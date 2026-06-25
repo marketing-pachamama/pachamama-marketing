@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pachamama · Centro de Inteligencia de Marketing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#D80879;--lime:#9EBD31;--dark:#0A412D;--pink-soft:#E44472;--green:#1d9e75;--amber:#d98a07;--red:#e0245e;
+  --bg:#f4f6f3;--bg2:#eef2ec;--surface:#ffffff;--surface2:#fbfcfa;--border:rgba(10,65,45,.10);--border2:rgba(10,65,45,.06);
+  --text:#0A412D;--text2:#33493f;--muted:#5d6f66;--hint:#93a59b;
+  --r:18px;--rs:11px;--rxs:8px;
+  --shadow:0 1px 2px rgba(10,65,45,.04),0 8px 24px rgba(10,65,45,.06);
+  --shadow-lg:0 4px 12px rgba(10,65,45,.08),0 24px 48px rgba(10,65,45,.10);
+  --grad-brand:linear-gradient(120deg,#D80879 0%,#9EBD31 100%);
+  --grad-dark2:linear-gradient(135deg,#0A412D 0%,#155c41 60%,#1d7a55 100%);
+  --g-bg:#eaf6dd;--g-tx:#4e7016;--a-bg:#fdf0dc;--a-tx:#a8690a;--r-bg:#fde6ef;--r-tx:#c01060;
+  --info-bg:#e6f0ee;--info-tx:#0A412D;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#0a120d;--bg2:#0d1611;--surface:#121f18;--surface2:#16271d;--border:rgba(158,189,49,.14);--border2:rgba(158,189,49,.07);
+  --text:#eef4ea;--text2:#cdddcf;--muted:#9ab09e;--hint:#62786a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.4),0 24px 48px rgba(0,0,0,.5);
+  --g-bg:#1b2c12;--g-tx:#bce06f;--a-bg:#34240c;--a-tx:#f0b25a;--r-bg:#350f22;--r-tx:#f58bb6;--info-bg:#13251d;--info-tx:#bce06f}
+}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased}
+.font-display{font-family:'Sora','Inter',sans-serif}
+a{color:var(--pink);text-decoration:none}
+::-webkit-scrollbar{height:9px;width:9px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--hint)}
+
+/* ── SETUP ─────────────────────────────── */
+#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(1200px 600px at 15% -10%,rgba(216,8,121,.10),transparent 55%),radial-gradient(1000px 500px at 110% 110%,rgba(158,189,49,.14),transparent 50%),var(--bg)}
+.setup-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:500px;width:100%;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.setup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--grad-brand)}
+.brandmark{display:flex;align-items:center;gap:13px;margin-bottom:22px}
+.logo{width:54px;height:54px;background:var(--grad-dark2);border-radius:15px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(10,65,45,.28)}
+.logo svg{width:30px;height:30px}
+.brandmark .bt{font-family:'Sora',sans-serif;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)}
+.brandmark .bs{font-size:12px;color:var(--muted);margin-top:1px}
+h1{font-family:'Sora',sans-serif;font-size:25px;font-weight:800;margin-bottom:9px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13.5px;line-height:1.65;margin-bottom:26px}
+label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+input,select{width:100%;height:46px;padding:0 15px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--surface2);color:var(--text);font-size:14px;margin-bottom:18px;outline:none;transition:all .18s;font-family:inherit}
+input:focus,select:focus{border-color:var(--pink);background:var(--surface);box-shadow:0 0 0 4px rgba(216,8,121,.10)}
+.row{display:flex;gap:11px}
+.btn{height:46px;padding:0 22px;border-radius:var(--rs);border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn-primary{background:var(--grad-brand);color:#fff;box-shadow:0 6px 18px rgba(216,8,121,.28)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(216,8,121,.34)}
+.btn-secondary{background:var(--surface2);border:1.5px solid var(--border);color:var(--text)}
+.btn-secondary:hover{background:var(--bg2);border-color:var(--hint)}
+.help{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.65}
+.help code{background:var(--bg2);padding:1px 6px;border-radius:5px;font-size:11px}
+.err{background:var(--r-bg);color:var(--r-tx);border:1px solid rgba(224,36,94,.3);border-radius:var(--rs);padding:13px 15px;font-size:13px;margin-top:14px;display:none}
+
+/* ── SHELL ─────────────────────────────── */
+#dash{display:none}
+.topbar{background:var(--grad-dark2);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:40;box-shadow:0 4px 20px rgba(10,65,45,.18)}
+.topbar-l{display:flex;align-items:center;gap:13px}
+.tb-logo{width:38px;height:38px;background:rgba(255,255,255,.12);border-radius:11px;display:inline-flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.tb-logo svg{width:23px;height:23px}
+.tb-title{font-family:'Sora',sans-serif;font-size:15.5px;font-weight:700;line-height:1.1}
+.tb-sub{font-size:11px;opacity:.72;letter-spacing:.04em}
+.topbar-r{display:flex;gap:9px;align-items:center}
+.acct-wrap{display:flex;flex-direction:column;gap:2px;margin-right:4px}
+.acct-wrap span{font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.08em}
+.acct-sel{height:36px;padding:0 12px;border:1px solid rgba(255,255,255,.22);border-radius:var(--rxs);background:rgba(255,255,255,.10);color:#fff;font-size:13px;min-width:200px;outline:none;font-family:inherit;cursor:pointer}
+.acct-sel option{color:#0A412D}
+.tbtn{height:36px;padding:0 14px;border-radius:var(--rxs);border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.tbtn:hover{background:rgba(255,255,255,.18)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#7CFFB0;box-shadow:0 0 0 0 rgba(124,255,176,.6);animation:pulse 2s infinite;display:inline-block;margin-right:6px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,255,176,.5)}70%{box-shadow:0 0 0 7px rgba(124,255,176,0)}100%{box-shadow:0 0 0 0 rgba(124,255,176,0)}}
+.wrap{max-width:1400px;margin:0 auto;padding:22px}
+
+/* ── FILTER BAR ────────────────────────── */
+.filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;box-shadow:var(--shadow)}
+.fgroup{display:flex;flex-direction:column;gap:8px}
+.fgroup-lbl{font-size:10px;font-weight:800;color:var(--hint);text-transform:uppercase;letter-spacing:.08em}
+.pbs{display:flex;gap:5px;flex-wrap:wrap}
+.pb{height:32px;padding:0 13px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.pb.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.pb:hover:not(.on){border-color:var(--pink);color:var(--pink)}
+.sep{width:1px;align-self:stretch;background:var(--border)}
+.di{height:34px;padding:0 11px;border:1.5px solid var(--border);border-radius:var(--rxs);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.di:focus{border-color:var(--pink)}
+.fsel{height:34px;padding:0 11px;border:1.5px solid var(--border);border-radius:var(--rxs);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit;cursor:pointer;min-width:150px}
+
+/* ── NAV TABS ──────────────────────────── */
+.navtabs{display:flex;gap:5px;overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:6px;margin-bottom:18px;box-shadow:var(--shadow)}
+.navtab{padding:10px 16px;border-radius:11px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .18s;font-family:inherit;display:flex;align-items:center;gap:7px}
+.navtab.on{background:var(--grad-brand);color:#fff;box-shadow:0 4px 12px rgba(216,8,121,.25)}
+.navtab:hover:not(.on){background:var(--bg2);color:var(--text)}
+.section{display:none;animation:fade .35s ease}
+.section.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── SECTION HEADERS ───────────────────── */
+.sechead{display:flex;align-items:center;justify-content:space-between;margin:26px 0 14px;gap:14px;flex-wrap:wrap}
+.sechead:first-child{margin-top:0}
+.sechead h2{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+.sechead .cnt{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:5px 12px;border-radius:20px}
+.subtitle{font-size:12.5px;color:var(--muted);margin:-8px 0 18px;line-height:1.6;max-width:900px}
+.minihead{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px;color:var(--text2)}
+
+/* ── HERO KPI STRIP ────────────────────── */
+.hero{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:980px){.hero{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.hero{grid-template-columns:1fr}}
+.herocard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.herocard.feat{background:var(--grad-dark2);color:#fff;border:none}
+.herocard.feat .hc-lbl{color:rgba(255,255,255,.78)}
+.herocard.feat .hc-foot{color:rgba(255,255,255,.7)}
+.hc-lbl{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.hc-val{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.hc-foot{font-size:11.5px;color:var(--muted);margin-top:9px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.delta{font-weight:800;display:inline-flex;align-items:center;gap:2px;padding:2px 8px;border-radius:20px;font-size:11px}
+.delta.up{color:var(--g-tx);background:var(--g-bg)}
+.delta.down{color:var(--r-tx);background:var(--r-bg)}
+.herocard.feat .delta.up{background:rgba(124,255,176,.18);color:#bdf5d4}
+.herocard.feat .delta.down{background:rgba(255,138,170,.18);color:#ffc1d4}
+.spark{position:absolute;right:0;bottom:0;left:0;height:42px;opacity:.55}
+
+/* ── KPI GRID ──────────────────────────── */
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:13px;margin-bottom:8px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
+.kc:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.kc::after{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--hint);opacity:.5}
+.kc.st-g::after{background:var(--lime);opacity:1}
+.kc.st-a::after{background:var(--amber);opacity:1}
+.kc.st-r::after{background:var(--red);opacity:1}
+.kc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kc-val{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;line-height:1.05;margin-bottom:8px;letter-spacing:-.01em}
+.kc-meta{display:flex;align-items:center;gap:7px;font-size:11px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
+.pill.g{background:var(--g-bg);color:var(--g-tx)}
+.pill.a{background:var(--a-bg);color:var(--a-tx)}
+.pill.r{background:var(--r-bg);color:var(--r-tx)}
+.pill.n{background:var(--bg2);color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.kc-goal{color:var(--hint);font-size:10.5px;margin-top:5px}
+
+/* ── CHARTS ────────────────────────────── */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:16px}
+.crow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:16px}
+.crow-13{display:grid;grid-template-columns:1.6fr 1fr;gap:15px;margin-bottom:16px}
+@media(max-width:980px){.crow,.crow3,.crow-13{grid-template-columns:1fr}}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.cc-ttl{font-family:'Sora',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.cc-desc{font-size:11.5px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.chart-h{position:relative;height:230px}
+.chart-h.tall{height:290px}
+.chart-h.sm{height:180px}
+
+/* ── GAUGES ────────────────────────────── */
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.gauge{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px}
+.gauge-wrap{position:relative;width:124px;height:124px;margin-bottom:6px}
+.gauge-val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge-num{font-family:'Sora',sans-serif;font-size:21px;font-weight:800;line-height:1}
+.gauge-unit{font-size:10px;color:var(--muted);margin-top:2px}
+.gauge-lbl{font-size:12px;font-weight:700;color:var(--text2)}
+.gauge-st{font-size:10.5px;font-weight:700;margin-top:2px}
+
+/* ── SCORE RING ────────────────────────── */
+.scorebox{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.scorering{position:relative;width:160px;height:160px;flex-shrink:0}
+.scorering .sc-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sc-num{font-family:'Sora',sans-serif;font-size:42px;font-weight:900;line-height:1}
+.sc-max{font-size:13px;color:var(--muted)}
+.sc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.score-bd{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
+.score-item{display:flex;align-items:center;gap:12px}
+.score-item .si-lbl{font-size:12.5px;font-weight:600;width:130px;flex-shrink:0;color:var(--text2)}
+.score-bar{flex:1;height:9px;background:var(--bg2);border-radius:6px;overflow:hidden}
+.score-fill{height:100%;border-radius:6px;transition:width .6s}
+.score-item .si-v{font-size:12px;font-weight:700;width:46px;text-align:right}
+
+/* ── TABLES ────────────────────────────── */
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+.tcard-h{padding:16px 18px;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{padding:11px 14px;font-size:10.5px;font-weight:800;color:var(--muted);text-align:left;background:var(--surface2);border-bottom:1.5px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none;position:sticky;top:0}
+th:hover{color:var(--pink)}
+td{padding:11px 14px;border-bottom:1px solid var(--border2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.namecell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;font-weight:600}
+.num{font-variant-numeric:tabular-nums;font-weight:600}
+.actiontag{padding:4px 11px;border-radius:8px;font-size:10.5px;font-weight:800;display:inline-flex;align-items:center;gap:4px}
+.actiontag.scale{background:var(--g-bg);color:var(--g-tx)}
+.actiontag.opt{background:var(--a-bg);color:var(--a-tx)}
+.actiontag.pause{background:var(--r-bg);color:var(--r-tx)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.02em}
+.badge.g{background:var(--g-bg);color:var(--g-tx)}
+.badge.a{background:var(--a-bg);color:var(--a-tx)}
+.badge.r{background:var(--r-bg);color:var(--r-tx)}
+.badge.n{background:var(--bg2);color:var(--muted)}
+.minibar{height:6px;background:var(--bg2);border-radius:4px;overflow:hidden;min-width:60px;display:inline-block;vertical-align:middle}
+.minibar > i{display:block;height:100%;border-radius:4px}
+
+/* ── CREATIVES ─────────────────────────── */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:15px;margin-bottom:8px}
+.acard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .18s;position:relative;box-shadow:var(--shadow)}
+.acard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.acard .rankbadge{position:absolute;top:10px;left:10px;z-index:2;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:rgba(255,255,255,.94);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.acard.top .rankbadge{background:var(--grad-brand);color:#fff}
+.athumb{height:150px;background:var(--bg2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.athumb img{width:100%;height:100%;object-fit:cover}
+.aph{display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--hint);font-size:11px}
+.abody{padding:13px}
+.aname{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:8px 0 10px}
+.astats{display:grid;grid-template-columns:1fr 1fr;gap:9px 6px;font-size:11.5px}
+.asl{color:var(--hint);font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.asv{font-weight:800;font-family:'Sora',sans-serif;font-size:14px;margin-top:1px}
+.bsm{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800}
+.ba{background:var(--g-bg);color:var(--g-tx)}
+.bp{background:var(--a-bg);color:var(--a-tx)}
+.bo{background:var(--bg2);color:var(--muted)}
+
+/* ── INSIGHTS ──────────────────────────── */
+.icard{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--dark);border-radius:var(--rs);padding:15px 18px;margin-bottom:11px;font-size:13.5px;line-height:1.6;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
+.icard .ico{font-size:18px;flex-shrink:0;line-height:1.3}
+.icard.warn{border-left-color:var(--amber)}
+.icard.bad{border-left-color:var(--red)}
+.icard.good{border-left-color:var(--green)}
+.icard b{font-weight:800}
+.recgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:14px}
+.acard-rec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.acard-rec.hl{background:var(--grad-dark2);color:#fff;border:none}
+.acard-rec.hl h3{color:#fff}
+.acard-rec.hl ul{color:rgba(255,255,255,.92)}
+.acard-rec h3{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.acard-rec ul{padding-left:20px;font-size:13px;line-height:1.85}
+.acard-rec ul li{margin-bottom:5px}
+.acard-rec ul li::marker{color:var(--pink)}
+
+/* ── FUNNEL ────────────────────────────── */
+.funnelviz{display:flex;flex-direction:column;gap:11px;padding:6px 0}
+.fbar-row .fbar-top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;align-items:baseline}
+.fbar-stage{font-weight:700}
+.fbar-track{background:var(--bg2);border-radius:8px;height:34px;overflow:hidden}
+.fbar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:13px;color:#fff;font-size:12px;font-weight:800;transition:width .5s;min-width:fit-content;font-family:'Sora',sans-serif}
+.conv-item{padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rs);margin-bottom:9px}
+.conv-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* ── MISC ──────────────────────────────── */
+.loading{text-align:center;padding:80px 20px;color:var(--muted)}
+.spinner{width:42px;height:42px;border:3.5px solid var(--border);border-top-color:var(--pink);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.erbox{background:var(--r-bg);color:var(--r-tx);border:1px solid rgba(224,36,94,.3);border-radius:var(--r);padding:16px 18px;font-size:13.5px;line-height:1.6}
+.empty{color:var(--hint);font-size:13px;padding:36px 0;text-align:center}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:#fff;padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:999;box-shadow:var(--shadow-lg);transform:translateY(8px)}
+#toast.show{opacity:1;transform:none}
+.legend-inline{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:10px}
+.legend-inline span{display:inline-flex;align-items:center;gap:6px}
+.legend-inline i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.heatcell{text-align:center;font-weight:700;font-size:11.5px;border-radius:6px;padding:8px 4px;color:#0A412D}
+.foot-note{font-size:11px;color:var(--hint);text-align:center;padding:24px 0 8px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SETUP ══════════ -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="brandmark">
+      <span class="logo">
+        <svg viewBox="0 0 48 48"><path d="M24 5C15 9 10 18 10 27c0 7.7 6.3 14 14 14s14-6.3 14-14C38 18 33 9 24 5z" fill="#9EBD31"/><path d="M24 14c-5 3-8 8.5-8 13.5a8 8 0 0 0 16 0c0-5-3-10.5-8-13.5z" fill="#D80879"/></svg>
+      </span>
+      <div>
+        <div class="bt">Megaproyecto Pachamama</div>
+        <div class="bs">Centro de Inteligencia de Marketing</div>
+      </div>
+    </div>
+    <h1>Dashboard Gerencial en Vivo</h1>
+    <p class="sub">KPIs, campañas, creativos, audiencias y embudo comercial conectados en tiempo real a Meta Ads. Ingresa tu token de acceso para comenzar.</p>
+    <label>Token de acceso de Meta *</label>
+    <input type="password" id="tkn" placeholder="EAAB..." autocomplete="off">
+    <label>Cuenta publicitaria</label>
+    <select id="acctSetup"><option value="">— Ingresa el token y presiona "Cargar cuentas" —</option></select>
+    <label>Producto (define la meta de CPL)</label>
+    <select id="productSel">
+      <option value="palta">🥑 Palta Hass · meta CPL S/10 – S/13</option>
+      <option value="pitahaya">🐉 Pitahaya · meta CPL S/15 – S/20</option>
+      <option value="other">Otro / sin meta específica</option>
+    </select>
+    <label>Google Sheets del embudo de leads (opcional)</label>
+    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv">
+    <div class="help" style="margin-top:-8px;margin-bottom:20px">Déjalo en blanco si aún no tienes la hoja conectada; puedes agregarla luego desde el panel.</div>
+    <div class="row">
+      <button class="btn btn-primary" style="flex:1" onclick="goToDash()">▶&nbsp; Ver Dashboard</button>
+      <button class="btn btn-secondary" onclick="loadAccts()">↻ Cargar cuentas</button>
+    </div>
+    <div class="err" id="setupErr"></div>
+    <div class="help">
+      ¿Cómo obtener tu token? → <a href="https://business.facebook.com/latest/settings/system_users" target="_blank">Business Manager → Usuarios del sistema → Generar token</a><br>
+      Permisos: <code>ads_read</code> · <code>ads_management</code> · <code>business_management</code>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ GATE (clave de acceso) ══════════ -->
+<div id="gate" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 15% -10%,rgba(216,8,121,.10),transparent 55%),radial-gradient(1000px 500px at 110% 110%,rgba(158,189,49,.14),transparent 50%),var(--bg)">
+  <div class="setup-card" style="max-width:400px;text-align:center">
+    <div class="brandmark" style="justify-content:center;margin-bottom:18px">
+      <span class="logo"><svg viewBox="0 0 48 48"><path d="M24 5C15 9 10 18 10 27c0 7.7 6.3 14 14 14s14-6.3 14-14C38 18 33 9 24 5z" fill="#9EBD31"/><path d="M24 14c-5 3-8 8.5-8 13.5a8 8 0 0 0 16 0c0-5-3-10.5-8-13.5z" fill="#D80879"/></svg></span>
+    </div>
+    <h1 style="font-size:21px">Acceso al Dashboard</h1>
+    <p class="sub" style="margin-bottom:20px">Ingresa la clave para ver los datos en vivo de Megaproyecto Pachamama.</p>
+    <input type="password" id="gatePass" placeholder="Clave de acceso" onkeydown="if(event.key==='Enter')unlockGate()">
+    <button class="btn btn-primary" style="width:100%" onclick="unlockGate()">🔓 Entrar</button>
+    <div class="err" id="gateErr"></div>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dash">
+  <div class="topbar">
+    <div class="topbar-l">
+      <span class="tb-logo">
+        <svg viewBox="0 0 48 48"><path d="M24 5C15 9 10 18 10 27c0 7.7 6.3 14 14 14s14-6.3 14-14C38 18 33 9 24 5z" fill="#9EBD31"/><path d="M24 14c-5 3-8 8.5-8 13.5a8 8 0 0 0 16 0c0-5-3-10.5-8-13.5z" fill="#D80879"/></svg>
+      </span>
+      <div>
+        <div class="tb-title">Pachamama · Inteligencia de Marketing</div>
+        <div class="tb-sub"><span class="live-dot"></span>En vivo · Meta Ads · TikTok Ads · Kommo CRM</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <div class="acct-wrap">
+        <span>Cuenta publicitaria</span>
+        <select class="acct-sel" id="acctDash" onchange="loadData()"></select>
+      </div>
+      <button class="tbtn" onclick="doShare()">🔗 Compartir</button>
+      <button class="tbtn" onclick="window.print()">🖨 PDF</button>
+      <button class="tbtn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="filters">
+      <div class="fgroup">
+        <span class="fgroup-lbl">Período</span>
+        <div class="pbs">
+          <button class="pb on" data-p="today" onclick="setP(this,'today')">Hoy</button>
+          <button class="pb" data-p="yesterday" onclick="setP(this,'yesterday')">Ayer</button>
+          <button class="pb" data-p="last_7d" onclick="setP(this,'last_7d')">7 días</button>
+          <button class="pb" data-p="last_30d" onclick="setP(this,'last_30d')">30 días</button>
+          <button class="pb" data-p="this_month" onclick="setP(this,'this_month')">Este mes</button>
+          <button class="pb" data-p="last_month" onclick="setP(this,'last_month')">Mes anterior</button>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="fgroup">
+        <span class="fgroup-lbl">Rango personalizado</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="date" class="di" id="df" onchange="clearP()">
+          <span style="color:var(--hint)">→</span>
+          <input type="date" class="di" id="dt" onchange="clearP()">
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="fgroup">
+        <span class="fgroup-lbl">Producto</span>
+        <select class="fsel" id="productSelDash" onchange="loadData()">
+          <option value="palta">🥑 Palta Hass</option>
+          <option value="pitahaya">🐉 Pitahaya</option>
+          <option value="other">Otro</option>
+        </select>
+      </div>
+      <div class="sep"></div>
+      <div class="fgroup">
+        <span class="fgroup-lbl">&nbsp;</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="height:34px;font-size:13px;padding:0 16px" onclick="loadData()">↻ Actualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="navtabs" id="navtabs">
+      <button class="navtab on" data-s="resumen" onclick="showSection(this,'resumen')">📊 Resumen</button>
+      <button class="navtab" data-s="campanas" onclick="showSection(this,'campanas')">🎯 Campañas</button>
+      <button class="navtab" data-s="creativos" onclick="showSection(this,'creativos')">🖼 Creativos</button>
+      <button class="navtab" data-s="audiencias" onclick="showSection(this,'audiencias')">👥 Audiencias</button>
+      <button class="navtab" data-s="tiktok" onclick="showSection(this,'tiktok')">🎵 TikTok Ads</button>
+      <button class="navtab" data-s="embudo" onclick="showSection(this,'embudo')">🔻 Embudo</button>
+      <button class="navtab" data-s="insights" onclick="showSection(this,'insights')">💡 Insights</button>
+      <button class="navtab" data-s="recomendaciones" onclick="showSection(this,'recomendaciones')">✅ Plan de acción</button>
+    </div>
+
+    <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
+
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.4</b> (resultados = Costo por resultado de Ads Manager + corrección histórica de días con error de pago)</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ╔════════════════ CONFIGURACIÓN ════════════════╗
+// Para abrir el dashboard SIN escribir el token cada vez:
+//   1) Pega tu token de Meta entre las comillas de EMBED_TOKEN.
+//   2) Cambia ACCESS_PASS por la clave que quieras pedir al abrir.
+//   3) (Opcional) Pon el ID de cuenta por defecto en EMBED_ACCOUNT.
+// Si EMBED_TOKEN queda vacío, el panel pide el token manualmente (como antes).
+const EMBED_TOKEN   = "EAAcX7epovb0BR9UEGwbS0E4iQPin7Q4cu4v3B8eHXCHJB7w4MLZCzqGI0vlLP1De4ZA1jyv9FbZAZCowFqB2YbpDsZAPLDFWnqG5vAEWuMglODhrpVVKeIngyOTO01LJO41Uuwu9gxz2ZAKxzfYZBLAca2aWuORvhRbERyGZC07BvrqOPUP5IraKwPX5PwCWZBfZCgSgZDZD"; // token incrustado (Usuario del sistema, sin caducidad)
+const ACCESS_PASS   = "pachamama2026";    // <-- CLAVE DE ACCESO (cámbiala)
+const EMBED_ACCOUNT = "4260660664079722"; // <-- (opcional) ID de cuenta, ej: 4260660664079722
+
+// ── PROXY (Cloudflare Worker) ──────────────────────────────────────────────
+// Kommo y TikTok NO permiten llamadas directas desde el navegador (CORS), por eso
+// pasan por un Worker gratuito que también oculta sus tokens. Pega aquí la URL del
+// Worker que despliegues (ver archivo kommo-tiktok-proxy-worker.js). Ej:
+//   https://pachamama-proxy.TUUSUARIO.workers.dev
+const PROXY_URL = "";   // <-- URL del Cloudflare Worker (sin "/" al final)
+
+// ── KOMMO CRM ──────────────────────────────────────────────────────────────
+// Subdominio de tu cuenta (lo que va antes de .kommo.com). Ej: "paradiseinmuebles".
+// El token de larga duración se configura DENTRO del Worker (no aquí), por seguridad.
+// Mapea cada estado/etapa de tu pipeline de Kommo a las 6 etapas del embudo.
+// Pon el NOMBRE EXACTO del status en Kommo (en minúsculas) a la izquierda.
+const KOMMO_SUBDOMAIN = "";  // <-- ej: "paradiseinmuebles"
+const KOMMO_PIPELINE_ID = ""; // <-- (opcional) ID del pipeline; vacío = todos
+const KOMMO_STAGE_MAP = {
+  // "nombre del status en kommo (minúsculas)" : "Etapa del embudo"
+  "lead entrante":            "Lead",
+  "nuevo lead":               "Lead",
+  "contacto inicial":         "Contactado",
+  "contactado":               "Contactado",
+  "prospecto":                "Prospecto",
+  "calificado":               "Prospecto",
+  "reunión agendada":         "Meet",
+  "meet":                     "Meet",
+  "separación":               "Separacion",
+  "separacion":               "Separacion",
+  "venta":                    "Venta",
+  "logrado con éxito":        "Venta",
+  "won":                      "Venta",
+  "cerrado sin éxito":        "Perdido",
+  "perdido":                  "Perdido",
+  "lost":                     "Perdido"
+};
+
+// ── TIKTOK ADS ─────────────────────────────────────────────────────────────
+// El access_token de TikTok se configura DENTRO del Worker (no aquí). Aquí solo el
+// advertiser_id (lo ves en TikTok Ads Manager → cabecera de la cuenta).
+const TIKTOK_ADVERTISER_ID = ""; // <-- ej: "7300000000000000000"
+const TIKTOK_CURRENCY = "PEN";   // moneda de la cuenta de TikTok (PEN o USD)
+
+// Corrección histórica de leads por campaña. Se RESTA del conteo SOLO cuando Meta no expone
+// su dato oficial (p. ej. días con "Error de pago"). En fechas normales Meta sí entrega el dato
+// y esta corrección se ignora (los números quedan exactos). La clave es parte del nombre de la campaña.
+const RESULT_CORRECTIONS = { "PALTA 2 JUN": -9 };
+// ╚═══════════════════════════════════════════════╝
+
+// ═══════════════ STATE ═══════════════
+let TOKEN='', preset='today', product='palta', charts={}, LAST_DATA=null, SHEET_URL='', FUNNEL_ROWS=[];
+let KOMMO_ROWS=[], KOMMO_ERROR=null, TT_DATA=null, TT_ERROR=null;
+const PINK='#D80879', LIME='#9EBD31', DARK='#0A412D', GREEN='#1d9e75', AMBER='#d98a07', RED='#e0245e', BLUE='#2f7dd1';
+const PALETTE=[PINK,LIME,DARK,'#2f7dd1','#d98a07','#7b4fc4','#0fa3a3','#e0245e','#5a7d1a','#c44fa0'];
+
+const BENCH={
+  ctr:{bad:1,ok:2,good:3},
+  cpc:{good:0.80,ok:1.50},
+  freq:{low:2,ok:4,watch:6},
+  cpl:{palta:{min:10,max:13},pitahaya:{min:15,max:20},other:null}
+};
+const FUNNEL_STAGES=['Lead','Contactado','Prospecto','Meet','Separacion','Venta'];
+const FUNNEL_HEALTHY={
+  'Lead->Contactado':{min:75,label:'Contactabilidad (Lead → Contactado)',note:'Real Pachamama: 80.6%'},
+  'Contactado->Prospecto':{min:60,label:'Calificación (Contactado → Prospecto)',note:'Real Pachamama: 72.4%'},
+  'Prospecto->Meet':{min:55,label:'Agendamiento (Prospecto → Meet)',note:'Real Pachamama: 66.7%'},
+  'Meet->Separacion':{min:35,label:'Cierre inicial (Meet → Separación)',note:'Real Pachamama: 50.0%'},
+  'Separacion->Venta':{min:60,label:'Formalización (Separación → Venta)',note:'Meta sector'}
+};
+
+// ═══════════════ UTILS ═══════════════
+const iso=d=>d.toISOString().split('T')[0];
+const sub=n=>{const d=new Date();d.setDate(d.getDate()-n);return d;};
+function fmt(n,dec=0){n=parseFloat(n)||0;if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1)+'K';return n.toLocaleString('es-PE',{maximumFractionDigits:dec});}
+function cur(n,c='PEN'){return new Intl.NumberFormat('es-PE',{style:'currency',currency:c,maximumFractionDigits:2}).format(parseFloat(n)||0);}
+function curK(n,c='PEN'){n=parseFloat(n)||0;const sym=c==='USD'?'$':'S/';if(Math.abs(n)>=1e3)return sym+(n/1e3).toFixed(1)+'K';return sym+n.toFixed(0);}
+function pct(n,dec=2){return(parseFloat(n)||0).toFixed(dec)+'%';}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+function esc(s){return(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function isDark(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;}
+function gridColor(){return isDark()?'rgba(255,255,255,.07)':'rgba(10,65,45,.06)';}
+function tickColor(){return isDark()?'#9ab09e':'#5d6f66';}
+function hexA(hex,a){const h=hex.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${b},${a})`;}
+
+function dates(p){
+  if(p==='today')return{s:iso(new Date()),u:iso(new Date())};
+  if(p==='yesterday')return{s:iso(sub(1)),u:iso(sub(1))};
+  if(p==='last_7d')return{s:iso(sub(6)),u:iso(new Date())};
+  if(p==='last_30d')return{s:iso(sub(29)),u:iso(new Date())};
+  if(p==='this_month')return{s:iso(new Date(new Date().getFullYear(),new Date().getMonth(),1)),u:iso(new Date())};
+  if(p==='last_month'){const d=new Date();return{s:iso(new Date(d.getFullYear(),d.getMonth()-1,1)),u:iso(new Date(d.getFullYear(),d.getMonth(),0))};}
+  return{s:iso(sub(6)),u:iso(new Date())};
+}
+function prevPeriod(since,until){
+  const s=new Date(since),u=new Date(until);
+  const days=Math.max(1,Math.round((u-s)/86400000)+1);
+  const prevU=new Date(s);prevU.setDate(prevU.getDate()-1);
+  const prevS=new Date(prevU);prevS.setDate(prevS.getDate()-(days-1));
+  return{s:iso(prevS),u:iso(prevU)};
+}
+
+// Status helpers
+function ctrStatus(v){if(v<BENCH.ctr.bad)return'r';if(v<BENCH.ctr.ok)return'a';return'g';}
+function ctrLabel(v){if(v<BENCH.ctr.bad)return'Bajo';if(v<BENCH.ctr.ok)return'Regular';if(v<BENCH.ctr.good)return'Bueno';return'Excelente';}
+function cpcStatus(v){if(v>BENCH.cpc.ok)return'r';if(v>BENCH.cpc.good)return'a';return'g';}
+function freqStatus(v){if(v>BENCH.freq.watch)return'r';if(v>BENCH.freq.ok)return'a';return'g';}
+function freqLabel(v){if(v<BENCH.freq.low)return'Baja exposición';if(v<=BENCH.freq.ok)return'Saludable';if(v<=BENCH.freq.watch)return'Vigilar';return'Fatiga';}
+function cplStatus(v,prod){const b=BENCH.cpl[prod];if(!b)return'a';if(v<=b.max)return'g';if(v<=b.max*1.2)return'a';return'r';}
+const STCOL={g:LIME,a:AMBER,r:RED,n:'#93a59b'};
+const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico'};
+
+// ═══════════════ API ═══════════════
+async function api(path,params={}){
+  const u=new URL('https://graph.facebook.com/v19.0/'+path);
+  u.searchParams.set('access_token',TOKEN);
+  if(path.includes('/insights')) params={...params,use_unified_attribution_setting:'true'};
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
+  const r=await fetch(u);const d=await r.json();
+  if(d.error)throw new Error(d.error.message);return d;
+}
+
+// ═══════════════ GOOGLE SHEETS ═══════════════
+function toCsvExportUrl(url){
+  if(!url)return'';
+  if(url.includes('/d/e/')&&(url.includes('output=csv')||url.includes('format=csv')))return url;
+  if((url.includes('output=csv')||url.includes('format=csv'))&&!url.includes('/d/e/'))return url;
+  const m=url.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);if(!m)return url;
+  const gidMatch=url.match(/gid=([0-9]+)/);const gid=gidMatch?gidMatch[1]:'0';
+  return`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
+}
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);if(!lines.length)return[];
+  function pl(line){const out=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){out.push(c);c='';}else c+=ch;}out.push(c);return out;}
+  const headers=pl(lines[0]).map(h=>h.trim());
+  return lines.slice(1).map(line=>{const vals=pl(line);const row={};headers.forEach((h,i)=>row[h]=(vals[i]||'').trim());return row;});
+}
+async function fetchCsvWithFallback(csvUrl){
+  try{const r=await fetch(csvUrl,{cache:'no-store'});if(r.ok){const t=await r.text();if(t&&!t.trim().startsWith('<'))return t;}}catch(e){}
+  try{const r2=await fetch('https://corsproxy.io/?url='+encodeURIComponent(csvUrl),{cache:'no-store'});if(r2.ok){const t2=await r2.text();if(t2&&!t2.trim().startsWith('<'))return t2;}}catch(e){}
+  throw new Error('No se pudo leer la hoja (¿está publicada en la web como CSV?)');
+}
+async function fetchFunnelData(){
+  if(!SHEET_URL){FUNNEL_ROWS=[];return;}
+  const text=await fetchCsvWithFallback(toCsvExportUrl(SHEET_URL));
+  const rows=parseCSV(text);
+  const norm=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  FUNNEL_ROWS=rows.map(r=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return{
+    fecha:o['fecha']||'',nombre:o['nombre']||'',campana:o['campana']||o['campaña']||'',anuncio:o['anuncio']||'',
+    producto:o['producto']||'',etapa:(o['etapa']||'').trim(),motivo:o['motivo perdida']||o['motivo_perdida']||''};
+  }).filter(r=>r.etapa);
+}
+function configSheet(){
+  const url=prompt('Pega la URL de tu Google Sheet publicada (Archivo → Compartir → Publicar en la web → CSV):',SHEET_URL||'');
+  if(url===null)return;SHEET_URL=url.trim();
+  try{localStorage.setItem('pachamama_sheet_url',SHEET_URL);}catch(e){}
+  toast(SHEET_URL?'✓ Hoja conectada':'Hoja desconectada');loadData();
+}
+
+// ═══════════════ KOMMO CRM ═══════════════
+function kommoReady(){return !!(PROXY_URL && KOMMO_SUBDOMAIN);}
+async function kapi(path,params={}){
+  if(!PROXY_URL)throw new Error('Falta configurar PROXY_URL (Cloudflare Worker).');
+  const u=new URL(PROXY_URL.replace(/\/$/,'')+'/kommo/'+path);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u,{cache:'no-store'});
+  if(r.status===204)return {_embedded:{leads:[]}};
+  const d=await r.json().catch(()=>({}));
+  if(d&&d.error)throw new Error('Kommo: '+(d.detail||d.title||d.error));
+  return d;
+}
+// Construye el mapa status_id -> {name, stage}
+async function kommoPipelines(){
+  const d=await kapi('leads/pipelines');
+  const map={};const pipes=(d._embedded&&d._embedded.pipelines)||[];
+  pipes.forEach(p=>{
+    const sts=(p._embedded&&p._embedded.statuses)||[];
+    sts.forEach(s=>{
+      const nm=(s.name||'').toString().toLowerCase().trim();
+      let stage=KOMMO_STAGE_MAP[nm]||null;
+      if(!stage){ if(s.id===142)stage='Venta'; else if(s.id===143)stage='Perdido'; }
+      map[s.id]={name:s.name||'',stage,pipeline_id:p.id};
+    });
+  });
+  return map;
+}
+// Extrae utm_campaign / nombre de campaña de los campos personalizados del lead
+function kommoCampaign(lead){
+  const cf=(lead.custom_fields_values)||[];
+  const keys=['utm_campaign','campaña','campana','campaign','fuente','origen'];
+  for(const f of cf){
+    const fn=(f.field_name||'').toString().toLowerCase();
+    if(keys.some(k=>fn.includes(k))){
+      const v=f.values&&f.values[0]?(f.values[0].value):'';
+      if(v)return v.toString();
+    }
+  }
+  return '';
+}
+function kommoAd(lead){
+  const cf=(lead.custom_fields_values)||[];
+  for(const f of cf){const fn=(f.field_name||'').toString().toLowerCase();
+    if(fn.includes('utm_content')||fn.includes('anuncio')||fn.includes('ad ')){
+      const v=f.values&&f.values[0]?f.values[0].value:'';if(v)return v.toString();}}
+  return '';
+}
+// Descarga todos los leads del período y los normaliza al formato del embudo
+async function fetchKommoData(since,until){
+  KOMMO_ROWS=[];
+  if(!kommoReady())return;
+  const statusMap=await kommoPipelines();
+  const fromTs=Math.floor(new Date(since+'T00:00:00').getTime()/1000);
+  const toTs=Math.floor(new Date(until+'T23:59:59').getTime()/1000);
+  let page=1,all=[];const MAXP=40;
+  while(page<=MAXP){
+    const params={limit:'250',page:String(page),'with':'contacts',
+      'filter[created_at][from]':String(fromTs),'filter[created_at][to]':String(toTs)};
+    if(KOMMO_PIPELINE_ID)params['filter[pipeline_id]']=String(KOMMO_PIPELINE_ID);
+    const d=await kapi('leads',params);
+    const leads=(d._embedded&&d._embedded.leads)||[];
+    all=all.concat(leads);
+    if(leads.length<250)break;
+    page++;
+  }
+  KOMMO_ROWS=all.map(l=>{
+    const sm=statusMap[l.status_id]||{};
+    const created=l.created_at?new Date(l.created_at*1000):null;
+    return{
+      fecha:created?iso(created):'',
+      nombre:l.name||('Lead #'+l.id),
+      campana:kommoCampaign(l),
+      anuncio:kommoAd(l),
+      producto:'',
+      etapa:sm.stage||'',
+      price:parseFloat(l.price||0),
+      statusName:sm.name||'',
+      motivo:l.loss_reason_id?('Motivo #'+l.loss_reason_id):''
+    };
+  }).filter(r=>r.etapa);
+}
+
+// ═══════════════ SETUP FLOW ═══════════════
+async function loadAccts(){
+  TOKEN=document.getElementById('tkn').value.trim();
+  if(!TOKEN){showErr('setupErr','⚠ Ingresa tu token primero');return;}
+  document.getElementById('setupErr').style.display='none';
+  try{
+    let accounts=[];
+    try{const d=await api('me/adaccounts',{fields:'id,name,currency,account_status',limit:100});accounts=(d.data||[]);}
+    catch(e1){const me=await api('me',{fields:'id'});const d2=await api(me.id+'/adaccounts',{fields:'id,name,currency,account_status',limit:100});accounts=(d2.data||[]);}
+    const actives=accounts.filter(a=>a.account_status!==2&&a.account_status!==101&&a.account_status!==201);
+    const list=actives.length?actives:accounts;
+    if(!list.length){showErr('setupErr','No se encontraron cuentas con este token.');return;}
+    const sel=document.getElementById('acctSetup');sel.innerHTML='';
+    list.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name||a.id;o.dataset.currency=a.currency||'PEN';sel.appendChild(o);});
+    toast('✓ '+list.length+' cuentas cargadas');
+  }catch(e){showErr('setupErr','Error: '+e.message);}
+}
+async function goToDash(){
+  TOKEN=document.getElementById('tkn').value.trim();
+  if(!TOKEN){showErr('setupErr','⚠ Ingresa tu token de acceso');return;}
+  const s=document.getElementById('acctSetup');
+  if(!s.value||s.options[0]?.value===''){await loadAccts();if(!document.getElementById('acctSetup').value)return;}
+  const s2=document.getElementById('acctSetup');const dd=document.getElementById('acctDash');dd.innerHTML='';
+  Array.from(s2.options).forEach(o=>{const n=document.createElement('option');n.value=o.value;n.textContent=o.textContent;n.dataset.currency=o.dataset.currency||'PEN';dd.appendChild(n);});
+  dd.value=s2.value;
+  product=document.getElementById('productSel').value;document.getElementById('productSelDash').value=product;
+  SHEET_URL=document.getElementById('sheetUrl').value.trim();
+  if(!SHEET_URL){try{SHEET_URL=localStorage.getItem('pachamama_sheet_url')||'';}catch(e){}}
+  else{try{localStorage.setItem('pachamama_sheet_url',SHEET_URL);}catch(e){}}
+  document.getElementById('setup').style.display='none';document.getElementById('dash').style.display='block';
+  const r=dates('today');document.getElementById('df').value=r.s;document.getElementById('dt').value=r.u;
+  loadData();
+}
+function doLogout(){TOKEN='';document.getElementById('dash').style.display='none';try{localStorage.removeItem('pachamama_unlocked');}catch(e){}if(EMBED_TOKEN){document.getElementById('gate').style.display='flex';document.getElementById('gatePass').value='';}else{document.getElementById('setup').style.display='flex';document.getElementById('tkn').value='';}}
+
+// ═══════════════ FILTERS / NAV ═══════════════
+function setP(btn,p){preset=p;document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');const r=dates(p);document.getElementById('df').value=r.s;document.getElementById('dt').value=r.u;loadData();}
+function clearP(){preset=null;document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));}
+function showSection(btn,s){document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('.section').forEach(sec=>sec.classList.remove('on'));document.getElementById('sec-'+s)?.classList.add('on');}
+
+// ═══════════════ LOAD DATA ═══════════════
+async function loadData(){
+  const acct=document.getElementById('acctDash').value;
+  if(!acct||!TOKEN)return;
+  product=document.getElementById('productSelDash').value;
+  const currency=document.getElementById('acctDash').selectedOptions[0]?.dataset?.currency||'PEN';
+  const since=document.getElementById('df').value, until=document.getElementById('dt').value;
+  document.getElementById('main').innerHTML='<div class="loading"><div class="spinner"></div>Cargando KPIs, campañas, creativos y audiencias…</div>';
+  try{
+    const tr=JSON.stringify({since,until}), prev=prevPeriod(since,until), trPrev=JSON.stringify({since:prev.s,until:prev.u});
+    const acctFields='spend,impressions,reach,clicks,ctr,cpm,cpc,actions,cost_per_action_type,frequency,unique_clicks';
+    const [acctIns,acctInsPrev,campaigns,ads,ageGender,region,platform,daily]=await Promise.all([
+      api(acct+'/insights',{fields:acctFields,time_range:tr,level:'account'}),
+      api(acct+'/insights',{fields:'spend,clicks,actions,impressions,reach,ctr,cpc',time_range:trPrev,level:'account'}).catch(()=>({data:[]})),
+      api(acct+'/insights',{fields:'campaign_name,spend,impressions,reach,clicks,ctr,cpc,frequency,actions,cost_per_action_type,cost_per_result,results',time_range:tr,level:'campaign',limit:200}).catch(()=>({data:[]})),
+      api(acct+'/ads',{fields:'id,name,status,creative{thumbnail_url,image_url}',limit:40,effective_status:'["ACTIVE","PAUSED"]'}).catch(()=>({data:[]})),
+      api(acct+'/insights',{fields:'spend,clicks,actions,cost_per_action_type,cost_per_result,results',time_range:tr,level:'account',breakdowns:'age,gender',limit:200}).catch(()=>({data:[]})),
+      api(acct+'/insights',{fields:'spend,clicks,actions,cost_per_action_type,cost_per_result,results',time_range:tr,level:'account',breakdowns:'region',limit:200}).catch(()=>({data:[]})),
+      api(acct+'/insights',{fields:'spend,clicks,impressions,actions,cost_per_action_type,cost_per_result,results',time_range:tr,level:'account',breakdowns:'publisher_platform',limit:100}).catch(()=>({data:[]})),
+      api(acct+'/insights',{fields:'campaign_name,spend,impressions,clicks,actions,cost_per_action_type,cost_per_result,results',time_range:tr,time_increment:1,level:'campaign',limit:1000}).catch(()=>({data:[]}))
+    ]);
+    const adsList=ads.data||[];let adsWithIns=adsList;
+    if(adsList.length){
+      try{const ip=adsList.map(a=>api(a.id+'/insights',{fields:'spend,impressions,clicks,ctr,cpc,actions,cost_per_action_type,frequency,cost_per_result,results',time_range:tr}).catch(()=>({data:[]})));
+        const ir=await Promise.all(ip);adsWithIns=adsList.map((ad,i)=>({...ad,_ins:(ir[i].data||[])[0]||{}}));}
+      catch(e){adsWithIns=adsList.map(ad=>({...ad,_ins:{}}));}
+    }
+    let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
+    KOMMO_ERROR=null;try{await fetchKommoData(since,until);}catch(e){KOMMO_ERROR=e.message;}
+    TT_ERROR=null;try{TT_DATA=await fetchTikTok(since,until);}catch(e){TT_ERROR=e.message;TT_DATA=null;}
+    LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,currency,since,until,product,funnelError};
+    renderAll(LAST_DATA);
+  }catch(e){
+    document.getElementById('main').innerHTML=`<div class="erbox">⚠ Error al cargar datos: ${esc(e.message)}<br><small>Verifica que el token tenga permisos ads_read y ads_management.</small></div>`;
+  }
+}
+
+// ═══════════════ METRIC EXTRACTION ═══════════════
+function gav(a){return a?parseFloat(a.value||0):0;}
+function extractFormLeads(actions){if(!actions)return 0;for(const t of['onsite_conversion.lead_grouped','offsite_complete_registration_add_meta_leads','offsite_conversion.fb_pixel_lead','lead']){const m=actions.find(a=>a.action_type===t);if(m)return gav(m);}return 0;}
+function extractConversations(actions){if(!actions)return 0;for(const t of['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.total_messaging_connection']){const m=actions.find(a=>a.action_type===t);if(m)return gav(m);}return 0;}
+function extractLeads(actions,cpat){
+  if(!actions)return 0;
+  const lead=['onsite_conversion.lead_grouped','offsite_complete_registration_add_meta_leads','offsite_conversion.fb_pixel_lead','lead'];
+  const conv=['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.total_messaging_connection'];
+  const all=[...lead,...conv];
+  if(cpat&&cpat.length){for(const t of all){if(cpat.find(c=>c.action_type===t)){const m=actions.find(a=>a.action_type===t);if(m)return gav(m);}}}
+  for(const t of all){const m=actions.find(a=>a.action_type===t);if(m)return gav(m);}return 0;
+}
+function isConvCampaign(cpat){
+  if(!cpat||!cpat.length)return false;
+  const lead=['onsite_conversion.lead_grouped','offsite_complete_registration_add_meta_leads','offsite_conversion.fb_pixel_lead','lead'];
+  const conv=['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.total_messaging_connection'];
+  const costed=cpat.filter(c=>[...lead,...conv].includes(c.action_type)).sort((a,b)=>parseFloat(a.value||999)-parseFloat(b.value||999));
+  if(!costed.length)return false;return conv.includes(costed[0].action_type);
+}
+
+function parseResultField(rf){
+  if(rf===undefined||rf===null)return null;
+  if(Array.isArray(rf)){if(!rf.length)return null;const it=rf[0];const v=parseFloat(it.values&&it.values[0]?it.values[0].value:0)||0;const ind=(it.indicator||'').toLowerCase();const isC=ind.indexOf('messaging')>=0||ind.indexOf('conversation')>=0;return{value:v,isConv:isC?true:(ind?false:null)};}
+  const n=parseFloat(rf);return isNaN(n)?null:{value:n,isConv:null};
+}
+function parseCprNum(cpr){
+  if(cpr===undefined||cpr===null)return 0;
+  if(Array.isArray(cpr)){if(!cpr.length)return 0;const it=cpr[0];return parseFloat(it.values&&it.values[0]?it.values[0].value:0)||0;}
+  const n=parseFloat(cpr);return isNaN(n)?0:n;
+}
+function resultCorrection(name){
+  if(!name)return 0;
+  for(const k in RESULT_CORRECTIONS){ if(name.toLowerCase().indexOf(k.toLowerCase())>=0) return RESULT_CORRECTIONS[k]||0; }
+  return 0;
+}
+function rowResults(r,allowCorrection){
+  // Prioridad: "Costo por resultado" oficial de Meta (coincide con Ads Manager). El campo results crudo
+  // sobrecuenta por atribución amplia, así que va después.
+  const cpa=r.cost_per_action_type||[],acts=r.actions||[],conv=isConvCampaign(cpa);
+  const sp=parseFloat(r.spend||0),cprN=parseCprNum(r.cost_per_result);
+  let val=(cprN>0&&sp>0)?Math.round(sp/cprN):0;
+  if(!val){
+    const rf=parseResultField(r.results);
+    if(rf&&rf.value>0){const isC=rf.isConv!==null?rf.isConv:conv;return isC?{leads:0,conversations:rf.value}:{leads:rf.value,conversations:0};}
+    // Meta no entregó su dato oficial (días con error de pago): conteo crudo + corrección histórica fija
+    val=conv?extractConversations(acts):extractFormLeads(acts);
+    if(allowCorrection) val=Math.max(0, val + resultCorrection(r.campaign_name));
+  }
+  return conv?{leads:0,conversations:val}:{leads:val,conversations:0};
+}
+function rowTotal(r,allowCorrection){const x=rowResults(r,allowCorrection);return x.leads+x.conversations;}
+function buildMetrics(row,campaignRows){
+  const m=row||{};
+  const spend=parseFloat(m.spend||0),impressions=parseInt(m.impressions||0),reach=parseInt(m.reach||0),clicks=parseInt(m.clicks||0);
+  const ctr=parseFloat(m.ctr||0),cpm=parseFloat(m.cpm||0),cpc=parseFloat(m.cpc||0),frequency=parseFloat(m.frequency||0);
+  let leads=0,conversations=0;
+  if(campaignRows&&campaignRows.length){
+    campaignRows.forEach(r=>{const _rr=rowResults(r,true);leads+=_rr.leads;conversations+=_rr.conversations;});
+  }else{const acts=m.actions||[];leads=extractFormLeads(acts);conversations=extractConversations(acts);}
+  const totalResults=leads+conversations, cpl=leads>0?spend/leads:0, cpc_conv=conversations>0?spend/conversations:0;
+  const costPerResult=totalResults>0?spend/totalResults:0;
+  return{spend,impressions,reach,clicks,ctr,cpm,cpc,frequency,leads,conversations,totalResults,cpl,cpc_conv,costPerResult};
+}
+function deltaPct(c,p){if(!p||!isFinite(p)||p===0)return null;return((c-p)/p)*100;}
+
+// ═══════════════ HEALTH SCORE ═══════════════
+function computeScore(m){
+  // 0-100 composite of CTR, CPC, frequency, CPL-vs-goal, result volume signal
+  const parts=[];
+  // CTR (0-100): bad<1 →0-40, 1-2→40-65, 2-3→65-85, >3→85-100
+  let ctrS = m.ctr>=3?Math.min(100,85+(m.ctr-3)*5):m.ctr>=2?65+(m.ctr-2)*20:m.ctr>=1?40+(m.ctr-1)*25:m.ctr*40;
+  parts.push({k:'CTR (interés)',v:Math.round(ctrS)});
+  // CPC: <0.8→90-100, 0.8-1.5→60-90, >1.5→down
+  let cpcS = m.cpc<=0?60:m.cpc<=0.8?100-(m.cpc/0.8)*10:m.cpc<=1.5?90-((m.cpc-0.8)/0.7)*40:Math.max(10,50-(m.cpc-1.5)*20);
+  parts.push({k:'CPC (eficiencia)',v:Math.round(cpcS)});
+  // Frequency: 2-4 ideal
+  let frS = m.frequency<=0?70:m.frequency<2?70+m.frequency*10:m.frequency<=4?100:m.frequency<=6?100-((m.frequency-4)/2)*40:Math.max(10,60-(m.frequency-6)*15);
+  parts.push({k:'Frecuencia',v:Math.round(Math.min(100,frS))});
+  // CPL vs goal
+  const b=BENCH.cpl[product];let cplS=70;
+  if(b&&m.cpl>0){cplS=m.cpl<=b.min?100:m.cpl<=b.max?100-((m.cpl-b.min)/(b.max-b.min))*20:Math.max(10,80-((m.cpl-b.max)/b.max)*100);}
+  else if(m.cpl>0)cplS=75;
+  parts.push({k:'CPL vs meta',v:Math.round(cplS)});
+  // Result generation
+  let resS=m.totalResults>0?Math.min(100,60+Math.log10(m.totalResults+1)*25):(m.spend>0?20:50);
+  parts.push({k:'Generación de leads',v:Math.round(resS)});
+  const total=Math.round(parts.reduce((a,p)=>a+p.v,0)/parts.length);
+  return{total,parts};
+}
+function scoreColor(v){return v>=75?LIME:v>=50?AMBER:RED;}
+function scoreWord(v){return v>=80?'Excelente':v>=65?'Bueno':v>=50?'Aceptable':v>=35?'Necesita mejora':'Crítico';}
+
+// ═══════════════ RENDER ALL ═══════════════
+function renderAll(D){
+  const m=buildMetrics((D.acctIns.data||[])[0],D.campaigns.data);
+  const mPrev=buildMetrics((D.acctInsPrev.data||[])[0]);
+  const main=document.getElementById('main');
+  main.innerHTML=`
+    <div class="section on" id="sec-resumen"></div>
+    <div class="section" id="sec-campanas"></div>
+    <div class="section" id="sec-creativos"></div>
+    <div class="section" id="sec-audiencias"></div>
+    <div class="section" id="sec-tiktok"></div>
+    <div class="section" id="sec-embudo"></div>
+    <div class="section" id="sec-insights"></div>
+    <div class="section" id="sec-recomendaciones"></div>`;
+  const activeTab=document.querySelector('.navtab.on')?.dataset?.s||'resumen';
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-'+activeTab)?.classList.add('on');
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
+  renderResumen(m,mPrev,D);
+  renderCampanas(D);
+  renderCreativos(D);
+  renderAudiencias(D);
+  renderTikTok(D);
+  renderEmbudo(D);
+  const ins=computeInsights(m,mPrev,D);
+  renderInsights(ins,D);
+  renderRecomendaciones(ins,D,m);
+}
+
+// Build daily series from campaign-level daily rows (correct per-objective sum)
+function dailySeries(D){
+  const raw=D.daily.data||[];const byDate={};
+  raw.forEach(r=>{const d=r.date_start;if(!byDate[d])byDate[d]={spend:0,leads:0,clicks:0,impressions:0};
+    byDate[d].spend+=parseFloat(r.spend||0);byDate[d].leads+=rowTotal(r);
+    byDate[d].clicks+=parseInt(r.clicks||0);byDate[d].impressions+=parseInt(r.impressions||0);});
+  const ds=Object.keys(byDate).sort();
+  return{dates:ds,labels:ds.map(d=>d.slice(5)),spend:ds.map(d=>byDate[d].spend),leads:ds.map(d=>byDate[d].leads),
+    clicks:ds.map(d=>byDate[d].clicks),impressions:ds.map(d=>byDate[d].impressions),
+    cpl:ds.map(d=>byDate[d].leads>0?byDate[d].spend/byDate[d].leads:null)};
+}
+
+// ═══════════════ 1 · RESUMEN ═══════════════
+function heroCard(feat,label,val,foot){return`<div class="herocard${feat?' feat':''}"><div class="hc-lbl">${label}</div><div class="hc-val">${val}</div><div class="hc-foot">${foot||''}</div></div>`;}
+function deltaHtml(d,goodWhenUp=true){if(d===null||!isFinite(d))return'';const up=d>=0;const good=goodWhenUp?up:!up;return`<span class="delta ${good?'up':'down'}">${up?'▲':'▼'} ${Math.abs(d).toFixed(1)}%</span>`;}
+function kc(label,val,st,stLabel,delta,goodWhenUp,goal){
+  return`<div class="kc${st?' st-'+st:''}">
+    <div class="kc-lbl">${label}</div><div class="kc-val">${val}</div>
+    <div class="kc-meta">${st?`<span class="pill ${st}"><span class="dot" style="background:${STCOL[st]}"></span>${stLabel||STLBL[st]}</span>`:''}${deltaHtml(delta,goodWhenUp)}</div>
+    ${goal?`<div class="kc-goal">${goal}</div>`:''}</div>`;
+}
+function renderResumen(m,mPrev,D){
+  const sec=document.getElementById('sec-resumen');const cur_=n=>cur(n,D.currency);
+  const dSpend=deltaPct(m.spend,mPrev.spend),dClicks=deltaPct(m.clicks,mPrev.clicks),dCtr=deltaPct(m.ctr,mPrev.ctr),dCpc=deltaPct(m.cpc,mPrev.cpc);
+  const mPrevLeads=buildMetrics((D.acctInsPrev.data||[])[0]); // leads not split prev; approximate
+  const score=computeScore(m);
+  const benchCpl=BENCH.cpl[D.product];const cplGoal=benchCpl?`Meta: ${cur_(benchCpl.min)} – ${cur_(benchCpl.max)}`:'Sin meta definida';
+  const cplSt=m.leads>0?cplStatus(m.cpl,D.product):null;
+  const days=Math.max(1,Math.round((new Date(D.until)-new Date(D.since))/86400000)+1);
+  // Pacing: projected month-end spend & leads if 'this_month'
+  let pacingHtml='';
+  if(preset==='this_month'){
+    const now=new Date(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),dayN=now.getDate();
+    const projSpend=m.spend/dayN*dim, projLeads=Math.round(m.leads/dayN*dim);
+    pacingHtml=`<span style="color:var(--muted)">Proyección fin de mes: <b>${cur_(projSpend)}</b> · <b>${fmt(projLeads)} leads</b></span>`;
+  }
+
+  sec.innerHTML=`
+    <div class="sechead"><h2>📊 Resumen Ejecutivo</h2><span class="cnt">${D.since} → ${D.until} · ${days} día(s)</span></div>
+    <p class="subtitle">Visión consolidada de inversión, alcance y eficiencia, comparada contra el período anterior equivalente. El indicador de salud sintetiza CTR, CPC, frecuencia, CPL y volumen de resultados en una sola puntuación de 0 a 100.</p>
+
+    <div class="hero">
+      ${heroCard(true,'💰 Inversión total',cur_(m.spend),`${deltaHtml(dSpend,false)} <span style="opacity:.85">vs período anterior</span>`)}
+      ${heroCard(false,'🎯 Resultados totales',fmt(m.totalResults),`<span style="color:var(--muted)">${fmt(m.leads)} leads · ${fmt(m.conversations)} conversaciones</span>`)}
+      ${heroCard(false,'🏷 Costo por resultado',m.totalResults>0?cur_(m.costPerResult):'–',cplSt?`<span class="pill ${cplSt}"><span class="dot" style="background:${STCOL[cplSt]}"></span>${STLBL[cplSt]}</span>`:`<span style="color:var(--muted)">CPL ${m.leads>0?cur_(m.cpl):'–'}</span>`)}
+      ${heroCard(false,'👥 Alcance',fmt(m.reach),`<span style="color:var(--muted)">${fmt(m.impressions)} impresiones</span>`)}
+    </div>
+
+    <div class="crow-13">
+      <div class="cc">
+        <div class="cc-ttl">🩺 Índice de salud de la cuenta</div>
+        <div class="cc-desc">Puntuación compuesta basada en estándares saludables de Meta Ads para captación de leads.</div>
+        <div class="scorebox">
+          <div class="scorering"><canvas id="scoreRing"></canvas>
+            <div class="sc-center"><div class="sc-num" style="color:${scoreColor(score.total)}">${score.total}</div><div class="sc-max">/ 100</div><div class="sc-lbl" style="color:${scoreColor(score.total)}">${scoreWord(score.total)}</div></div>
+          </div>
+          <div class="score-bd">
+            ${score.parts.map(p=>`<div class="score-item"><span class="si-lbl">${p.k}</span><div class="score-bar"><div class="score-fill" style="width:${p.v}%;background:${scoreColor(p.v)}"></div></div><span class="si-v" style="color:${scoreColor(p.v)}">${p.v}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="cc">
+        <div class="cc-ttl">⚙ Medidores de eficiencia</div>
+        <div class="cc-desc">Comparación visual contra rangos saludables.</div>
+        <div class="gauges">
+          <div class="gauge"><div class="gauge-wrap"><canvas id="gCtr"></canvas><div class="gauge-val"><div class="gauge-num">${pct(m.ctr,2)}</div></div></div><div class="gauge-lbl">CTR</div><div class="gauge-st" style="color:${STCOL[ctrStatus(m.ctr)]}">${ctrLabel(m.ctr)}</div></div>
+          <div class="gauge"><div class="gauge-wrap"><canvas id="gCpc"></canvas><div class="gauge-val"><div class="gauge-num">${curK(m.cpc,D.currency)}</div></div></div><div class="gauge-lbl">CPC</div><div class="gauge-st" style="color:${STCOL[cpcStatus(m.cpc)]}">${({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(m.cpc)]}</div></div>
+          <div class="gauge"><div class="gauge-wrap"><canvas id="gFreq"></canvas><div class="gauge-val"><div class="gauge-num">${m.frequency.toFixed(1)}</div></div></div><div class="gauge-lbl">Frecuencia</div><div class="gauge-st" style="color:${STCOL[freqStatus(m.frequency)]}">${freqLabel(m.frequency)}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kgrid" style="margin-bottom:16px">
+      ${kc('📋 Clientes potenciales',fmt(m.leads),null,null,null,true,'Formularios de Meta Ads')}
+      ${kc('💬 Conversaciones',fmt(m.conversations),null,null,null,true,'Mensajes iniciados (WSP)')}
+      ${kc('🏷 CPL',m.leads>0?cur_(m.cpl):'–',cplSt,null,null,false,cplGoal)}
+      ${kc('💸 Costo / conversación',m.conversations>0?cur_(m.cpc_conv):'–',null,null,null,false,'Campañas de mensajes')}
+      ${kc('🖱 Clics',fmt(m.clicks),null,null,dClicks,true)}
+      ${kc('💵 CPC',cur_(m.cpc),cpcStatus(m.cpc),({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(m.cpc)],dCpc,false,'Saludable: < S/0.80')}
+      ${kc('📊 CTR',pct(m.ctr),ctrStatus(m.ctr),ctrLabel(m.ctr),dCtr,true,'Excelente: > 3%')}
+      ${kc('📡 CPM',cur_(m.cpm),null,null,null,false,'Costo por mil impresiones')}
+    </div>
+    ${pacingHtml?`<div class="cc" style="margin-bottom:16px;display:flex;align-items:center;gap:10px"><span style="font-size:18px">📅</span> ${pacingHtml}</div>`:''}
+
+    <div class="crow">
+      <div class="cc"><div class="cc-ttl">📈 Inversión vs. Leads por día</div><div class="cc-desc">Relación diaria entre gasto y leads generados.</div><div class="chart-h"><canvas id="chSpendLeads"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">🎯 CPL diario vs. meta</div><div class="cc-desc">Evolución del costo por lead frente al rango objetivo del producto.</div><div class="chart-h"><canvas id="chCpl"></canvas></div></div>
+    </div>
+    <div class="crow3">
+      <div class="cc"><div class="cc-ttl">🥧 Resultados por tipo</div><div class="cc-desc">Leads de formulario vs. conversaciones.</div><div class="chart-h sm"><canvas id="chResultMix"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">💰 Inversión por campaña</div><div class="cc-desc">Top campañas por gasto.</div><div class="chart-h sm"><canvas id="chSpendCamp"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">🔻 Eficiencia del funnel publicitario</div><div class="cc-desc">De impresiones a leads.</div><div class="chart-h sm"><canvas id="chAdFunnel"></canvas></div></div>
+    </div>`;
+
+  drawScoreRing(score.total);
+  drawGauge('gCtr',m.ctr,4,[BENCH.ctr.bad,BENCH.ctr.ok],STCOL[ctrStatus(m.ctr)],false);
+  drawGauge('gCpc',m.cpc,2.5,[BENCH.cpc.good,BENCH.cpc.ok],STCOL[cpcStatus(m.cpc)],true);
+  drawGauge('gFreq',m.frequency,8,[BENCH.freq.ok,BENCH.freq.watch],STCOL[freqStatus(m.frequency)],true,4);
+  drawResumenCharts(D,m);
+}
+
+function drawScoreRing(val){
+  const ctx=document.getElementById('scoreRing');if(!ctx)return;
+  charts.score=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[val,100-val],backgroundColor:[scoreColor(val),hexA('#93a59b',.15)],borderWidth:0}]},
+    options:{cutout:'78%',rotation:-90,circumference:360,plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{animateRotate:true}}});
+}
+function drawGauge(id,val,max,thresholds,color,lowerBetter,ideal){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  const v=Math.min(val,max),rest=max-v;
+  charts[id]=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[v,rest],backgroundColor:[color,hexA('#93a59b',.13)],borderWidth:0}]},
+    options:{cutout:'72%',circumference:270,rotation:225,plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+}
+function drawResumenCharts(D,m){
+  const s=dailySeries(D);const benchCpl=BENCH.cpl[D.product];
+  // spend vs leads
+  const c1=document.getElementById('chSpendLeads');
+  if(c1)charts.sl=new Chart(c1,{data:{labels:s.labels,datasets:[
+    {type:'bar',label:'Inversión',data:s.spend,backgroundColor:hexA(PINK,.75),borderRadius:5,yAxisID:'y',order:2},
+    {type:'line',label:'Leads',data:s.leads,borderColor:DARK,backgroundColor:hexA(LIME,.15),tension:.35,yAxisID:'y2',pointRadius:3,pointBackgroundColor:LIME,borderWidth:2.5,fill:true,order:1}
+  ]},options:baseOpts({dualY:true,curr:D.currency})});
+  // cpl
+  const c2=document.getElementById('chCpl');
+  if(c2){const ds=[{label:'CPL real',data:s.cpl,borderColor:PINK,backgroundColor:hexA(PINK,.10),tension:.35,fill:true,pointRadius:3,pointBackgroundColor:PINK,borderWidth:2.5,spanGaps:true}];
+    if(benchCpl){ds.push({label:'Meta máx.',data:s.labels.map(()=>benchCpl.max),borderColor:AMBER,borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false});ds.push({label:'Meta mín.',data:s.labels.map(()=>benchCpl.min),borderColor:LIME,borderDash:[3,3],pointRadius:0,borderWidth:1.5,fill:false});}
+    charts.cpl=new Chart(c2,{type:'line',data:{labels:s.labels,datasets:ds},options:baseOpts({curr:D.currency,money:true})});}
+  // result mix
+  const c3=document.getElementById('chResultMix');
+  if(c3)charts.rm=new Chart(c3,{type:'doughnut',data:{labels:['Leads formulario','Conversaciones'],datasets:[{data:[m.leads,m.conversations],backgroundColor:[PINK,LIME],borderWidth:0}]},options:{cutout:'62%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:12,color:tickColor()}}}}});
+  // spend by campaign
+  const camps=(D.campaigns.data||[]).map(r=>({n:r.campaign_name||'—',s:parseFloat(r.spend||0)})).filter(c=>c.s>0).sort((a,b)=>b.s-a.s).slice(0,7);
+  const c4=document.getElementById('chSpendCamp');
+  if(c4)charts.sc=new Chart(c4,{type:'bar',data:{labels:camps.map(c=>c.n.length>18?c.n.slice(0,17)+'…':c.n),datasets:[{data:camps.map(c=>c.s),backgroundColor:camps.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>cur(c.parsed.x,D.currency)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>curK(v,D.currency)}},y:{grid:{display:false},ticks:{color:tickColor(),font:{size:10}}}}}});
+  // ad funnel impressions->clicks->leads
+  const c5=document.getElementById('chAdFunnel');
+  if(c5)charts.af=new Chart(c5,{type:'bar',data:{labels:['Impresiones','Clics','Leads'],datasets:[{data:[m.impressions,m.clicks,m.leads],backgroundColor:[hexA(DARK,.85),hexA(PINK,.85),hexA(LIME,.9)],borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x)}}},scales:{x:{type:'logarithmic',grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>fmt(v)}},y:{grid:{display:false},ticks:{color:tickColor(),font:{size:11,weight:'600'}}}}}});
+}
+function baseOpts({dualY,curr,money}={}){
+  const o={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:10,padding:12,color:tickColor()}},
+      tooltip:{callbacks:{label:c=>{const v=c.parsed.y;return c.dataset.label+': '+(money||c.dataset.yAxisID==='y'?cur(v,curr||'PEN'):fmt(v,1));}}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12,color:tickColor()}},
+      y:{grid:{color:gridColor()},ticks:{font:{size:10},color:tickColor(),callback:v=>money?curK(v,curr):curK(v,curr)}}}};
+  if(dualY)o.scales.y2={position:'right',grid:{display:false},ticks:{font:{size:10},color:tickColor()}};
+  if(!money&&!dualY)o.scales.y.ticks.callback=v=>fmt(v);
+  return o;
+}
+
+// ═══════════════ 2 · CAMPAÑAS ═══════════════
+let campSortKey='spend',campSortDir=-1;
+function campRowsData(D){
+  return(D.campaigns.data||[]).map(r=>{
+    const spend=parseFloat(r.spend||0),impressions=parseInt(r.impressions||0),reach=parseInt(r.reach||0),clicks=parseInt(r.clicks||0),
+      ctr=parseFloat(r.ctr||0),cpc=parseFloat(r.cpc||0),frequency=parseFloat(r.frequency||0);
+    const cpa=r.cost_per_action_type||[],conv=isConvCampaign(cpa);
+    const _rr=rowResults(r,true),formLeads=_rr.leads,conversations=_rr.conversations;
+    const results=formLeads+conversations,cpl=formLeads>0?spend/formLeads:0,cpc_conv=conversations>0?spend/conversations:0;
+    let action='opt',actionLabel='Optimizar';
+    if(results>0){const b=BENCH.cpl[D.product];const costOk=conv?true:(!b||cpl<=b.max);
+      if(costOk&&ctr>=BENCH.ctr.ok&&frequency<=BENCH.freq.ok){action='scale';actionLabel='Escalar';}
+      else if(frequency>BENCH.freq.watch||ctr<BENCH.ctr.bad){action='pause';actionLabel='Revisar';}}
+    else if(spend>0){action='pause';actionLabel='Pausar';}
+    return{name:r.campaign_name||'—',spend,impressions,reach,clicks,ctr,cpc,frequency,formLeads,conversations,results,cpl,cpc_conv,conv,action,actionLabel};
+  });
+}
+function renderCampanas(D){
+  const sec=document.getElementById('sec-campanas');const cur_=n=>cur(n,D.currency);
+  let rows=campRowsData(D);
+  const totalSpend=rows.reduce((a,r)=>a+r.spend,0)||1;
+  rows.sort((a,b)=>{const av=a[campSortKey],bv=b[campSortKey];return(av>bv?1:av<bv?-1:0)*campSortDir;});
+  const maxSpend=Math.max(...rows.map(r=>r.spend),1);
+  // CPL by campaign (leads only) for chart
+  const cplCamps=rows.filter(r=>r.formLeads>0).sort((a,b)=>a.cpl-b.cpl).slice(0,10);
+  sec.innerHTML=`
+    <div class="sechead"><h2>🎯 Diagnóstico de Campañas</h2><span class="cnt">${rows.length} campañas</span></div>
+    <p class="subtitle">Los resultados se separan por objetivo: Clientes Potenciales (formulario) y Conversaciones (WhatsApp), tal como Meta Ads Manager. La columna acción sugiere escalar, optimizar o revisar según CPL, CTR y frecuencia.</p>
+    <div class="crow">
+      <div class="cc"><div class="cc-ttl">🏷 CPL por campaña</div><div class="cc-desc">Campañas con leads, ordenadas de menor a mayor costo (verde = dentro de meta).</div><div class="chart-h"><canvas id="chCampCpl"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">🎯 Eficiencia: CTR vs CPL</div><div class="cc-desc">Cada burbuja es una campaña; tamaño = inversión. Ideal: arriba-izquierda (alto CTR, bajo CPL).</div><div class="chart-h"><canvas id="chCampScatter"></canvas></div></div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-h">📋 Detalle por campaña</div>
+      <div class="tscroll"><table>
+        <thead><tr>
+          <th onclick="sortCamp('name')">Campaña</th><th>Objetivo</th>
+          <th onclick="sortCamp('spend')">Inversión</th><th onclick="sortCamp('reach')">Alcance</th>
+          <th onclick="sortCamp('formLeads')">📋 Leads</th><th onclick="sortCamp('conversations')">💬 Conv.</th>
+          <th onclick="sortCamp('cpl')">CPL</th><th onclick="sortCamp('ctr')">CTR</th>
+          <th onclick="sortCamp('frequency')">Frec.</th><th>Acción</th>
+        </tr></thead>
+        <tbody>${rows.length===0?'<tr><td colspan="10" class="empty">No se encontraron campañas con datos en este período.</td></tr>':rows.map(r=>`
+          <tr>
+            <td class="namecell" title="${esc(r.name)}">${esc(r.name)}<div class="minibar" style="margin-top:5px;width:100%"><i style="width:${(r.spend/maxSpend*100).toFixed(0)}%;background:${PINK}"></i></div></td>
+            <td><span class="badge ${r.conv?'a':'g'}">${r.conv?'Conversaciones':'Clientes pot.'}</span></td>
+            <td class="num">${cur_(r.spend)}</td><td class="num">${fmt(r.reach)}</td>
+            <td class="num"><b>${r.formLeads>0?fmt(r.formLeads):'–'}</b></td><td class="num"><b>${r.conversations>0?fmt(r.conversations):'–'}</b></td>
+            <td class="num">${r.formLeads>0?cur_(r.cpl):'–'}</td>
+            <td class="num"><span style="color:${STCOL[ctrStatus(r.ctr)]}">${pct(r.ctr)}</span></td>
+            <td class="num"><span style="color:${STCOL[freqStatus(r.frequency)]}">${r.frequency.toFixed(2)}</span></td>
+            <td><span class="actiontag ${r.action}">${r.actionLabel}</span></td>
+          </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  // CPL bar
+  const c1=document.getElementById('chCampCpl');const b=BENCH.cpl[D.product];
+  if(c1&&cplCamps.length)charts.ccpl=new Chart(c1,{type:'bar',data:{labels:cplCamps.map(c=>c.name.length>20?c.name.slice(0,19)+'…':c.name),datasets:[{data:cplCamps.map(c=>c.cpl),backgroundColor:cplCamps.map(c=>STCOL[cplStatus(c.cpl,D.product)]),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'CPL: '+cur(c.parsed.x,D.currency)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>curK(v,D.currency)}},y:{grid:{display:false},ticks:{color:tickColor(),font:{size:10}}}}}});
+  else if(c1)c1.parentElement.innerHTML='<div class="empty">Sin campañas con leads para graficar.</div>';
+  // scatter CTR vs CPL
+  const sc=rows.filter(r=>r.formLeads>0&&r.ctr>0);
+  const c2=document.getElementById('chCampScatter');
+  if(c2&&sc.length)charts.csc=new Chart(c2,{type:'bubble',data:{datasets:sc.map((r,i)=>({label:r.name,data:[{x:r.ctr,y:r.cpl,r:Math.max(6,Math.sqrt(r.spend)/3)}],backgroundColor:hexA(PALETTE[i%PALETTE.length],.6),borderColor:PALETTE[i%PALETTE.length],borderWidth:1}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': CTR '+pct(c.parsed.x)+', CPL '+cur(c.parsed.y,D.currency)}}},scales:{x:{title:{display:true,text:'CTR %',color:tickColor(),font:{size:10}},grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10}}},y:{title:{display:true,text:'CPL',color:tickColor(),font:{size:10}},grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>curK(v,D.currency)}}}}});
+  else if(c2)c2.parentElement.innerHTML='<div class="empty">Sin datos suficientes para el gráfico de dispersión.</div>';
+}
+function sortCamp(k){if(campSortKey===k)campSortDir*=-1;else{campSortKey=k;campSortDir=-1;}if(LAST_DATA)renderCampanas(LAST_DATA);}
+
+// ═══════════════ 3 · CREATIVOS ═══════════════
+function renderCreativos(D){
+  const sec=document.getElementById('sec-creativos');
+  const items=(D.adsWithIns||[]).map(ad=>{const ins=ad._ins||{};const spend=parseFloat(ins.spend||0),impressions=parseInt(ins.impressions||0),clicks=parseInt(ins.clicks||0),ctr=parseFloat(ins.ctr||0),cpc=parseFloat(ins.cpc||0),freq=parseFloat(ins.frequency||0);
+    const leads=rowTotal(ins),cpl=leads>0?spend/leads:0;
+    return{id:ad.id,name:ad.name||('#'+ad.id),status:ad.status,thumb:ad.creative?.thumbnail_url||ad.creative?.image_url||'',spend,impressions,clicks,ctr,cpc,freq,leads,cpl};
+  }).filter(a=>a.spend>0||a.impressions>0);
+  const byPerf=[...items].sort((a,b)=>b.leads-a.leads||b.ctr-a.ctr);
+  const top=byPerf.slice(0,4),bottom=[...items].filter(a=>a.spend>0).sort((a,b)=>a.leads-b.leads||a.ctr-b.ctr).slice(0,4);
+  function card(ad,rank){
+    const bc=ad.status==='ACTIVE'?'ba':ad.status==='PAUSED'?'bp':'bo';const sl=ad.status==='ACTIVE'?'Activo':ad.status==='PAUSED'?'Pausado':ad.status||'';
+    return`<div class="acard ${rank&&rank<=3?'top':''}">${rank?`<div class="rankbadge">${rank<=3?['🥇','🥈','🥉'][rank-1]:rank}</div>`:''}
+      <div class="athumb">${ad.thumb?`<img src="${ad.thumb}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'aph\\'>🖼<span>Sin imagen</span></div>'">`:`<div class="aph">🖼<span>Sin imagen</span></div>`}</div>
+      <div class="abody"><span class="bsm ${bc}">${sl}</span>
+        <div class="aname" title="${esc(ad.name)}">${esc(ad.name)}</div>
+        <div class="astats">
+          <div><div class="asl">Gasto</div><div class="asv">${curK(ad.spend,D.currency)}</div></div>
+          <div><div class="asl">Leads</div><div class="asv">${fmt(ad.leads)}</div></div>
+          <div><div class="asl">CTR</div><div class="asv" style="color:${STCOL[ctrStatus(ad.ctr)]}">${pct(ad.ctr,1)}</div></div>
+          <div><div class="asl">CPL</div><div class="asv">${ad.leads>0?curK(ad.cpl,D.currency):'–'}</div></div>
+        </div></div></div>`;
+  }
+  sec.innerHTML=`
+    <div class="sechead"><h2>🖼 Ranking de Creativos</h2><span class="cnt">${items.length} anuncios</span></div>
+    <p class="subtitle">Comparativa de anuncios activos y pausados según leads generados y CTR. Identifica qué creativos replicar y cuáles renovar.</p>
+    <div class="minihead">🏆 Mejores creativos</div>
+    <div class="agrid">${top.length?top.map((a,i)=>card(a,i+1)).join(''):'<div class="empty">Sin datos suficientes en este período.</div>'}</div>
+    <div class="minihead">⚠ Creativos de bajo rendimiento</div>
+    <div class="agrid">${bottom.length?bottom.map(a=>card(a)).join(''):'<div class="empty">Sin datos suficientes en este período.</div>'}</div>
+    <div class="minihead">📋 Todos los anuncios con actividad</div>
+    <div class="agrid">${items.length?items.map(a=>card(a)).join(''):'<div class="empty">No se encontraron anuncios con actividad en este período.</div>'}</div>`;
+}
+
+// ═══════════════ 4 · AUDIENCIAS ═══════════════
+function renderAudiencias(D){
+  const sec=document.getElementById('sec-audiencias');const cur_=n=>cur(n,D.currency);
+  function proc(data,keyFn){const map={};(data||[]).forEach(r=>{const k=keyFn(r);if(!map[k])map[k]={spend:0,clicks:0,leads:0};map[k].spend+=parseFloat(r.spend||0);map[k].clicks+=parseInt(r.clicks||0);map[k].leads+=rowTotal(r);});
+    return Object.entries(map).map(([k,v])=>({label:k,...v,cpl:v.leads>0?v.spend/v.leads:0,cpc:v.clicks>0?v.spend/v.clicks:0})).sort((a,b)=>b.spend-a.spend);}
+  const genderMap={male:'Hombre',female:'Mujer',unknown:'Otro'};
+  const ag=(D.ageGender.data||[]);
+  const ageGenderRows=proc(ag,r=>`${r.age||'—'} · ${genderMap[r.gender]||'Otro'}`);
+  const regionRows=proc(D.region.data,r=>r.region||'—');
+  const platMap={facebook:'Facebook',instagram:'Instagram',audience_network:'Audience Network',messenger:'Messenger'};
+  const platformRows=proc(D.platform.data,r=>platMap[r.publisher_platform]||r.publisher_platform||'—');
+  // Heatmap data: ages x gender by leads
+  const ages=[...new Set(ag.map(r=>r.age))].filter(Boolean).sort();
+  const genders=['male','female'];
+  const heat={};let maxHeat=0;
+  ag.forEach(r=>{const k=r.age+'|'+r.gender;heat[k]=(heat[k]||0)+rowTotal(r);maxHeat=Math.max(maxHeat,heat[k]);});
+  function heatBg(v){if(maxHeat===0)return'var(--bg2)';const t=v/maxHeat;return hexA(LIME,.12+t*.78);}
+  const best=[...regionRows].filter(r=>r.leads>0).sort((a,b)=>a.cpl-b.cpl)[0];
+  const worst=[...regionRows].filter(r=>r.leads>0).sort((a,b)=>b.cpl-a.cpl)[0];
+  function trows(rows){if(!rows.length)return'<tr><td colspan="5" class="empty">Sin datos.</td></tr>';const mx=Math.max(...rows.map(r=>r.spend),1);
+    return rows.map(r=>`<tr><td class="namecell">${esc(r.label)}</td><td class="num">${cur_(r.spend)}<div class="minibar" style="margin-left:8px;width:50px"><i style="width:${(r.spend/mx*100).toFixed(0)}%;background:${LIME}"></i></div></td><td class="num">${fmt(r.leads)}</td><td class="num">${r.leads>0?cur_(r.cpl):'–'}</td><td class="num">${cur_(r.cpc)}</td></tr>`).join('');}
+  sec.innerHTML=`
+    <div class="sechead"><h2>👥 Análisis de Audiencias</h2><span class="cnt">Edad · género · ubicación · plataforma</span></div>
+    <p class="subtitle">Rendimiento segmentado para identificar los públicos más y menos rentables y reasignar presupuesto con criterio.</p>
+    ${(best||worst)?`<div class="hero" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+      ${best?heroCard(false,'🏆 Región más rentable',esc(best.label),`<span class="pill g"><span class="dot" style="background:${LIME}"></span>CPL ${cur_(best.cpl)}</span>`):''}
+      ${worst?heroCard(false,'⚠ Región menos rentable',esc(worst.label),`<span class="pill r"><span class="dot" style="background:${RED}"></span>CPL ${cur_(worst.cpl)}</span>`):''}
+    </div>`:''}
+    <div class="crow">
+      <div class="cc"><div class="cc-ttl">📱 Inversión por plataforma</div><div class="cc-desc">Distribución del gasto entre Facebook, Instagram y otras.</div><div class="chart-h sm"><canvas id="chPlatform"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">🎂 Leads por edad y género</div><div class="cc-desc">Volumen de leads por grupo etario.</div><div class="chart-h sm"><canvas id="chAgeGender"></canvas></div></div>
+    </div>
+    ${ages.length?`<div class="cc" style="margin-bottom:16px"><div class="cc-ttl">🔥 Mapa de calor — Leads por edad × género</div><div class="cc-desc">Cuanto más intenso el verde, más leads genera ese segmento.</div>
+      <div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:4px"><thead><tr><th style="background:transparent;border:none"></th>${genders.map(g=>`<th style="background:transparent;border:none;text-align:center">${genderMap[g]}</th>`).join('')}</tr></thead>
+      <tbody>${ages.map(a=>`<tr><td style="font-weight:700;border:none">${a}</td>${genders.map(g=>{const v=heat[a+'|'+g]||0;return`<td style="border:none;padding:0"><div class="heatcell" style="background:${heatBg(v)}">${v||'·'}</div></td>`;}).join('')}</tr>`).join('')}</tbody></table></div></div>`:''}
+    <div class="crow">
+      <div class="tcard"><div class="tcard-h">🎂 Edad y Género</div><div class="tscroll"><table><thead><tr><th>Segmento</th><th>Inversión</th><th>Leads</th><th>CPL</th><th>CPC</th></tr></thead><tbody>${trows(ageGenderRows)}</tbody></table></div></div>
+      <div class="tcard"><div class="tcard-h">📱 Plataforma</div><div class="tscroll"><table><thead><tr><th>Plataforma</th><th>Inversión</th><th>Leads</th><th>CPL</th><th>CPC</th></tr></thead><tbody>${trows(platformRows)}</tbody></table></div></div>
+    </div>
+    <div class="tcard"><div class="tcard-h">📍 Ubicación (Región)</div><div class="tscroll"><table><thead><tr><th>Región</th><th>Inversión</th><th>Leads</th><th>CPL</th><th>CPC</th></tr></thead><tbody>${trows(regionRows)}</tbody></table></div></div>`;
+  // platform donut
+  const pf=platformRows.filter(r=>r.spend>0);
+  const c1=document.getElementById('chPlatform');
+  if(c1&&pf.length)charts.pf=new Chart(c1,{type:'doughnut',data:{labels:pf.map(p=>p.label),datasets:[{data:pf.map(p=>p.spend),backgroundColor:pf.map((_,i)=>PALETTE[i%PALETTE.length]),borderWidth:0}]},options:{cutout:'58%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:10,color:tickColor()}},tooltip:{callbacks:{label:c=>c.label+': '+cur(c.parsed,D.currency)}}}}});
+  else if(c1)c1.parentElement.innerHTML='<div class="empty">Sin datos de plataforma.</div>';
+  // age/gender grouped bar
+  const c2=document.getElementById('chAgeGender');
+  if(c2&&ages.length){const leadsBy=g=>ages.map(a=>{const r=ag.find(x=>x.age===a&&x.gender===g);return r?rowTotal(r):0;});
+    charts.agc=new Chart(c2,{type:'bar',data:{labels:ages,datasets:[{label:'Hombre',data:leadsBy('male'),backgroundColor:hexA(DARK,.8),borderRadius:4},{label:'Mujer',data:leadsBy('female'),backgroundColor:hexA(PINK,.8),borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,color:tickColor()}}},scales:{x:{grid:{display:false},ticks:{color:tickColor(),font:{size:10}}},y:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10}}}}}});}
+  else if(c2)c2.parentElement.innerHTML='<div class="empty">Sin datos de edad/género.</div>';
+}
+
+// ═══════════════ 5 · EMBUDO ═══════════════
+function renderEmbudo(D){
+  const sec=document.getElementById('sec-embudo');if(!sec)return;const cur_=n=>cur(n,D.currency);
+  if(!kommoReady()){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div>
+    <div class="acard-rec"><h3>🔗 Conecta tu CRM Kommo</h3>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">El embudo comercial (Lead → Contactado → Prospecto → Meet → Separación → Venta) y el CAC se alimentan en vivo desde tu pipeline de Kommo. Para activarlo:</p>
+    <ul style="font-size:13px;line-height:1.9;padding-left:20px">
+      <li>Despliega el <b>Cloudflare Worker</b> (<code>kommo-tiktok-proxy-worker.js</code>) y pega su URL en <code>PROXY_URL</code>.</li>
+      <li>Configura en el Worker: <code>KOMMO_SUBDOMAIN</code> y <code>KOMMO_TOKEN</code> (token de larga duración de una integración privada de Kommo).</li>
+      <li>Pon tu subdominio en <code>KOMMO_SUBDOMAIN</code> y ajusta <code>KOMMO_STAGE_MAP</code> con los nombres exactos de tus estados.</li>
+    </ul></div>`;return;}
+  if(KOMMO_ERROR){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div><div class="erbox">⚠ No se pudo conectar con Kommo: ${esc(KOMMO_ERROR)}<br><small>Verifica PROXY_URL, el token en el Worker y el subdominio.</small></div>`;return;}
+  const rows=KOMMO_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
+  if(!rows.length){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div><div class="empty">No hay leads en Kommo para este período (${D.since} → ${D.until}).</div>`;return;}
+  const stageIdx=s=>FUNNEL_STAGES.indexOf(s);const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);let perdidos=0;
+  rows.forEach(r=>{if(r.etapa==='Perdido'){perdidos++;return;}const idx=stageIdx(r.etapa);if(idx===-1)return;for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
+  const maxC=counts['Lead']||1;const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,'#e08a07',GREEN];
+  const bars=FUNNEL_STAGES.map((s,i)=>{const c=counts[s];const w=Math.max(6,(c/maxC)*100);const prev=i>0?counts[FUNNEL_STAGES[i-1]]:c;const conv=i>0&&prev>0?(c/prev)*100:null;return{stage:s,count:c,width:w,conv};});
+  const checks=[];for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const fb=bars[i];const prev=counts[FUNNEL_STAGES[i-1]];if(bench&&fb.conv!==null&&prev>0)checks.push({label:bench.label,value:fb.conv,ok:fb.conv>=bench.min,note:bench.note,min:bench.min});}
+  // per campaign
+  const campSpend={};(D.campaigns.data||[]).forEach(c=>{const n=(c.campaign_name||'').trim().toLowerCase();campSpend[n]=(campSpend[n]||0)+parseFloat(c.spend||0);});
+  const byCamp={};rows.forEach(r=>{const k=(r.campana||'Sin campaña').trim();if(!byCamp[k])byCamp[k]={leads:0,contactado:0,prospecto:0,meet:0,separacion:0,venta:0,perdido:0};const idx=stageIdx(r.etapa);if(r.etapa==='Perdido'){byCamp[k].perdido++;return;}if(idx>=0)byCamp[k].leads++;if(idx>=1)byCamp[k].contactado++;if(idx>=2)byCamp[k].prospecto++;if(idx>=3)byCamp[k].meet++;if(idx>=4)byCamp[k].separacion++;if(idx>=5)byCamp[k].venta++;});
+  const campRows=Object.entries(byCamp).map(([name,v])=>{const sp=campSpend[name.toLowerCase()]||0;return{name,...v,spend:sp,cac:v.venta>0?sp/v.venta:0};}).sort((a,b)=>b.venta-a.venta);
+  const totalVentas=counts['Venta']||0,totalLeads=counts['Lead']||0,convGlobal=totalLeads>0?(totalVentas/totalLeads*100):0;
+  sec.innerHTML=`
+    <div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2><span class="cnt"><span class="live-dot" style="background:#1d9e75"></span>${rows.length} leads · Fuente: Kommo (en vivo)</span></div>
+    <p class="subtitle">Progreso real de Lead a Venta tomado directamente del pipeline de Kommo, cruzado con la inversión publicitaria de Meta para calcular el CAC (Costo de Adquisición de Cliente).</p>
+    <div class="hero" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      ${heroCard(true,'🎯 Leads en el período',fmt(totalLeads),'')}
+      ${heroCard(false,'🏆 Ventas cerradas',fmt(totalVentas),`<span style="color:var(--muted)">Conversión global ${pct(convGlobal,1)}</span>`)}
+      ${heroCard(false,'❌ Perdidos',fmt(perdidos),'')}
+      ${heroCard(false,'💵 CAC promedio',totalVentas>0?cur_((campRows.reduce((a,c)=>a+c.spend,0))/totalVentas):'–','')}
+    </div>
+    <div class="crow">
+      <div class="cc"><div class="cc-ttl">🔻 Embudo de conversión</div><div class="cc-desc">Volumen de leads en cada etapa y % de avance desde la anterior.</div>
+        <div class="funnelviz">${bars.map((fb,i)=>`<div class="fbar-row"><div class="fbar-top"><span class="fbar-stage">${fb.stage}</span><span style="color:var(--muted)">${fb.count}${fb.conv!==null?` · <b style="color:${fb.conv>=50?GREEN:AMBER}">${fb.conv.toFixed(0)}%</b>`:''}</span></div><div class="fbar-track"><div class="fbar-fill" style="width:${fb.width}%;background:${stageColors[i]}">${fb.count>0?fb.count:''}</div></div></div>`).join('')}${perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:var(--red)">❌ Perdidos en el período: <b>${perdidos}</b></div>`:''}</div>
+      </div>
+      <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Tasa de conversión de cada etapa vs. meta saludable.</div>
+        ${checks.length?checks.map(c=>`<div class="conv-item"><div class="conv-top"><span style="font-size:12.5px;font-weight:600">${c.label}</span><span class="badge ${c.ok?'g':'r'}">${c.value.toFixed(0)}% ${c.ok?'✓':'✗'}</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">Meta: ≥ ${c.min}% · ${c.note}</div></div>`).join(''):'<div class="empty">Aún no hay suficientes etapas con datos.</div>'}
+      </div>
+    </div>
+    <div class="tcard"><div class="tcard-h">🎯 Embudo por Campaña (con CAC real)</div><div class="tscroll"><table>
+      <thead><tr><th>Campaña</th><th>Inversión</th><th>Leads</th><th>Contactado</th><th>Prospecto</th><th>Meet</th><th>Separación</th><th>Venta</th><th>CAC</th></tr></thead>
+      <tbody>${campRows.length===0?'<tr><td colspan="9" class="empty">Sin datos de campaña en la hoja.</td></tr>':campRows.map(c=>`<tr><td class="namecell" title="${esc(c.name)}">${esc(c.name)}</td><td class="num">${c.spend>0?cur_(c.spend):'–'}</td><td class="num">${c.leads}</td><td class="num">${c.contactado}</td><td class="num">${c.prospecto}</td><td class="num">${c.meet}</td><td class="num">${c.separacion}</td><td class="num"><b>${c.venta}</b></td><td class="num">${c.cac>0?cur_(c.cac):'–'}</td></tr>`).join('')}</tbody>
+    </table></div></div>`;
+}
+
+// ═══════════════ 6 · INSIGHTS ═══════════════
+function computeInsights(m,mPrev,D){
+  const insights=[],alerts=[];const cur_=n=>cur(n,D.currency);const benchCpl=BENCH.cpl[D.product];
+  if(mPrev.cpl>0&&m.cpl>0){const ch=((m.cpl-mPrev.cpl)/mPrev.cpl)*100;
+    if(ch>20)alerts.push({text:`El CPL aumentó <b>${ch.toFixed(0)}%</b> vs. el período anterior (de ${cur_(mPrev.cpl)} a ${cur_(m.cpl)}).${m.frequency>BENCH.freq.watch?' Coincide con frecuencia > 6, señal de fatiga publicitaria — renovar creativos.':''}`});
+    else if(ch<-15)insights.push({text:`El CPL mejoró <b>${Math.abs(ch).toFixed(0)}%</b> vs. el período anterior (de ${cur_(mPrev.cpl)} a ${cur_(m.cpl)}).`});}
+  if(m.ctr<BENCH.ctr.bad)alerts.push({text:`CTR de <b>${pct(m.ctr)}</b>, por debajo del umbral saludable (1%). Los anuncios no generan suficiente interés — revisar creativos y segmentación.`});
+  else if(m.ctr>=BENCH.ctr.good)insights.push({text:`CTR de <b>${pct(m.ctr)}</b> en rango excelente (> 3%): creativos muy relevantes para la audiencia.`});
+  if(m.frequency>BENCH.freq.watch)alerts.push({text:`Frecuencia promedio <b>${m.frequency.toFixed(1)}</b> (> 6): fatiga publicitaria. Ampliar audiencia o renovar creativos.`});
+  else if(m.frequency>BENCH.freq.ok)insights.push({type:'warn',text:`Frecuencia (${m.frequency.toFixed(1)}) en zona de vigilancia (4–6). Monitorear de cerca.`});
+  if(m.cpc>BENCH.cpc.ok)alerts.push({text:`CPC promedio <b>${cur_(m.cpc)}</b>, por encima del umbral saludable (S/1.50): encarece la adquisición de tráfico.`});
+  if(benchCpl&&m.leads>0){if(m.cpl>benchCpl.max*1.2)alerts.push({text:`CPL actual (${cur_(m.cpl)}) supera la meta de ${D.product==='palta'?'Palta':'Pitahaya'} (${cur_(benchCpl.min)}–${cur_(benchCpl.max)}) en más de 20%.`});
+    else if(m.cpl<=benchCpl.max)insights.push({text:`CPL (${cur_(m.cpl)}) dentro de la meta saludable para ${D.product==='palta'?'Palta':'Pitahaya'} (${cur_(benchCpl.min)}–${cur_(benchCpl.max)}).`});}
+  const camps=campRowsData(D).filter(c=>c.spend>0);
+  if(camps.length>1){const best=[...camps].filter(c=>c.formLeads>0).sort((a,b)=>a.cpl-b.cpl)[0];
+    if(best)insights.push({text:`La campaña <b>"${esc(best.name)}"</b> tiene el mejor CPL (${cur_(best.cpl)}) — candidata a recibir más presupuesto.`});
+    const noLead=camps.filter(c=>c.results===0&&c.spend>50);
+    if(noLead.length)alerts.push({text:`${noLead.length} campaña(s) con inversión pero <b>cero resultados</b>: ${noLead.map(c=>'"'+esc(c.name)+'"').join(', ')}.`});}
+  const items=(D.adsWithIns||[]).map(ad=>{const ins=ad._ins||{};return{name:ad.name,spend:parseFloat(ins.spend||0),leads:rowTotal(ins),ctr:parseFloat(ins.ctr||0)};}).filter(a=>a.spend>0);
+  if(items.length>1){const top=[...items].sort((a,b)=>b.leads-a.leads)[0];if(top&&top.leads>0)insights.push({text:`El creativo <b>"${esc(top.name)}"</b> generó más leads (${fmt(top.leads)}) — replicar su formato y estilo.`});}
+  // funnel insights (Kommo)
+  if(kommoReady()&&KOMMO_ROWS.length){const rws=KOMMO_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
+    const sIdx=s=>FUNNEL_STAGES.indexOf(s);const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);
+    rws.forEach(r=>{const idx=sIdx(r.etapa);if(idx===-1)return;for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
+    for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const prev=counts[FUNNEL_STAGES[i-1]],curr=counts[FUNNEL_STAGES[i]];if(!bench||prev===0)continue;const conv=(curr/prev)*100;
+      if(conv<bench.min){let sg='';if(key==='Lead->Contactado')sg='Mejorar tiempos de respuesta — primer contacto en menos de 15 minutos.';else if(key==='Contactado->Prospecto')sg='Reforzar guion de calificación.';else if(key==='Prospecto->Meet')sg='Revisar oferta de horarios y seguimiento.';else if(key==='Meet->Separacion')sg='Revisar discurso de cierre y objeciones.';else sg='Seguimiento más cercano hasta formalizar.';
+        alerts.push({text:`Conversión de <b>${bench.label}</b> es solo <b>${conv.toFixed(0)}%</b>, bajo la meta (≥${bench.min}%). ${sg}`});}
+      else insights.push({text:`<b>${bench.label}</b> en ${conv.toFixed(0)}%, sobre la meta de ${bench.min}%.`});}}
+  return{insights,alerts};
+}
+function renderInsights(data,D){
+  const sec=document.getElementById('sec-insights');const{insights,alerts}=data;
+  sec.innerHTML=`
+    <div class="sechead"><h2>💡 Insights & Alertas</h2><span class="cnt">Generados automáticamente</span></div>
+    <p class="subtitle">Análisis automático comparando el desempeño actual contra el período anterior y contra valores de referencia saludables.</p>
+    <div class="minihead">🚨 Alertas (requieren atención)</div>
+    ${alerts.length?alerts.map(a=>`<div class="icard bad"><span class="ico">⚠</span><div>${a.text}</div></div>`).join(''):'<div class="icard good"><span class="ico">✓</span><div>No se detectaron alertas críticas en este período.</div></div>'}
+    <div class="minihead">✨ Insights positivos</div>
+    ${insights.length?insights.map(i=>`<div class="icard ${i.type==='warn'?'warn':'good'}"><span class="ico">${i.type==='warn'?'⚠':'✓'}</span><div>${i.text}</div></div>`).join(''):'<div class="icard"><span class="ico">ℹ</span><div>Sin insights destacados — datos insuficientes o resultados estables.</div></div>'}`;
+}
+
+// ═══════════════ 7 · RECOMENDACIONES ═══════════════
+function renderRecomendaciones(data,D,m){
+  const sec=document.getElementById('sec-recomendaciones');const cur_=n=>cur(n,D.currency);
+  const camps=campRowsData(D).filter(c=>c.spend>0);const b=BENCH.cpl[D.product];
+  const toScale=camps.filter(c=>c.formLeads>0&&(!b||c.cpl<=b.max)&&c.ctr>=BENCH.ctr.ok&&c.frequency<=BENCH.freq.ok).sort((a,b)=>a.cpl-b.cpl).slice(0,5);
+  const toPause=camps.filter(c=>(c.results===0&&c.spend>30)||c.frequency>BENCH.freq.watch||c.ctr<BENCH.ctr.bad).slice(0,5);
+  const toOpt=camps.filter(c=>!toScale.includes(c)&&!toPause.includes(c)).slice(0,5);
+  const items=(D.adsWithIns||[]).map(ad=>{const ins=ad._ins||{};return{name:ad.name,spend:parseFloat(ins.spend||0),leads:rowTotal(ins),ctr:parseFloat(ins.ctr||0)};}).filter(a=>a.spend>0);
+  const bestCre=[...items].sort((a,b)=>b.leads-a.leads).slice(0,3);
+  const regMap={};(D.region.data||[]).forEach(r=>{const k=r.region||'—';if(!regMap[k])regMap[k]={spend:0,leads:0};regMap[k].spend+=parseFloat(r.spend||0);regMap[k].leads+=rowTotal(r);});
+  const regs=Object.entries(regMap).map(([k,v])=>({label:k,...v,cpl:v.leads>0?v.spend/v.leads:Infinity}));
+  const bestReg=[...regs].filter(r=>r.leads>0).sort((a,b)=>a.cpl-b.cpl).slice(0,3);
+  const worstReg=[...regs].filter(r=>r.spend>30).sort((a,b)=>b.cpl-a.cpl).slice(0,3);
+  const findings=[];
+  if(data.alerts.length)findings.push(data.alerts[0].text.replace(/<\/?b>/g,''));
+  if(toScale.length)findings.push(`${toScale.length} campaña(s) listas para escalar, lideradas por "${toScale[0]?.name||''}".`);
+  if(toPause.length)findings.push(`${toPause.length} campaña(s) deberían revisarse o pausarse por bajo rendimiento.`);
+  if(bestCre.length&&bestCre[0].leads>0)findings.push(`El creativo "${bestCre[0]?.name||''}" es el de mejor desempeño — replicarlo.`);
+  if(bestReg.length)findings.push(`La región "${bestReg[0]?.label||''}" tiene el mejor costo por lead.`);
+  sec.innerHTML=`
+    <div class="sechead"><h2>✅ Plan de Acción</h2><span class="cnt">Priorizado por impacto</span></div>
+    <p class="subtitle">Recomendaciones accionables según reglas de negocio y estándares saludables, ordenadas por impacto esperado en el rendimiento.</p>
+    <div class="acard-rec hl" style="margin-bottom:16px"><h3>🏁 Top hallazgos de la semana</h3><ul>${findings.length?findings.slice(0,5).map(f=>`<li>${f}</li>`).join(''):'<li>Datos insuficientes para generar hallazgos.</li>'}</ul></div>
+    <div class="recgrid">
+      <div class="acard-rec"><h3>🚀 Escalar presupuesto</h3><ul>${toScale.length?toScale.map(c=>`<li><b>${esc(c.name)}</b> — CPL ${cur_(c.cpl)}, CTR ${pct(c.ctr)}</li>`).join(''):'<li>Ninguna campaña cumple aún todos los criterios.</li>'}</ul></div>
+      <div class="acard-rec"><h3>🛠 Optimizar</h3><ul>${toOpt.length?toOpt.map(c=>`<li><b>${esc(c.name)}</b> — CPL ${c.formLeads>0?cur_(c.cpl):'sin leads'}, Frec. ${c.frequency.toFixed(1)}</li>`).join(''):'<li>Sin campañas pendientes.</li>'}</ul></div>
+      <div class="acard-rec"><h3>⏸ Revisar / Pausar</h3><ul>${toPause.length?toPause.map(c=>`<li><b>${esc(c.name)}</b> — ${c.results===0?'sin resultados':'frecuencia/CTR fuera de rango'}</li>`).join(''):'<li>Ninguna campaña requiere pausa inmediata.</li>'}</ul></div>
+    </div>
+    <div class="recgrid">
+      <div class="acard-rec"><h3>🎨 Creativos a replicar</h3><ul>${bestCre.length&&bestCre[0].leads>0?bestCre.map(c=>`<li><b>${esc(c.name)}</b> — ${fmt(c.leads)} leads, CTR ${pct(c.ctr)}</li>`).join(''):'<li>Sin datos suficientes de creativos.</li>'}</ul></div>
+      <div class="acard-rec"><h3>📍 Audiencias a priorizar</h3><ul>${bestReg.length?bestReg.map(r=>`<li><b>Atacar:</b> ${esc(r.label)} — CPL ${cur_(r.cpl)}</li>`).join(''):''}${worstReg.length?worstReg.map(r=>`<li><b>Revisar:</b> ${esc(r.label)} — CPL ${r.leads>0?cur_(r.cpl):'sin leads, con gasto'}</li>`).join(''):''}${(!bestReg.length&&!worstReg.length)?'<li>Sin datos suficientes.</li>':''}</ul></div>
+    </div>`;
+}
+
+// ═══════════════ TIKTOK ADS ═══════════════
+function ttReady(){return !!(PROXY_URL && TIKTOK_ADVERTISER_ID);}
+function ttNum(o,k){return parseFloat((o&&o[k])!=null?o[k]:0)||0;}
+async function ttapi(endpoint,params={}){
+  if(!PROXY_URL)throw new Error('Falta configurar PROXY_URL (Cloudflare Worker).');
+  const u=new URL(PROXY_URL.replace(/\/$/,'')+'/tiktok/'+endpoint);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
+  const r=await fetch(u,{cache:'no-store'});
+  const d=await r.json().catch(()=>({}));
+  if(d&&d.error)throw new Error('TikTok: '+(d.detail||d.error));
+  if(d&&d.code!==undefined&&d.code!==0)throw new Error('TikTok: '+(d.message||('código '+d.code)));
+  return (d&&d.data)?d.data:d;
+}
+async function fetchTikTok(since,until){
+  if(!ttReady())return null;
+  const baseM=["spend","impressions","clicks","ctr","cpc","cpm","reach","conversion","cost_per_conversion"];
+  const common={advertiser_id:TIKTOK_ADVERTISER_ID,report_type:'BASIC',start_date:since,end_date:until,page_size:'100'};
+  const [acct,camp,ad,daily]=await Promise.all([
+    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_ADVERTISER',dimensions:["advertiser_id"],metrics:baseM}),
+    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_CAMPAIGN',dimensions:["campaign_id"],metrics:["campaign_name",...baseM]}).catch(()=>({list:[]})),
+    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_AD',dimensions:["ad_id"],metrics:["ad_name",...baseM]}).catch(()=>({list:[]})),
+    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_ADVERTISER',dimensions:["advertiser_id","stat_time_day"],metrics:["spend","impressions","clicks","conversion"]}).catch(()=>({list:[]}))
+  ]);
+  return {acct:(acct.list||[]),camp:(camp.list||[]),ad:(ad.list||[]),daily:(daily.list||[])};
+}
+function renderTikTok(D){
+  const sec=document.getElementById('sec-tiktok');if(!sec)return;
+  const TC=TIKTOK_CURRENCY,ttc=n=>cur(n,TC);
+  if(!ttReady()){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2></div>
+    <div class="acard-rec"><h3>🔗 Conecta TikTok Ads</h3>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Esta sección muestra en vivo los KPIs, campañas y creativos de TikTok Ads, con la misma estética que Meta. Para activarla:</p>
+    <ul style="font-size:13px;line-height:1.9;padding-left:20px">
+      <li>Despliega el <b>Cloudflare Worker</b> y pega su URL en <code>PROXY_URL</code>.</li>
+      <li>Configura <code>TIKTOK_TOKEN</code> (access_token de TikTok for Business) dentro del Worker.</li>
+      <li>Pon tu <code>TIKTOK_ADVERTISER_ID</code> y la moneda en <code>TIKTOK_CURRENCY</code>.</li>
+    </ul></div>`;return;}
+  if(TT_ERROR){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2></div><div class="erbox">⚠ No se pudo conectar con TikTok: ${esc(TT_ERROR)}<br><small>Verifica PROXY_URL, el TIKTOK_TOKEN en el Worker y el advertiser_id.</small></div>`;return;}
+  if(!TT_DATA||!(TT_DATA.acct&&TT_DATA.acct.length)){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2><span class="cnt">${D.since} → ${D.until}</span></div><div class="empty">Sin datos de TikTok para este período.</div>`;return;}
+  const a=TT_DATA.acct[0].metrics||{};
+  const spend=ttNum(a,'spend'),impr=ttNum(a,'impressions'),reach=ttNum(a,'reach'),clicks=ttNum(a,'clicks');
+  const ctr=ttNum(a,'ctr'),cpc=ttNum(a,'cpc'),cpm=ttNum(a,'cpm');
+  const conv=ttNum(a,'conversion'),cpl=ttNum(a,'cost_per_conversion')||(conv>0?spend/conv:0);
+  // campañas
+  const camps=(TT_DATA.camp||[]).map(r=>{const mt=r.metrics||{};const sp=ttNum(mt,'spend'),cv=ttNum(mt,'conversion');
+    return{name:mt.campaign_name||('Campaña '+(r.dimensions&&r.dimensions.campaign_id||'')),spend:sp,impr:ttNum(mt,'impressions'),reach:ttNum(mt,'reach'),clicks:ttNum(mt,'clicks'),ctr:ttNum(mt,'ctr'),cpc:ttNum(mt,'cpc'),conv:cv,cpl:ttNum(mt,'cost_per_conversion')||(cv>0?sp/cv:0)};
+  }).sort((x,y)=>y.spend-x.spend);
+  // creativos
+  const ads=(TT_DATA.ad||[]).map(r=>{const mt=r.metrics||{};const sp=ttNum(mt,'spend'),cv=ttNum(mt,'conversion');
+    return{name:mt.ad_name||('Anuncio '+(r.dimensions&&r.dimensions.ad_id||'')),spend:sp,clicks:ttNum(mt,'clicks'),ctr:ttNum(mt,'ctr'),cpc:ttNum(mt,'cpc'),conv:cv,cpl:ttNum(mt,'cost_per_conversion')||(cv>0?sp/cv:0)};
+  }).filter(x=>x.spend>0||x.conv>0).sort((x,y)=>y.conv-x.conv||y.spend-x.spend);
+  // serie diaria
+  const daily=(TT_DATA.daily||[]).map(r=>({d:(r.dimensions&&r.dimensions.stat_time_day||'').slice(0,10),m:r.metrics||{}}))
+    .filter(x=>x.d).sort((x,y)=>x.d<y.d?-1:1);
+  const dLabels=daily.map(x=>x.d.slice(5)),dSpend=daily.map(x=>ttNum(x.m,'spend')),dConv=daily.map(x=>ttNum(x.m,'conversion'));
+  const days=Math.max(1,Math.round((new Date(D.until)-new Date(D.since))/86400000)+1);
+
+  sec.innerHTML=`
+    <div class="sechead"><h2>🎵 TikTok Ads</h2><span class="cnt"><span class="live-dot" style="background:#25F4EE"></span>${D.since} → ${D.until} · ${days} día(s)</span></div>
+    <p class="subtitle">Desempeño en vivo de TikTok Ads: inversión, alcance, clics y conversiones (leads). Métricas tomadas directamente de la API de reportes de TikTok for Business.</p>
+    <div class="hero">
+      ${heroCard(true,'💰 Inversión TikTok',ttc(spend),`<span style="opacity:.85">${days} día(s)</span>`)}
+      ${heroCard(false,'🎯 Conversiones / Leads',fmt(conv),`<span style="color:var(--muted)">Costo por conversión ${conv>0?ttc(cpl):'–'}</span>`)}
+      ${heroCard(false,'👥 Alcance',fmt(reach),`<span style="color:var(--muted)">${fmt(impr)} impresiones</span>`)}
+      ${heroCard(false,'🖱 Clics',fmt(clicks),`<span style="color:var(--muted)">CTR ${pct(ctr)}</span>`)}
+    </div>
+    <div class="kgrid" style="margin-bottom:16px">
+      ${kc('🎯 Conversiones',fmt(conv),null,null,null,true,'Eventos de conversión TikTok')}
+      ${kc('🏷 Costo / conversión',conv>0?ttc(cpl):'–',null,null,null,false,'CPL en TikTok')}
+      ${kc('💵 CPC',ttc(cpc),cpcStatus(cpc),({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(cpc)],null,false,'Saludable: < S/0.80')}
+      ${kc('📊 CTR',pct(ctr),ctrStatus(ctr),ctrLabel(ctr),null,true,'Excelente: > 3%')}
+      ${kc('📡 CPM',ttc(cpm),null,null,null,false,'Costo por mil impresiones')}
+      ${kc('🖱 Clics',fmt(clicks),null,null,null,true)}
+      ${kc('👁 Impresiones',fmt(impr),null,null,null,true)}
+      ${kc('👥 Alcance',fmt(reach),null,null,null,true)}
+    </div>
+    <div class="crow">
+      <div class="cc"><div class="cc-ttl">📈 Inversión vs. Conversiones por día</div><div class="cc-desc">Relación diaria entre gasto y conversiones en TikTok.</div><div class="chart-h"><canvas id="ttDaily"></canvas></div></div>
+      <div class="cc"><div class="cc-ttl">💰 Inversión por campaña</div><div class="cc-desc">Top campañas de TikTok por gasto.</div><div class="chart-h"><canvas id="ttSpendCamp"></canvas></div></div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-h">📋 Detalle por campaña · TikTok</div>
+      <div class="tscroll"><table>
+        <thead><tr><th>Campaña</th><th>Inversión</th><th>Alcance</th><th>Clics</th><th>CTR</th><th>Conv.</th><th>Costo/Conv.</th></tr></thead>
+        <tbody>${camps.length===0?'<tr><td colspan="7" class="empty">Sin campañas con datos en este período.</td></tr>':camps.map(c=>`
+          <tr><td class="namecell" title="${esc(c.name)}">${esc(c.name)}</td>
+          <td class="num">${ttc(c.spend)}</td><td class="num">${fmt(c.reach)}</td><td class="num">${fmt(c.clicks)}</td>
+          <td class="num"><span style="color:${STCOL[ctrStatus(c.ctr)]}">${pct(c.ctr)}</span></td>
+          <td class="num"><b>${c.conv>0?fmt(c.conv):'–'}</b></td><td class="num">${c.conv>0?ttc(c.cpl):'–'}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="minihead">🏆 Mejores creativos · TikTok</div>
+    <div class="agrid">${ads.length?ads.slice(0,8).map((ad,i)=>`
+      <div class="acard ${i<3?'top':''}"><div class="rankbadge">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
+        <div class="athumb"><div class="aph">🎵<span>TikTok</span></div></div>
+        <div class="abody"><div class="aname" title="${esc(ad.name)}">${esc(ad.name)}</div>
+          <div class="astats">
+            <div><div class="asl">Gasto</div><div class="asv">${curK(ad.spend,TC)}</div></div>
+            <div><div class="asl">Conv.</div><div class="asv">${fmt(ad.conv)}</div></div>
+            <div><div class="asl">CTR</div><div class="asv" style="color:${STCOL[ctrStatus(ad.ctr)]}">${pct(ad.ctr,1)}</div></div>
+            <div><div class="asl">C/Conv.</div><div class="asv">${ad.conv>0?curK(ad.cpl,TC):'–'}</div></div>
+          </div></div></div>`).join(''):'<div class="empty">Sin creativos con actividad en este período.</div>'}</div>`;
+
+  // chart: daily spend vs conversions
+  const c1=document.getElementById('ttDaily');
+  if(c1&&dLabels.length)charts.ttd=new Chart(c1,{data:{labels:dLabels,datasets:[
+    {type:'bar',label:'Inversión',data:dSpend,backgroundColor:hexA('#25F4EE',.6),borderRadius:5,yAxisID:'y',order:2},
+    {type:'line',label:'Conversiones',data:dConv,borderColor:'#FE2C55',backgroundColor:hexA('#FE2C55',.12),tension:.35,yAxisID:'y2',pointRadius:3,pointBackgroundColor:'#FE2C55',borderWidth:2.5,fill:true,order:1}
+  ]},options:baseOpts({dualY:true,curr:TC})});
+  else if(c1)c1.parentElement.innerHTML='<div class="empty">Sin datos diarios.</div>';
+  // chart: spend by campaign
+  const topC=camps.filter(c=>c.spend>0).slice(0,7);
+  const c2=document.getElementById('ttSpendCamp');
+  if(c2&&topC.length)charts.ttc=new Chart(c2,{type:'bar',data:{labels:topC.map(c=>c.name.length>18?c.name.slice(0,17)+'…':c.name),datasets:[{data:topC.map(c=>c.spend),backgroundColor:topC.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>cur(c.parsed.x,TC)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>curK(v,TC)}},y:{grid:{display:false},ticks:{color:tickColor(),font:{size:10}}}}}});
+  else if(c2)c2.parentElement.innerHTML='<div class="empty">Sin campañas con inversión.</div>';
+}
+
+// ═══════════════ SHARE ═══════════════
+function doShare(){
+  const acct=document.getElementById('acctDash').value,from=document.getElementById('df').value,to=document.getElementById('dt').value;
+  const url=`${location.href.split('?')[0]}?account=${acct}&from=${from}&to=${to}&product=${product}${preset?'&preset='+preset:''}`;
+  if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>toast('✓ Enlace copiado'));else toast('Enlace: '+url.slice(0,40)+'…');
+}
+
+// ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
+function unlockGate(){
+  const v=document.getElementById('gatePass').value;
+  if(v===ACCESS_PASS){try{localStorage.setItem('pachamama_unlocked','1');}catch(e){}document.getElementById('gateErr').style.display='none';bootEmbedded();}
+  else{showErr('gateErr','⚠ Clave incorrecta');}
+}
+async function bootEmbedded(){
+  TOKEN=EMBED_TOKEN;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('setup').style.display='none';
+  document.getElementById('dash').style.display='block';
+  document.getElementById('main').innerHTML='<div class="loading"><div class="spinner"></div>Conectando con Meta Ads…</div>';
+  try{
+    let accounts=[];
+    try{const d=await api('me/adaccounts',{fields:'id,name,currency,account_status',limit:100});accounts=d.data||[];}
+    catch(e){const me=await api('me',{fields:'id'});const d2=await api(me.id+'/adaccounts',{fields:'id,name,currency,account_status',limit:100});accounts=d2.data||[];}
+    const act=accounts.filter(a=>a.account_status!==2&&a.account_status!==101&&a.account_status!==201);
+    const use=act.length?act:accounts;
+    const dd=document.getElementById('acctDash');dd.innerHTML='';
+    use.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.name||a.id;o.dataset.currency=a.currency||'PEN';dd.appendChild(o);});
+    if(EMBED_ACCOUNT){const t=String(EMBED_ACCOUNT).replace('act_','');const m=use.find(a=>a.id.replace('act_','')===t);if(m)dd.value=m.id;}
+    product=document.getElementById('productSelDash').value;
+    try{SHEET_URL=localStorage.getItem('pachamama_sheet_url')||'';}catch(e){}
+    const r=dates('today');document.getElementById('df').value=r.s;document.getElementById('dt').value=r.u;
+    loadData();
+  }catch(e){
+    document.getElementById('main').innerHTML='<div class="erbox">⚠ No se pudo conectar con Meta: '+esc(e.message)+'<br><small>Revisa que el token incrustado sea válido y tenga permisos ads_read.</small></div>';
+  }
+}
+
+// ═══════════════ INIT ═══════════════
+window.onload=()=>{
+  try{const saved=localStorage.getItem('pachamama_sheet_url');if(saved)document.getElementById('sheetUrl').value=saved;}catch(e){}
+  if(EMBED_TOKEN){
+    document.getElementById('setup').style.display='none';
+    let unlocked=false;try{unlocked=localStorage.getItem('pachamama_unlocked')==='1';}catch(e){}
+    if(unlocked){bootEmbedded();}
+    else{document.getElementById('gate').style.display='flex';setTimeout(()=>document.getElementById('gatePass').focus(),100);}
+  }else{
+    document.getElementById('setup').style.display='flex';document.getElementById('dash').style.display='none';
+  }
+};
+</script>
+</body>
+</html>
