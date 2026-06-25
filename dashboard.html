@@ -331,7 +331,7 @@ tbody tr:hover td{background:var(--surface2)}
       </span>
       <div>
         <div class="tb-title">Pachamama · Inteligencia de Marketing</div>
-        <div class="tb-sub"><span class="live-dot"></span>En vivo · Meta Ads · TikTok Ads · Kommo CRM</div>
+        <div class="tb-sub"><span class="live-dot"></span>Datos en vivo desde Meta Ads</div>
       </div>
     </div>
     <div class="topbar-r">
@@ -381,6 +381,7 @@ tbody tr:hover td{background:var(--surface2)}
         <span class="fgroup-lbl">&nbsp;</span>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" style="height:34px;font-size:13px;padding:0 16px" onclick="loadData()">↻ Actualizar</button>
+          <button class="btn btn-secondary" style="height:34px;font-size:13px;padding:0 14px" onclick="configSheet()">📄 Embudo</button>
         </div>
       </div>
     </div>
@@ -390,7 +391,6 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="navtab" data-s="campanas" onclick="showSection(this,'campanas')">🎯 Campañas</button>
       <button class="navtab" data-s="creativos" onclick="showSection(this,'creativos')">🖼 Creativos</button>
       <button class="navtab" data-s="audiencias" onclick="showSection(this,'audiencias')">👥 Audiencias</button>
-      <button class="navtab" data-s="tiktok" onclick="showSection(this,'tiktok')">🎵 TikTok Ads</button>
       <button class="navtab" data-s="embudo" onclick="showSection(this,'embudo')">🔻 Embudo</button>
       <button class="navtab" data-s="insights" onclick="showSection(this,'insights')">💡 Insights</button>
       <button class="navtab" data-s="recomendaciones" onclick="showSection(this,'recomendaciones')">✅ Plan de acción</button>
@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.4</b> (resultados = Costo por resultado de Ads Manager + corrección histórica de días con error de pago)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.5</b> (100% datos de Meta, sin ajuste manual)</div>
   </div>
 </div>
 
@@ -411,59 +411,17 @@ tbody tr:hover td{background:var(--surface2)}
 //   2) Cambia ACCESS_PASS por la clave que quieras pedir al abrir.
 //   3) (Opcional) Pon el ID de cuenta por defecto en EMBED_ACCOUNT.
 // Si EMBED_TOKEN queda vacío, el panel pide el token manualmente (como antes).
-const EMBED_TOKEN   = "EAAcX7epovb0BR9UEGwbS0E4iQPin7Q4cu4v3B8eHXCHJB7w4MLZCzqGI0vlLP1De4ZA1jyv9FbZAZCowFqB2YbpDsZAPLDFWnqG5vAEWuMglODhrpVVKeIngyOTO01LJO41Uuwu9gxz2ZAKxzfYZBLAca2aWuORvhRbERyGZC07BvrqOPUP5IraKwPX5PwCWZBfZCgSgZDZD"; // token incrustado (Usuario del sistema, sin caducidad)
+const EMBED_TOKEN   = "EAAcX7epovb0BR7g7usacmAZBF7d2Y0ROaS9xzZCaIcukpPbMDkDTnFiH6fEkeGXkYRkwiTATTdb0EeCF3Lv9XakZA6xTtJiUY5U9viuRImWIgNWxUMEvURFL8u5sgFC3HAf7VClN3frbqSIlRX8ZAwxSzDJ3uydGV5JuzvVf8gxLp4GR5QsndJZCFr3f3HIcCxgZDZD"; // token incrustado (Usuario del sistema)
 const ACCESS_PASS   = "pachamama2026";    // <-- CLAVE DE ACCESO (cámbiala)
 const EMBED_ACCOUNT = "4260660664079722"; // <-- (opcional) ID de cuenta, ej: 4260660664079722
-
-// ── PROXY (Cloudflare Worker) ──────────────────────────────────────────────
-// Kommo y TikTok NO permiten llamadas directas desde el navegador (CORS), por eso
-// pasan por un Worker gratuito que también oculta sus tokens. Pega aquí la URL del
-// Worker que despliegues (ver archivo kommo-tiktok-proxy-worker.js). Ej:
-//   https://pachamama-proxy.TUUSUARIO.workers.dev
-const PROXY_URL = "";   // <-- URL del Cloudflare Worker (sin "/" al final)
-
-// ── KOMMO CRM ──────────────────────────────────────────────────────────────
-// Subdominio de tu cuenta (lo que va antes de .kommo.com). Ej: "paradiseinmuebles".
-// El token de larga duración se configura DENTRO del Worker (no aquí), por seguridad.
-// Mapea cada estado/etapa de tu pipeline de Kommo a las 6 etapas del embudo.
-// Pon el NOMBRE EXACTO del status en Kommo (en minúsculas) a la izquierda.
-const KOMMO_SUBDOMAIN = "";  // <-- ej: "paradiseinmuebles"
-const KOMMO_PIPELINE_ID = ""; // <-- (opcional) ID del pipeline; vacío = todos
-const KOMMO_STAGE_MAP = {
-  // "nombre del status en kommo (minúsculas)" : "Etapa del embudo"
-  "lead entrante":            "Lead",
-  "nuevo lead":               "Lead",
-  "contacto inicial":         "Contactado",
-  "contactado":               "Contactado",
-  "prospecto":                "Prospecto",
-  "calificado":               "Prospecto",
-  "reunión agendada":         "Meet",
-  "meet":                     "Meet",
-  "separación":               "Separacion",
-  "separacion":               "Separacion",
-  "venta":                    "Venta",
-  "logrado con éxito":        "Venta",
-  "won":                      "Venta",
-  "cerrado sin éxito":        "Perdido",
-  "perdido":                  "Perdido",
-  "lost":                     "Perdido"
-};
-
-// ── TIKTOK ADS ─────────────────────────────────────────────────────────────
-// El access_token de TikTok se configura DENTRO del Worker (no aquí). Aquí solo el
-// advertiser_id (lo ves en TikTok Ads Manager → cabecera de la cuenta).
-const TIKTOK_ADVERTISER_ID = ""; // <-- ej: "7300000000000000000"
-const TIKTOK_CURRENCY = "PEN";   // moneda de la cuenta de TikTok (PEN o USD)
-
 // Corrección histórica de leads por campaña. Se RESTA del conteo SOLO cuando Meta no expone
 // su dato oficial (p. ej. días con "Error de pago"). En fechas normales Meta sí entrega el dato
 // y esta corrección se ignora (los números quedan exactos). La clave es parte del nombre de la campaña.
-const RESULT_CORRECTIONS = { "PALTA 2 JUN": -9 };
+const RESULT_CORRECTIONS = {}; // sin ajuste manual: 100% datos de Meta
 // ╚═══════════════════════════════════════════════╝
 
 // ═══════════════ STATE ═══════════════
 let TOKEN='', preset='today', product='palta', charts={}, LAST_DATA=null, SHEET_URL='', FUNNEL_ROWS=[];
-let KOMMO_ROWS=[], KOMMO_ERROR=null, TT_DATA=null, TT_ERROR=null;
 const PINK='#D80879', LIME='#9EBD31', DARK='#0A412D', GREEN='#1d9e75', AMBER='#d98a07', RED='#e0245e', BLUE='#2f7dd1';
 const PALETTE=[PINK,LIME,DARK,'#2f7dd1','#d98a07','#7b4fc4','#0fa3a3','#e0245e','#5a7d1a','#c44fa0'];
 
@@ -571,88 +529,6 @@ function configSheet(){
   toast(SHEET_URL?'✓ Hoja conectada':'Hoja desconectada');loadData();
 }
 
-// ═══════════════ KOMMO CRM ═══════════════
-function kommoReady(){return !!(PROXY_URL && KOMMO_SUBDOMAIN);}
-async function kapi(path,params={}){
-  if(!PROXY_URL)throw new Error('Falta configurar PROXY_URL (Cloudflare Worker).');
-  const u=new URL(PROXY_URL.replace(/\/$/,'')+'/kommo/'+path);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
-  const r=await fetch(u,{cache:'no-store'});
-  if(r.status===204)return {_embedded:{leads:[]}};
-  const d=await r.json().catch(()=>({}));
-  if(d&&d.error)throw new Error('Kommo: '+(d.detail||d.title||d.error));
-  return d;
-}
-// Construye el mapa status_id -> {name, stage}
-async function kommoPipelines(){
-  const d=await kapi('leads/pipelines');
-  const map={};const pipes=(d._embedded&&d._embedded.pipelines)||[];
-  pipes.forEach(p=>{
-    const sts=(p._embedded&&p._embedded.statuses)||[];
-    sts.forEach(s=>{
-      const nm=(s.name||'').toString().toLowerCase().trim();
-      let stage=KOMMO_STAGE_MAP[nm]||null;
-      if(!stage){ if(s.id===142)stage='Venta'; else if(s.id===143)stage='Perdido'; }
-      map[s.id]={name:s.name||'',stage,pipeline_id:p.id};
-    });
-  });
-  return map;
-}
-// Extrae utm_campaign / nombre de campaña de los campos personalizados del lead
-function kommoCampaign(lead){
-  const cf=(lead.custom_fields_values)||[];
-  const keys=['utm_campaign','campaña','campana','campaign','fuente','origen'];
-  for(const f of cf){
-    const fn=(f.field_name||'').toString().toLowerCase();
-    if(keys.some(k=>fn.includes(k))){
-      const v=f.values&&f.values[0]?(f.values[0].value):'';
-      if(v)return v.toString();
-    }
-  }
-  return '';
-}
-function kommoAd(lead){
-  const cf=(lead.custom_fields_values)||[];
-  for(const f of cf){const fn=(f.field_name||'').toString().toLowerCase();
-    if(fn.includes('utm_content')||fn.includes('anuncio')||fn.includes('ad ')){
-      const v=f.values&&f.values[0]?f.values[0].value:'';if(v)return v.toString();}}
-  return '';
-}
-// Descarga todos los leads del período y los normaliza al formato del embudo
-async function fetchKommoData(since,until){
-  KOMMO_ROWS=[];
-  if(!kommoReady())return;
-  const statusMap=await kommoPipelines();
-  const fromTs=Math.floor(new Date(since+'T00:00:00').getTime()/1000);
-  const toTs=Math.floor(new Date(until+'T23:59:59').getTime()/1000);
-  let page=1,all=[];const MAXP=40;
-  while(page<=MAXP){
-    const params={limit:'250',page:String(page),'with':'contacts',
-      'filter[created_at][from]':String(fromTs),'filter[created_at][to]':String(toTs)};
-    if(KOMMO_PIPELINE_ID)params['filter[pipeline_id]']=String(KOMMO_PIPELINE_ID);
-    const d=await kapi('leads',params);
-    const leads=(d._embedded&&d._embedded.leads)||[];
-    all=all.concat(leads);
-    if(leads.length<250)break;
-    page++;
-  }
-  KOMMO_ROWS=all.map(l=>{
-    const sm=statusMap[l.status_id]||{};
-    const created=l.created_at?new Date(l.created_at*1000):null;
-    return{
-      fecha:created?iso(created):'',
-      nombre:l.name||('Lead #'+l.id),
-      campana:kommoCampaign(l),
-      anuncio:kommoAd(l),
-      producto:'',
-      etapa:sm.stage||'',
-      price:parseFloat(l.price||0),
-      statusName:sm.name||'',
-      motivo:l.loss_reason_id?('Motivo #'+l.loss_reason_id):''
-    };
-  }).filter(r=>r.etapa);
-}
-
 // ═══════════════ SETUP FLOW ═══════════════
 async function loadAccts(){
   TOKEN=document.getElementById('tkn').value.trim();
@@ -721,8 +597,6 @@ async function loadData(){
       catch(e){adsWithIns=adsList.map(ad=>({...ad,_ins:{}}));}
     }
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
-    KOMMO_ERROR=null;try{await fetchKommoData(since,until);}catch(e){KOMMO_ERROR=e.message;}
-    TT_ERROR=null;try{TT_DATA=await fetchTikTok(since,until);}catch(e){TT_ERROR=e.message;TT_DATA=null;}
     LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,currency,since,until,product,funnelError};
     renderAll(LAST_DATA);
   }catch(e){
@@ -832,7 +706,6 @@ function renderAll(D){
     <div class="section" id="sec-campanas"></div>
     <div class="section" id="sec-creativos"></div>
     <div class="section" id="sec-audiencias"></div>
-    <div class="section" id="sec-tiktok"></div>
     <div class="section" id="sec-embudo"></div>
     <div class="section" id="sec-insights"></div>
     <div class="section" id="sec-recomendaciones"></div>`;
@@ -844,7 +717,6 @@ function renderAll(D){
   renderCampanas(D);
   renderCreativos(D);
   renderAudiencias(D);
-  renderTikTok(D);
   renderEmbudo(D);
   const ins=computeInsights(m,mPrev,D);
   renderInsights(ins,D);
@@ -1158,17 +1030,13 @@ function renderAudiencias(D){
 // ═══════════════ 5 · EMBUDO ═══════════════
 function renderEmbudo(D){
   const sec=document.getElementById('sec-embudo');if(!sec)return;const cur_=n=>cur(n,D.currency);
-  if(!kommoReady()){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div>
-    <div class="acard-rec"><h3>🔗 Conecta tu CRM Kommo</h3>
-    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">El embudo comercial (Lead → Contactado → Prospecto → Meet → Separación → Venta) y el CAC se alimentan en vivo desde tu pipeline de Kommo. Para activarlo:</p>
-    <ul style="font-size:13px;line-height:1.9;padding-left:20px">
-      <li>Despliega el <b>Cloudflare Worker</b> (<code>kommo-tiktok-proxy-worker.js</code>) y pega su URL en <code>PROXY_URL</code>.</li>
-      <li>Configura en el Worker: <code>KOMMO_SUBDOMAIN</code> y <code>KOMMO_TOKEN</code> (token de larga duración de una integración privada de Kommo).</li>
-      <li>Pon tu subdominio en <code>KOMMO_SUBDOMAIN</code> y ajusta <code>KOMMO_STAGE_MAP</code> con los nombres exactos de tus estados.</li>
-    </ul></div>`;return;}
-  if(KOMMO_ERROR){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div><div class="erbox">⚠ No se pudo conectar con Kommo: ${esc(KOMMO_ERROR)}<br><small>Verifica PROXY_URL, el token en el Worker y el subdominio.</small></div>`;return;}
-  const rows=KOMMO_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
-  if(!rows.length){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2></div><div class="empty">No hay leads en Kommo para este período (${D.since} → ${D.until}).</div>`;return;}
+  if(!SHEET_URL){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div>
+    <div class="acard-rec"><h3>📄 Conecta tu hoja de seguimiento de leads</h3>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Para ver el progreso real de cada lead (Contactado → Prospecto → Meet → Separación → Venta) y calcular el CAC, conecta tu Google Sheets con el botón <b>"📄 Embudo"</b> en la barra de filtros.</p>
+    <ul style="font-size:13px;line-height:1.9;padding-left:20px"><li>Columna <b>Etapa</b> con: Lead, Contactado, Prospecto, Meet, Separacion, Venta, Perdido</li><li>Columnas <b>Campana</b> y <b>Anuncio</b> que coincidan con Meta Ads</li><li>En Google Sheets: Archivo → Compartir → Publicar en la web → CSV</li></ul></div>`;return;}
+  if(D.funnelError){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="erbox">⚠ No se pudo leer la hoja: ${esc(D.funnelError)}</div>`;return;}
+  const rows=FUNNEL_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
+  if(!rows.length){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="empty">No hay leads en la hoja para este período (${D.since} → ${D.until}).</div>`;return;}
   const stageIdx=s=>FUNNEL_STAGES.indexOf(s);const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);let perdidos=0;
   rows.forEach(r=>{if(r.etapa==='Perdido'){perdidos++;return;}const idx=stageIdx(r.etapa);if(idx===-1)return;for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
   const maxC=counts['Lead']||1;const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,'#e08a07',GREEN];
@@ -1180,8 +1048,8 @@ function renderEmbudo(D){
   const campRows=Object.entries(byCamp).map(([name,v])=>{const sp=campSpend[name.toLowerCase()]||0;return{name,...v,spend:sp,cac:v.venta>0?sp/v.venta:0};}).sort((a,b)=>b.venta-a.venta);
   const totalVentas=counts['Venta']||0,totalLeads=counts['Lead']||0,convGlobal=totalLeads>0?(totalVentas/totalLeads*100):0;
   sec.innerHTML=`
-    <div class="sechead"><h2>🔻 Embudo Comercial · Kommo CRM</h2><span class="cnt"><span class="live-dot" style="background:#1d9e75"></span>${rows.length} leads · Fuente: Kommo (en vivo)</span></div>
-    <p class="subtitle">Progreso real de Lead a Venta tomado directamente del pipeline de Kommo, cruzado con la inversión publicitaria de Meta para calcular el CAC (Costo de Adquisición de Cliente).</p>
+    <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${rows.length} leads · Fuente: Google Sheets</span></div>
+    <p class="subtitle">Progreso real de Lead a Venta, cruzado con la inversión publicitaria para calcular el CAC (Costo de Adquisición de Cliente).</p>
     <div class="hero" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
       ${heroCard(true,'🎯 Leads en el período',fmt(totalLeads),'')}
       ${heroCard(false,'🏆 Ventas cerradas',fmt(totalVentas),`<span style="color:var(--muted)">Conversión global ${pct(convGlobal,1)}</span>`)}
@@ -1222,8 +1090,8 @@ function computeInsights(m,mPrev,D){
     if(noLead.length)alerts.push({text:`${noLead.length} campaña(s) con inversión pero <b>cero resultados</b>: ${noLead.map(c=>'"'+esc(c.name)+'"').join(', ')}.`});}
   const items=(D.adsWithIns||[]).map(ad=>{const ins=ad._ins||{};return{name:ad.name,spend:parseFloat(ins.spend||0),leads:rowTotal(ins),ctr:parseFloat(ins.ctr||0)};}).filter(a=>a.spend>0);
   if(items.length>1){const top=[...items].sort((a,b)=>b.leads-a.leads)[0];if(top&&top.leads>0)insights.push({text:`El creativo <b>"${esc(top.name)}"</b> generó más leads (${fmt(top.leads)}) — replicar su formato y estilo.`});}
-  // funnel insights (Kommo)
-  if(kommoReady()&&KOMMO_ROWS.length){const rws=KOMMO_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
+  // funnel insights
+  if(SHEET_URL&&FUNNEL_ROWS.length){const rws=FUNNEL_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
     const sIdx=s=>FUNNEL_STAGES.indexOf(s);const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);
     rws.forEach(r=>{const idx=sIdx(r.etapa);if(idx===-1)return;for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
     for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const prev=counts[FUNNEL_STAGES[i-1]],curr=counts[FUNNEL_STAGES[i]];if(!bench||prev===0)continue;const conv=(curr/prev)*100;
@@ -1275,123 +1143,6 @@ function renderRecomendaciones(data,D,m){
       <div class="acard-rec"><h3>🎨 Creativos a replicar</h3><ul>${bestCre.length&&bestCre[0].leads>0?bestCre.map(c=>`<li><b>${esc(c.name)}</b> — ${fmt(c.leads)} leads, CTR ${pct(c.ctr)}</li>`).join(''):'<li>Sin datos suficientes de creativos.</li>'}</ul></div>
       <div class="acard-rec"><h3>📍 Audiencias a priorizar</h3><ul>${bestReg.length?bestReg.map(r=>`<li><b>Atacar:</b> ${esc(r.label)} — CPL ${cur_(r.cpl)}</li>`).join(''):''}${worstReg.length?worstReg.map(r=>`<li><b>Revisar:</b> ${esc(r.label)} — CPL ${r.leads>0?cur_(r.cpl):'sin leads, con gasto'}</li>`).join(''):''}${(!bestReg.length&&!worstReg.length)?'<li>Sin datos suficientes.</li>':''}</ul></div>
     </div>`;
-}
-
-// ═══════════════ TIKTOK ADS ═══════════════
-function ttReady(){return !!(PROXY_URL && TIKTOK_ADVERTISER_ID);}
-function ttNum(o,k){return parseFloat((o&&o[k])!=null?o[k]:0)||0;}
-async function ttapi(endpoint,params={}){
-  if(!PROXY_URL)throw new Error('Falta configurar PROXY_URL (Cloudflare Worker).');
-  const u=new URL(PROXY_URL.replace(/\/$/,'')+'/tiktok/'+endpoint);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
-  const r=await fetch(u,{cache:'no-store'});
-  const d=await r.json().catch(()=>({}));
-  if(d&&d.error)throw new Error('TikTok: '+(d.detail||d.error));
-  if(d&&d.code!==undefined&&d.code!==0)throw new Error('TikTok: '+(d.message||('código '+d.code)));
-  return (d&&d.data)?d.data:d;
-}
-async function fetchTikTok(since,until){
-  if(!ttReady())return null;
-  const baseM=["spend","impressions","clicks","ctr","cpc","cpm","reach","conversion","cost_per_conversion"];
-  const common={advertiser_id:TIKTOK_ADVERTISER_ID,report_type:'BASIC',start_date:since,end_date:until,page_size:'100'};
-  const [acct,camp,ad,daily]=await Promise.all([
-    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_ADVERTISER',dimensions:["advertiser_id"],metrics:baseM}),
-    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_CAMPAIGN',dimensions:["campaign_id"],metrics:["campaign_name",...baseM]}).catch(()=>({list:[]})),
-    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_AD',dimensions:["ad_id"],metrics:["ad_name",...baseM]}).catch(()=>({list:[]})),
-    ttapi('report/integrated/get/',{...common,data_level:'AUCTION_ADVERTISER',dimensions:["advertiser_id","stat_time_day"],metrics:["spend","impressions","clicks","conversion"]}).catch(()=>({list:[]}))
-  ]);
-  return {acct:(acct.list||[]),camp:(camp.list||[]),ad:(ad.list||[]),daily:(daily.list||[])};
-}
-function renderTikTok(D){
-  const sec=document.getElementById('sec-tiktok');if(!sec)return;
-  const TC=TIKTOK_CURRENCY,ttc=n=>cur(n,TC);
-  if(!ttReady()){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2></div>
-    <div class="acard-rec"><h3>🔗 Conecta TikTok Ads</h3>
-    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Esta sección muestra en vivo los KPIs, campañas y creativos de TikTok Ads, con la misma estética que Meta. Para activarla:</p>
-    <ul style="font-size:13px;line-height:1.9;padding-left:20px">
-      <li>Despliega el <b>Cloudflare Worker</b> y pega su URL en <code>PROXY_URL</code>.</li>
-      <li>Configura <code>TIKTOK_TOKEN</code> (access_token de TikTok for Business) dentro del Worker.</li>
-      <li>Pon tu <code>TIKTOK_ADVERTISER_ID</code> y la moneda en <code>TIKTOK_CURRENCY</code>.</li>
-    </ul></div>`;return;}
-  if(TT_ERROR){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2></div><div class="erbox">⚠ No se pudo conectar con TikTok: ${esc(TT_ERROR)}<br><small>Verifica PROXY_URL, el TIKTOK_TOKEN en el Worker y el advertiser_id.</small></div>`;return;}
-  if(!TT_DATA||!(TT_DATA.acct&&TT_DATA.acct.length)){sec.innerHTML=`<div class="sechead"><h2>🎵 TikTok Ads</h2><span class="cnt">${D.since} → ${D.until}</span></div><div class="empty">Sin datos de TikTok para este período.</div>`;return;}
-  const a=TT_DATA.acct[0].metrics||{};
-  const spend=ttNum(a,'spend'),impr=ttNum(a,'impressions'),reach=ttNum(a,'reach'),clicks=ttNum(a,'clicks');
-  const ctr=ttNum(a,'ctr'),cpc=ttNum(a,'cpc'),cpm=ttNum(a,'cpm');
-  const conv=ttNum(a,'conversion'),cpl=ttNum(a,'cost_per_conversion')||(conv>0?spend/conv:0);
-  // campañas
-  const camps=(TT_DATA.camp||[]).map(r=>{const mt=r.metrics||{};const sp=ttNum(mt,'spend'),cv=ttNum(mt,'conversion');
-    return{name:mt.campaign_name||('Campaña '+(r.dimensions&&r.dimensions.campaign_id||'')),spend:sp,impr:ttNum(mt,'impressions'),reach:ttNum(mt,'reach'),clicks:ttNum(mt,'clicks'),ctr:ttNum(mt,'ctr'),cpc:ttNum(mt,'cpc'),conv:cv,cpl:ttNum(mt,'cost_per_conversion')||(cv>0?sp/cv:0)};
-  }).sort((x,y)=>y.spend-x.spend);
-  // creativos
-  const ads=(TT_DATA.ad||[]).map(r=>{const mt=r.metrics||{};const sp=ttNum(mt,'spend'),cv=ttNum(mt,'conversion');
-    return{name:mt.ad_name||('Anuncio '+(r.dimensions&&r.dimensions.ad_id||'')),spend:sp,clicks:ttNum(mt,'clicks'),ctr:ttNum(mt,'ctr'),cpc:ttNum(mt,'cpc'),conv:cv,cpl:ttNum(mt,'cost_per_conversion')||(cv>0?sp/cv:0)};
-  }).filter(x=>x.spend>0||x.conv>0).sort((x,y)=>y.conv-x.conv||y.spend-x.spend);
-  // serie diaria
-  const daily=(TT_DATA.daily||[]).map(r=>({d:(r.dimensions&&r.dimensions.stat_time_day||'').slice(0,10),m:r.metrics||{}}))
-    .filter(x=>x.d).sort((x,y)=>x.d<y.d?-1:1);
-  const dLabels=daily.map(x=>x.d.slice(5)),dSpend=daily.map(x=>ttNum(x.m,'spend')),dConv=daily.map(x=>ttNum(x.m,'conversion'));
-  const days=Math.max(1,Math.round((new Date(D.until)-new Date(D.since))/86400000)+1);
-
-  sec.innerHTML=`
-    <div class="sechead"><h2>🎵 TikTok Ads</h2><span class="cnt"><span class="live-dot" style="background:#25F4EE"></span>${D.since} → ${D.until} · ${days} día(s)</span></div>
-    <p class="subtitle">Desempeño en vivo de TikTok Ads: inversión, alcance, clics y conversiones (leads). Métricas tomadas directamente de la API de reportes de TikTok for Business.</p>
-    <div class="hero">
-      ${heroCard(true,'💰 Inversión TikTok',ttc(spend),`<span style="opacity:.85">${days} día(s)</span>`)}
-      ${heroCard(false,'🎯 Conversiones / Leads',fmt(conv),`<span style="color:var(--muted)">Costo por conversión ${conv>0?ttc(cpl):'–'}</span>`)}
-      ${heroCard(false,'👥 Alcance',fmt(reach),`<span style="color:var(--muted)">${fmt(impr)} impresiones</span>`)}
-      ${heroCard(false,'🖱 Clics',fmt(clicks),`<span style="color:var(--muted)">CTR ${pct(ctr)}</span>`)}
-    </div>
-    <div class="kgrid" style="margin-bottom:16px">
-      ${kc('🎯 Conversiones',fmt(conv),null,null,null,true,'Eventos de conversión TikTok')}
-      ${kc('🏷 Costo / conversión',conv>0?ttc(cpl):'–',null,null,null,false,'CPL en TikTok')}
-      ${kc('💵 CPC',ttc(cpc),cpcStatus(cpc),({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(cpc)],null,false,'Saludable: < S/0.80')}
-      ${kc('📊 CTR',pct(ctr),ctrStatus(ctr),ctrLabel(ctr),null,true,'Excelente: > 3%')}
-      ${kc('📡 CPM',ttc(cpm),null,null,null,false,'Costo por mil impresiones')}
-      ${kc('🖱 Clics',fmt(clicks),null,null,null,true)}
-      ${kc('👁 Impresiones',fmt(impr),null,null,null,true)}
-      ${kc('👥 Alcance',fmt(reach),null,null,null,true)}
-    </div>
-    <div class="crow">
-      <div class="cc"><div class="cc-ttl">📈 Inversión vs. Conversiones por día</div><div class="cc-desc">Relación diaria entre gasto y conversiones en TikTok.</div><div class="chart-h"><canvas id="ttDaily"></canvas></div></div>
-      <div class="cc"><div class="cc-ttl">💰 Inversión por campaña</div><div class="cc-desc">Top campañas de TikTok por gasto.</div><div class="chart-h"><canvas id="ttSpendCamp"></canvas></div></div>
-    </div>
-    <div class="tcard">
-      <div class="tcard-h">📋 Detalle por campaña · TikTok</div>
-      <div class="tscroll"><table>
-        <thead><tr><th>Campaña</th><th>Inversión</th><th>Alcance</th><th>Clics</th><th>CTR</th><th>Conv.</th><th>Costo/Conv.</th></tr></thead>
-        <tbody>${camps.length===0?'<tr><td colspan="7" class="empty">Sin campañas con datos en este período.</td></tr>':camps.map(c=>`
-          <tr><td class="namecell" title="${esc(c.name)}">${esc(c.name)}</td>
-          <td class="num">${ttc(c.spend)}</td><td class="num">${fmt(c.reach)}</td><td class="num">${fmt(c.clicks)}</td>
-          <td class="num"><span style="color:${STCOL[ctrStatus(c.ctr)]}">${pct(c.ctr)}</span></td>
-          <td class="num"><b>${c.conv>0?fmt(c.conv):'–'}</b></td><td class="num">${c.conv>0?ttc(c.cpl):'–'}</td></tr>`).join('')}</tbody>
-      </table></div>
-    </div>
-    <div class="minihead">🏆 Mejores creativos · TikTok</div>
-    <div class="agrid">${ads.length?ads.slice(0,8).map((ad,i)=>`
-      <div class="acard ${i<3?'top':''}"><div class="rankbadge">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
-        <div class="athumb"><div class="aph">🎵<span>TikTok</span></div></div>
-        <div class="abody"><div class="aname" title="${esc(ad.name)}">${esc(ad.name)}</div>
-          <div class="astats">
-            <div><div class="asl">Gasto</div><div class="asv">${curK(ad.spend,TC)}</div></div>
-            <div><div class="asl">Conv.</div><div class="asv">${fmt(ad.conv)}</div></div>
-            <div><div class="asl">CTR</div><div class="asv" style="color:${STCOL[ctrStatus(ad.ctr)]}">${pct(ad.ctr,1)}</div></div>
-            <div><div class="asl">C/Conv.</div><div class="asv">${ad.conv>0?curK(ad.cpl,TC):'–'}</div></div>
-          </div></div></div>`).join(''):'<div class="empty">Sin creativos con actividad en este período.</div>'}</div>`;
-
-  // chart: daily spend vs conversions
-  const c1=document.getElementById('ttDaily');
-  if(c1&&dLabels.length)charts.ttd=new Chart(c1,{data:{labels:dLabels,datasets:[
-    {type:'bar',label:'Inversión',data:dSpend,backgroundColor:hexA('#25F4EE',.6),borderRadius:5,yAxisID:'y',order:2},
-    {type:'line',label:'Conversiones',data:dConv,borderColor:'#FE2C55',backgroundColor:hexA('#FE2C55',.12),tension:.35,yAxisID:'y2',pointRadius:3,pointBackgroundColor:'#FE2C55',borderWidth:2.5,fill:true,order:1}
-  ]},options:baseOpts({dualY:true,curr:TC})});
-  else if(c1)c1.parentElement.innerHTML='<div class="empty">Sin datos diarios.</div>';
-  // chart: spend by campaign
-  const topC=camps.filter(c=>c.spend>0).slice(0,7);
-  const c2=document.getElementById('ttSpendCamp');
-  if(c2&&topC.length)charts.ttc=new Chart(c2,{type:'bar',data:{labels:topC.map(c=>c.name.length>18?c.name.slice(0,17)+'…':c.name),datasets:[{data:topC.map(c=>c.spend),backgroundColor:topC.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>cur(c.parsed.x,TC)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},callback:v=>curK(v,TC)}},y:{grid:{display:false},ticks:{color:tickColor(),font:{size:10}}}}}});
-  else if(c2)c2.parentElement.innerHTML='<div class="empty">Sin campañas con inversión.</div>';
 }
 
 // ═══════════════ SHARE ═══════════════
