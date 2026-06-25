@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.6</b> (100% Meta en vivo; 1–23 jun con resultados diarios reales del periodo de error)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.7</b> (PALTA cuenta como Clientes Potenciales; 1–23 jun con datos reales del periodo de error)</div>
   </div>
 </div>
 
@@ -634,6 +634,14 @@ function isConvCampaign(cpat){
   const costed=cpat.filter(c=>[...lead,...conv].includes(c.action_type)).sort((a,b)=>parseFloat(a.value||999)-parseFloat(b.value||999));
   if(!costed.length)return false;return conv.includes(costed[0].action_type);
 }
+// Forzar el TIPO de resultado de una campaña según su objetivo real (lead o conv).
+// Útil cuando una campaña dispara eventos de lead Y de mensaje y la detección automática se confunde.
+const CAMPAIGN_RESULT_TYPE = { "PALTA 2 JUN": "lead" };
+function forcedType(name){
+  if(!name)return null;
+  for(const k in CAMPAIGN_RESULT_TYPE){ if(name.toLowerCase().indexOf(k.toLowerCase())>=0) return CAMPAIGN_RESULT_TYPE[k]; }
+  return null;
+}
 
 function parseResultField(rf){
   if(rf===undefined||rf===null)return null;
@@ -653,7 +661,7 @@ function resultCorrection(name){
 function rowResults(r,allowCorrection){
   // Prioridad: "Costo por resultado" oficial de Meta (coincide con Ads Manager). El campo results crudo
   // sobrecuenta por atribución amplia, así que va después.
-  const cpa=r.cost_per_action_type||[],acts=r.actions||[],conv=isConvCampaign(cpa);
+  const cpa=r.cost_per_action_type||[],acts=r.actions||[],_ft=forcedType(r.campaign_name),conv=_ft?(_ft==='conv'):isConvCampaign(cpa);
   const sp=parseFloat(r.spend||0),cprN=parseCprNum(r.cost_per_result);
   let val=(cprN>0&&sp>0)?Math.round(sp/cprN):0;
   if(!val){
@@ -911,7 +919,7 @@ function campRowsData(D){
   return(D.campaigns.data||[]).map(r=>{
     const spend=parseFloat(r.spend||0),impressions=parseInt(r.impressions||0),reach=parseInt(r.reach||0),clicks=parseInt(r.clicks||0),
       ctr=parseFloat(r.ctr||0),cpc=parseFloat(r.cpc||0),frequency=parseFloat(r.frequency||0);
-    const cpa=r.cost_per_action_type||[],conv=isConvCampaign(cpa);
+    const cpa=r.cost_per_action_type||[],_ft=forcedType(r.campaign_name),conv=_ft?(_ft==='conv'):isConvCampaign(cpa);
     const _rr=rowResults(r,true),_adj=(D._adj&&D._adj[r.campaign_name])||0,formLeads=Math.max(0,_rr.leads+_adj),conversations=_rr.conversations;
     const results=formLeads+conversations,cpl=formLeads>0?spend/formLeads:0,cpc_conv=conversations>0?spend/conversations:0;
     let action='opt',actionLabel='Optimizar';
