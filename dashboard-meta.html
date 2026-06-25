@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.9</b> (Embudo Kommo = pipeline completo en vivo, conteo acumulado)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.1</b> (Embudo Kommo: total que ingresaron + leads por etapa actual + conversión real)</div>
   </div>
 </div>
 
@@ -1081,32 +1081,31 @@ function renderAudiencias(D){
 // ═══════════════ 5 · EMBUDO ═══════════════
 function renderEmbudo(D){
   const sec=document.getElementById('sec-embudo');if(!sec)return;const cur_=n=>cur(n,D.currency);
-  if(!KOMMO_WORKER_URL){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="acard-rec"><h3>Conecta tu CRM Kommo</h3><p style="font-size:13px">Define KOMMO_WORKER_URL en el código para ver el embudo en vivo.</p></div>`;return;}
+  if(!KOMMO_WORKER_URL){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="acard-rec"><h3>Conecta tu CRM Kommo</h3><p style="font-size:13px">Define KOMMO_WORKER_URL en el código.</p></div>`;return;}
   if(D.kommoError||!KOMMO_DATA||KOMMO_DATA.ok!==true){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="erbox">⚠ No se pudo leer Kommo: ${esc(D.kommoError||(KOMMO_DATA&&KOMMO_DATA.error)||'sin datos')}</div>`;return;}
-  // Embudo = pipeline ACTUAL completo de Kommo (no se filtra por fecha). Conteo ACUMULATIVO.
-  const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);
-  (KOMMO_DATA.stages||[]).forEach(st=>{counts[st.name]=st.count;});
-  const perdidos=KOMMO_DATA.perdidos||0;
-  const maxC=counts['Lead']||1;const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,GREEN];
-  const bars=FUNNEL_STAGES.map((s,i)=>{const c=counts[s]||0;const w=Math.max(6,(c/maxC)*100);const prev=i>0?(counts[FUNNEL_STAGES[i-1]]||0):c;const conv=i>0&&prev>0?(c/prev)*100:null;return{stage:s,count:c,width:w,conv};});
-  const checks=[];for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const fb=bars[i];const prev=counts[FUNNEL_STAGES[i-1]]||0;if(bench&&fb.conv!==null&&prev>0)checks.push({label:bench.label,value:fb.conv,ok:fb.conv>=bench.min,note:bench.note,min:bench.min});}
-  const totalVentas=counts['Venta']||0,totalLeads=counts['Lead']||0,convGlobal=totalLeads>0?(totalVentas/totalLeads*100):0;
+  const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);(KOMMO_DATA.stages||[]).forEach(st=>{counts[st.name]=st.count;});
+  const occ={};FUNNEL_STAGES.forEach(s=>occ[s]=0);(KOMMO_DATA.rows||[]).forEach(r=>{if(occ[r.etapa]!==undefined)occ[r.etapa]++;});
+  const perdidos=KOMMO_DATA.perdidos||0;const total=counts['Lead']||0;
+  const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,GREEN];
+  const bars=FUNNEL_STAGES.map((s,i)=>{const c=i===0?total:(occ[s]||0);const w=Math.max(4,total>0?(c/total*100):0);const ptot=total>0?(c/total*100):0;return{stage:s,count:c,width:w,ptot};});
+  const checks=[];for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const prev=counts[FUNNEL_STAGES[i-1]]||0,cur2=counts[FUNNEL_STAGES[i]]||0;if(bench&&prev>0){const conv=cur2/prev*100;checks.push({label:bench.label,value:conv,ok:conv>=bench.min,note:`${cur2} de ${prev} leads avanzaron · ${bench.note}`});}}
+  const totalVentas=counts['Venta']||0,convGlobal=total>0?(totalVentas/total*100):0;
   const totalSpend=parseFloat((D.acctIns.data||[])[0]?.spend||0);const cac=totalVentas>0?totalSpend/totalVentas:0;
   const upd=KOMMO_DATA.updated?new Date(KOMMO_DATA.updated).toLocaleString('es-PE'):'';
   sec.innerHTML=`
-    <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${totalLeads} leads · Kommo en vivo</span></div>
-    <p class="subtitle">Pipeline actual de tu CRM Kommo. El conteo es <b>acumulado</b>: cada etapa incluye a los leads que ya avanzaron más allá (por eso "Agenda" cuenta también a los que pasaron a Meet — distinto de la columna de Kommo, que solo muestra los que están parados ahí). Actualizado: ${esc(upd)}.</p>
+    <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${total} leads totales · Kommo en vivo</span></div>
+    <p class="subtitle">Total de leads que ingresaron y cuántos hay en cada etapa ahora (igual que tus columnas de Kommo). El panel de salud mide la <b>conversión real</b> entre etapas. Actualizado: ${esc(upd)}.</p>
     <div class="hero" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-      ${heroCard(true,'🎯 Leads',fmt(totalLeads),'')}
+      ${heroCard(true,'🎯 Leads totales',fmt(total),'')}
       ${heroCard(false,'🏆 Ventas',fmt(totalVentas),`<span style="color:var(--muted)">Conversión global ${pct(convGlobal,1)}</span>`)}
       ${heroCard(false,'❌ Perdidos',fmt(perdidos),'')}
       ${heroCard(false,'💵 CAC (Meta)',cac>0?cur_(cac):'–',`<span style="color:var(--muted)">Inversión Meta / ventas</span>`)}
     </div>
     <div class="crow">
-      <div class="cc"><div class="cc-ttl">🔻 Embudo de conversión</div><div class="cc-desc">Leads que alcanzaron cada etapa (o más) y % de avance desde la anterior.</div>
-        <div class="funnelviz">${bars.map((fb,i)=>`<div class="fbar-row"><div class="fbar-top"><span class="fbar-stage">${fb.stage}</span><span style="color:var(--muted)">${fb.count}${fb.conv!==null?` · <b style="color:${fb.conv>=50?GREEN:AMBER}">${fb.conv.toFixed(0)}%</b>`:''}</span></div><div class="fbar-track"><div class="fbar-fill" style="width:${fb.width}%;background:${stageColors[i]}">${fb.count>0?fb.count:''}</div></div></div>`).join('')}${perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:var(--red)">❌ Perdidos: <b>${perdidos}</b></div>`:''}</div>
+      <div class="cc"><div class="cc-ttl">🔻 Embudo — leads por etapa</div><div class="cc-desc">Total que ingresaron y cuántos están en cada etapa ahora.</div>
+        <div class="funnelviz">${bars.map((fb,i)=>`<div class="fbar-row"><div class="fbar-top"><span class="fbar-stage">${fb.stage}${i===0?' (total)':''}</span><span style="color:var(--muted)">${fb.count}${i>0?` · <b style="color:${fb.ptot>=25?GREEN:AMBER}">${fb.ptot.toFixed(0)}%</b> del total`:''}</span></div><div class="fbar-track"><div class="fbar-fill" style="width:${fb.width}%;background:${stageColors[i]}">${fb.count>0?fb.count:''}</div></div></div>`).join('')}${perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:var(--red)">❌ Perdidos: <b>${perdidos}</b></div>`:''}</div>
       </div>
-      <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Conversión de cada etapa vs. meta saludable.</div>
+      <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Conversión real: de los que llegaron a una etapa, cuántos pasaron a la siguiente.</div>
         ${checks.length?checks.map(c=>`<div class="conv-item"><div class="conv-top"><span style="font-size:12.5px;font-weight:600">${c.label}</span><span class="badge ${c.ok?'g':'r'}">${c.value.toFixed(0)}% ${c.ok?'✓ Saludable':'✗ Mejorar'}</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">${c.note}</div></div>`).join(''):'<div class="empty">Aún no hay suficientes etapas con datos.</div>'}
       </div>
     </div>`;
