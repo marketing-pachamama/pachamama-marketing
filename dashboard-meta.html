@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.7</b> (PALTA cuenta como Clientes Potenciales; 1–23 jun con datos reales del periodo de error)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v1.8</b> (Embudo en vivo desde Kommo + Meta con datos reales del periodo de error)</div>
   </div>
 </div>
 
@@ -414,6 +414,8 @@ tbody tr:hover td{background:var(--surface2)}
 const EMBED_TOKEN   = "EAAcX7epovb0BR7g7usacmAZBF7d2Y0ROaS9xzZCaIcukpPbMDkDTnFiH6fEkeGXkYRkwiTATTdb0EeCF3Lv9XakZA6xTtJiUY5U9viuRImWIgNWxUMEvURFL8u5sgFC3HAf7VClN3frbqSIlRX8ZAwxSzDJ3uydGV5JuzvVf8gxLp4GR5QsndJZCFr3f3HIcCxgZDZD"; // token incrustado (Usuario del sistema)
 const ACCESS_PASS   = "pachamama2026";    // <-- CLAVE DE ACCESO (cámbiala)
 const EMBED_ACCOUNT = "4260660664079722"; // <-- (opcional) ID de cuenta, ej: 4260660664079722
+// URL del puente (Cloudflare Worker) que lee tu CRM Kommo para el embudo en vivo.
+const KOMMO_WORKER_URL = "https://kommo-embudo.m-palomino.workers.dev/";
 // Corrección histórica de leads por campaña. Se RESTA del conteo SOLO cuando Meta no expone
 // su dato oficial (p. ej. días con "Error de pago"). En fechas normales Meta sí entrega el dato
 // y esta corrección se ignora (los números quedan exactos). La clave es parte del nombre de la campaña.
@@ -442,13 +444,12 @@ const BENCH={
   freq:{low:2,ok:4,watch:6},
   cpl:{palta:{min:10,max:13},pitahaya:{min:15,max:20},other:null}
 };
-const FUNNEL_STAGES=['Lead','Contactado','Prospecto','Meet','Separacion','Venta'];
+const FUNNEL_STAGES=['Lead','Agenda','Meet','Separacion','Venta'];
 const FUNNEL_HEALTHY={
-  'Lead->Contactado':{min:75,label:'Contactabilidad (Lead → Contactado)',note:'Real Pachamama: 80.6%'},
-  'Contactado->Prospecto':{min:60,label:'Calificación (Contactado → Prospecto)',note:'Real Pachamama: 72.4%'},
-  'Prospecto->Meet':{min:55,label:'Agendamiento (Prospecto → Meet)',note:'Real Pachamama: 66.7%'},
-  'Meet->Separacion':{min:35,label:'Cierre inicial (Meet → Separación)',note:'Real Pachamama: 50.0%'},
-  'Separacion->Venta':{min:60,label:'Formalización (Separación → Venta)',note:'Meta sector'}
+  'Lead->Agenda':{min:40,label:'Agendamiento (Lead → Agenda)',note:'Meta saludable ≥ 40%'},
+  'Agenda->Meet':{min:50,label:'Asistencia (Agenda → Meet)',note:'Meta saludable ≥ 50%'},
+  'Meet->Separacion':{min:35,label:'Cierre inicial (Meet → Separación)',note:'Meta saludable ≥ 35%'},
+  'Separacion->Venta':{min:60,label:'Formalización (Separación → Venta)',note:'Meta saludable ≥ 60%'}
 };
 
 // ═══════════════ UTILS ═══════════════
@@ -522,6 +523,14 @@ async function fetchCsvWithFallback(csvUrl){
   try{const r=await fetch(csvUrl,{cache:'no-store'});if(r.ok){const t=await r.text();if(t&&!t.trim().startsWith('<'))return t;}}catch(e){}
   try{const r2=await fetch('https://corsproxy.io/?url='+encodeURIComponent(csvUrl),{cache:'no-store'});if(r2.ok){const t2=await r2.text();if(t2&&!t2.trim().startsWith('<'))return t2;}}catch(e){}
   throw new Error('No se pudo leer la hoja (¿está publicada en la web como CSV?)');
+}
+let KOMMO_DATA=null;
+async function fetchKommoFunnel(){
+  if(!KOMMO_WORKER_URL){KOMMO_DATA=null;return;}
+  const r=await fetch(KOMMO_WORKER_URL,{cache:'no-store'});
+  const d=await r.json();
+  if(!d||d.ok!==true)throw new Error((d&&d.error)||('HTTP '+r.status));
+  KOMMO_DATA=d;
 }
 async function fetchFunnelData(){
   if(!SHEET_URL){FUNNEL_ROWS=[];return;}
@@ -608,7 +617,8 @@ async function loadData(){
       catch(e){adsWithIns=adsList.map(ad=>({...ad,_ins:{}}));}
     }
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
-    LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,currency,since,until,product,funnelError};
+    let kommoError=null;try{await fetchKommoFunnel();}catch(e){kommoError=e.message;}
+    LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,currency,since,until,product,funnelError,kommoError};
     renderAll(LAST_DATA);
   }catch(e){
     document.getElementById('main').innerHTML=`<div class="erbox">⚠ Error al cargar datos: ${esc(e.message)}<br><small>Verifica que el token tenga permisos ads_read y ads_management.</small></div>`;
@@ -1071,44 +1081,36 @@ function renderAudiencias(D){
 // ═══════════════ 5 · EMBUDO ═══════════════
 function renderEmbudo(D){
   const sec=document.getElementById('sec-embudo');if(!sec)return;const cur_=n=>cur(n,D.currency);
-  if(!SHEET_URL){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div>
-    <div class="acard-rec"><h3>📄 Conecta tu hoja de seguimiento de leads</h3>
-    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Para ver el progreso real de cada lead (Contactado → Prospecto → Meet → Separación → Venta) y calcular el CAC, conecta tu Google Sheets con el botón <b>"📄 Embudo"</b> en la barra de filtros.</p>
-    <ul style="font-size:13px;line-height:1.9;padding-left:20px"><li>Columna <b>Etapa</b> con: Lead, Contactado, Prospecto, Meet, Separacion, Venta, Perdido</li><li>Columnas <b>Campana</b> y <b>Anuncio</b> que coincidan con Meta Ads</li><li>En Google Sheets: Archivo → Compartir → Publicar en la web → CSV</li></ul></div>`;return;}
-  if(D.funnelError){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="erbox">⚠ No se pudo leer la hoja: ${esc(D.funnelError)}</div>`;return;}
-  const rows=FUNNEL_ROWS.filter(r=>{if(!r.fecha)return true;const d=r.fecha.slice(0,10);return d>=D.since&&d<=D.until;});
-  if(!rows.length){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="empty">No hay leads en la hoja para este período (${D.since} → ${D.until}).</div>`;return;}
-  const stageIdx=s=>FUNNEL_STAGES.indexOf(s);const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);let perdidos=0;
-  rows.forEach(r=>{if(r.etapa==='Perdido'){perdidos++;return;}const idx=stageIdx(r.etapa);if(idx===-1)return;for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
-  const maxC=counts['Lead']||1;const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,'#e08a07',GREEN];
+  if(!KOMMO_WORKER_URL){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="acard-rec"><h3>Conecta tu CRM Kommo</h3><p style="font-size:13px">Define KOMMO_WORKER_URL en el código para ver el embudo en vivo.</p></div>`;return;}
+  if(D.kommoError||!KOMMO_DATA||KOMMO_DATA.ok!==true){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2></div><div class="erbox">⚠ No se pudo leer Kommo: ${esc(D.kommoError||(KOMMO_DATA&&KOMMO_DATA.error)||'sin datos')}</div>`;return;}
+  const allRows=KOMMO_DATA.rows||[];
+  const rows=allRows.filter(r=>{if(!r.fecha)return true;return r.fecha>=D.since&&r.fecha<=D.until;});
+  if(!rows.length){sec.innerHTML=`<div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">Kommo en vivo</span></div><div class="empty">No hay leads en Kommo para este período (${D.since} → ${D.until}). Prueba un rango más amplio (ej. "30 días" o "Este mes").</div>`;return;}
+  const counts={};FUNNEL_STAGES.forEach(s=>counts[s]=0);let perdidos=0;
+  rows.forEach(r=>{if(r.etapa==='Perdido'){perdidos++;counts['Lead']++;return;}const idx=FUNNEL_STAGES.indexOf(r.etapa);if(idx===-1){counts['Lead']++;return;}for(let i=0;i<=idx;i++)counts[FUNNEL_STAGES[i]]++;});
+  const maxC=counts['Lead']||1;const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,GREEN];
   const bars=FUNNEL_STAGES.map((s,i)=>{const c=counts[s];const w=Math.max(6,(c/maxC)*100);const prev=i>0?counts[FUNNEL_STAGES[i-1]]:c;const conv=i>0&&prev>0?(c/prev)*100:null;return{stage:s,count:c,width:w,conv};});
   const checks=[];for(let i=1;i<FUNNEL_STAGES.length;i++){const key=FUNNEL_STAGES[i-1]+'->'+FUNNEL_STAGES[i];const bench=FUNNEL_HEALTHY[key];const fb=bars[i];const prev=counts[FUNNEL_STAGES[i-1]];if(bench&&fb.conv!==null&&prev>0)checks.push({label:bench.label,value:fb.conv,ok:fb.conv>=bench.min,note:bench.note,min:bench.min});}
-  // per campaign
-  const campSpend={};(D.campaigns.data||[]).forEach(c=>{const n=(c.campaign_name||'').trim().toLowerCase();campSpend[n]=(campSpend[n]||0)+parseFloat(c.spend||0);});
-  const byCamp={};rows.forEach(r=>{const k=(r.campana||'Sin campaña').trim();if(!byCamp[k])byCamp[k]={leads:0,contactado:0,prospecto:0,meet:0,separacion:0,venta:0,perdido:0};const idx=stageIdx(r.etapa);if(r.etapa==='Perdido'){byCamp[k].perdido++;return;}if(idx>=0)byCamp[k].leads++;if(idx>=1)byCamp[k].contactado++;if(idx>=2)byCamp[k].prospecto++;if(idx>=3)byCamp[k].meet++;if(idx>=4)byCamp[k].separacion++;if(idx>=5)byCamp[k].venta++;});
-  const campRows=Object.entries(byCamp).map(([name,v])=>{const sp=campSpend[name.toLowerCase()]||0;return{name,...v,spend:sp,cac:v.venta>0?sp/v.venta:0};}).sort((a,b)=>b.venta-a.venta);
   const totalVentas=counts['Venta']||0,totalLeads=counts['Lead']||0,convGlobal=totalLeads>0?(totalVentas/totalLeads*100):0;
+  const totalSpend=parseFloat((D.acctIns.data||[])[0]?.spend||0);const cac=totalVentas>0?totalSpend/totalVentas:0;
+  const upd=KOMMO_DATA.updated?new Date(KOMMO_DATA.updated).toLocaleString('es-PE'):'';
   sec.innerHTML=`
-    <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${rows.length} leads · Fuente: Google Sheets</span></div>
-    <p class="subtitle">Progreso real de Lead a Venta, cruzado con la inversión publicitaria para calcular el CAC (Costo de Adquisición de Cliente).</p>
+    <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${rows.length} leads · Kommo en vivo</span></div>
+    <p class="subtitle">Progreso real de Lead a Venta desde tu CRM Kommo, con % de conversión entre etapas y semáforo de salud. Actualizado: ${esc(upd)}.</p>
     <div class="hero" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-      ${heroCard(true,'🎯 Leads en el período',fmt(totalLeads),'')}
-      ${heroCard(false,'🏆 Ventas cerradas',fmt(totalVentas),`<span style="color:var(--muted)">Conversión global ${pct(convGlobal,1)}</span>`)}
+      ${heroCard(true,'🎯 Leads',fmt(totalLeads),'')}
+      ${heroCard(false,'🏆 Ventas',fmt(totalVentas),`<span style="color:var(--muted)">Conversión global ${pct(convGlobal,1)}</span>`)}
       ${heroCard(false,'❌ Perdidos',fmt(perdidos),'')}
-      ${heroCard(false,'💵 CAC promedio',totalVentas>0?cur_((campRows.reduce((a,c)=>a+c.spend,0))/totalVentas):'–','')}
+      ${heroCard(false,'💵 CAC (Meta)',cac>0?cur_(cac):'–',`<span style="color:var(--muted)">Inversión Meta / ventas</span>`)}
     </div>
     <div class="crow">
-      <div class="cc"><div class="cc-ttl">🔻 Embudo de conversión</div><div class="cc-desc">Volumen de leads en cada etapa y % de avance desde la anterior.</div>
-        <div class="funnelviz">${bars.map((fb,i)=>`<div class="fbar-row"><div class="fbar-top"><span class="fbar-stage">${fb.stage}</span><span style="color:var(--muted)">${fb.count}${fb.conv!==null?` · <b style="color:${fb.conv>=50?GREEN:AMBER}">${fb.conv.toFixed(0)}%</b>`:''}</span></div><div class="fbar-track"><div class="fbar-fill" style="width:${fb.width}%;background:${stageColors[i]}">${fb.count>0?fb.count:''}</div></div></div>`).join('')}${perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:var(--red)">❌ Perdidos en el período: <b>${perdidos}</b></div>`:''}</div>
+      <div class="cc"><div class="cc-ttl">🔻 Embudo de conversión</div><div class="cc-desc">Leads que alcanzaron cada etapa y % de avance desde la anterior.</div>
+        <div class="funnelviz">${bars.map((fb,i)=>`<div class="fbar-row"><div class="fbar-top"><span class="fbar-stage">${fb.stage}</span><span style="color:var(--muted)">${fb.count}${fb.conv!==null?` · <b style="color:${fb.conv>=50?GREEN:AMBER}">${fb.conv.toFixed(0)}%</b>`:''}</span></div><div class="fbar-track"><div class="fbar-fill" style="width:${fb.width}%;background:${stageColors[i]}">${fb.count>0?fb.count:''}</div></div></div>`).join('')}${perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:var(--red)">❌ Perdidos: <b>${perdidos}</b></div>`:''}</div>
       </div>
-      <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Tasa de conversión de cada etapa vs. meta saludable.</div>
-        ${checks.length?checks.map(c=>`<div class="conv-item"><div class="conv-top"><span style="font-size:12.5px;font-weight:600">${c.label}</span><span class="badge ${c.ok?'g':'r'}">${c.value.toFixed(0)}% ${c.ok?'✓':'✗'}</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">Meta: ≥ ${c.min}% · ${c.note}</div></div>`).join(''):'<div class="empty">Aún no hay suficientes etapas con datos.</div>'}
+      <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Conversión de cada etapa vs. meta saludable.</div>
+        ${checks.length?checks.map(c=>`<div class="conv-item"><div class="conv-top"><span style="font-size:12.5px;font-weight:600">${c.label}</span><span class="badge ${c.ok?'g':'r'}">${c.value.toFixed(0)}% ${c.ok?'✓ Saludable':'✗ Mejorar'}</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">${c.note}</div></div>`).join(''):'<div class="empty">Aún no hay suficientes etapas con datos.</div>'}
       </div>
-    </div>
-    <div class="tcard"><div class="tcard-h">🎯 Embudo por Campaña (con CAC real)</div><div class="tscroll"><table>
-      <thead><tr><th>Campaña</th><th>Inversión</th><th>Leads</th><th>Contactado</th><th>Prospecto</th><th>Meet</th><th>Separación</th><th>Venta</th><th>CAC</th></tr></thead>
-      <tbody>${campRows.length===0?'<tr><td colspan="9" class="empty">Sin datos de campaña en la hoja.</td></tr>':campRows.map(c=>`<tr><td class="namecell" title="${esc(c.name)}">${esc(c.name)}</td><td class="num">${c.spend>0?cur_(c.spend):'–'}</td><td class="num">${c.leads}</td><td class="num">${c.contactado}</td><td class="num">${c.prospecto}</td><td class="num">${c.meet}</td><td class="num">${c.separacion}</td><td class="num"><b>${c.venta}</b></td><td class="num">${c.cac>0?cur_(c.cac):'–'}</td></tr>`).join('')}</tbody>
-    </table></div></div>`;
+    </div>`;
 }
 
 // ═══════════════ 6 · INSIGHTS ═══════════════
