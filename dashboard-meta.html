@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.2</b> (token Meta renovado + Embudo Kommo en vivo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.3</b> (Meta y Kommo por puente Cloudflare, sin tokens en el archivo)</div>
   </div>
 </div>
 
@@ -411,11 +411,13 @@ tbody tr:hover td{background:var(--surface2)}
 //   2) Cambia ACCESS_PASS por la clave que quieras pedir al abrir.
 //   3) (Opcional) Pon el ID de cuenta por defecto en EMBED_ACCOUNT.
 // Si EMBED_TOKEN queda vacío, el panel pide el token manualmente (como antes).
-const EMBED_TOKEN   = "EAAcX7epovb0BR1glY55di4bxNNGdq9XEVkCAUhAJu1TavZCBBEpMo4I0QJZCGz1ZC2bCBzj4ggexJ0bvbZCaLBeRmlrxZBstZCDEzBgiPKoQbX5mKDynkO8c3K9cc5Vzx1M4tG67vgGlPdi3UmA7xb640HgwJrUXqSYZCZChfEDOwUXxHaIfiy2tE8cl8WaSNEs6vQZDZD"; // token Meta (Usuario del sistema)
+const EMBED_TOKEN   = "proxy"; // Meta va por el puente Cloudflare (META_WORKER_URL); sin token en el archivo publico
 const ACCESS_PASS   = "pachamama2026";    // <-- CLAVE DE ACCESO (cámbiala)
 const EMBED_ACCOUNT = "4260660664079722"; // <-- (opcional) ID de cuenta, ej: 4260660664079722
 // URL del puente (Cloudflare Worker) que lee tu CRM Kommo para el embudo en vivo.
 const KOMMO_WORKER_URL = "https://kommo-embudo.m-palomino.workers.dev/";
+// Puente (Cloudflare Worker) que guarda el token de Meta de forma privada.
+const META_WORKER_URL = "https://meta-proxy.m-palomino.workers.dev/";
 // Corrección histórica de leads por campaña. Se RESTA del conteo SOLO cuando Meta no expone
 // su dato oficial (p. ej. días con "Error de pago"). En fechas normales Meta sí entrega el dato
 // y esta corrección se ignora (los números quedan exactos). La clave es parte del nombre de la campaña.
@@ -496,12 +498,13 @@ const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico'};
 
 // ═══════════════ API ═══════════════
 async function api(path,params={}){
-  const u=new URL('https://graph.facebook.com/v19.0/'+path);
-  u.searchParams.set('access_token',TOKEN);
+  // Va al puente de Cloudflare (que agrega el token de Meta de forma privada), no directo a Graph.
+  const u=new URL(META_WORKER_URL);
+  u.searchParams.set('path',path);
   if(path.includes('/insights')) params={...params,use_unified_attribution_setting:'true'};
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
-  const r=await fetch(u);const d=await r.json();
-  if(d.error)throw new Error(d.error.message);return d;
+  const r=await fetch(u,{cache:'no-store'});const d=await r.json();
+  if(d.error)throw new Error(d.error.message||'API');return d;
 }
 
 // ═══════════════ GOOGLE SHEETS ═══════════════
