@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.3</b> (Meta y Kommo por puente Cloudflare, sin tokens en el archivo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.4</b> (Embudo: observación de No Responde + atribución por campaña/anuncio)</div>
   </div>
 </div>
 
@@ -1095,6 +1095,18 @@ function renderEmbudo(D){
   const totalVentas=counts['Venta']||0,convGlobal=total>0?(totalVentas/total*100):0;
   const totalSpend=parseFloat((D.acctIns.data||[])[0]?.spend||0);const cac=totalVentas>0?totalSpend/totalVentas:0;
   const upd=KOMMO_DATA.updated?new Date(KOMMO_DATA.updated).toLocaleString('es-PE'):'';
+  // ── Atribución por campaña/anuncio desde las etiquetas de Kommo ──
+  const allRows=KOMMO_DATA.rows||[];
+  const noRespCount=allRows.filter(r=>r.etapaKommo==='No responde').length;
+  const campMap={};
+  allRows.forEach(r=>{const tags=r.tags||[];let camp='(sin campaña)',ad='—';
+    for(const t of tags){if(/^form/i.test(t)){camp=t;break;}}
+    for(const t of tags){if(/^fb\d+/i.test(t)){ad=t;break;}}
+    if(!campMap[camp])campMap[camp]={camp,ad,noResp:0,agenda:0,meet:0,perdido:0,total:0};
+    const g=campMap[camp];g.total++;if(ad!=='—'&&g.ad==='—')g.ad=ad;
+    if(r.etapa==='Perdido')g.perdido++;else if(r.etapaKommo==='No responde')g.noResp++;else if(r.etapaKommo==='Agenda')g.agenda++;else if(r.etapaKommo==='Meet')g.meet++;});
+  const campList=Object.values(campMap).map(g=>Object.assign({},g,{efect:g.total>0?((g.agenda+g.meet)/g.total*100):0})).sort((a,b)=>b.total-a.total);
+  const topCamp=campList[0];
   sec.innerHTML=`
     <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${total} leads totales · Kommo en vivo</span></div>
     <p class="subtitle">Total de leads que ingresaron y cuántos hay en cada etapa ahora (igual que tus columnas de Kommo). El panel de salud mide la <b>conversión real</b> entre etapas. Actualizado: ${esc(upd)}.</p>
@@ -1111,6 +1123,21 @@ function renderEmbudo(D){
       <div class="cc"><div class="cc-ttl">✅ Salud del proceso comercial</div><div class="cc-desc">Conversión real: de los que llegaron a una etapa, cuántos pasaron a la siguiente.</div>
         ${checks.length?checks.map(c=>`<div class="conv-item"><div class="conv-top"><span style="font-size:12.5px;font-weight:600">${c.label}</span><span class="badge ${c.ok?'g':'r'}">${c.value.toFixed(0)}% ${c.ok?'✓ Saludable':'✗ Mejorar'}</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">${c.note}</div></div>`).join(''):'<div class="empty">Aún no hay suficientes etapas con datos.</div>'}
       </div>
+    </div>
+    <div class="cc" style="border-left:4px solid ${AMBER};margin-bottom:16px">
+      <div class="cc-ttl">🔔 Observaciones del embudo (Kommo)</div>
+      <div style="font-size:13.5px;line-height:1.75">
+        Actualmente hay <b style="color:${RED}">${noRespCount}</b> leads en la etapa <b>"No Responde"</b> (ingresaron pero aún no contestan) — es donde más se estanca el embudo, así que ahí conviene reforzar el seguimiento/velocidad de contacto.
+        ${topCamp&&topCamp.camp!=='(sin campaña)'?`<br>La campaña que más leads trae es <b>${esc(topCamp.camp)}</b> con <b>${topCamp.total}</b> leads (${topCamp.efect.toFixed(0)}% avanzó más allá de "No Responde").`:''}
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-h">📊 ¿Qué campaña / anuncio es más funcional?</div>
+      <div class="tscroll"><table>
+        <thead><tr><th>Campaña (formulario)</th><th>Anuncio (ID Meta)</th><th>No Responde</th><th>Agenda</th><th>Meet</th><th>Desistido</th><th>Total</th><th>% Efectivo</th></tr></thead>
+        <tbody>${campList.length?campList.map(g=>`<tr><td class="namecell" title="${esc(g.camp)}">${esc(g.camp)}</td><td class="num" style="font-size:11px;color:var(--muted)">${esc(g.ad)}</td><td class="num">${g.noResp}</td><td class="num">${g.agenda}</td><td class="num">${g.meet}</td><td class="num">${g.perdido}</td><td class="num"><b>${g.total}</b></td><td class="num"><span style="color:${g.efect>=25?GREEN:AMBER};font-weight:700">${g.efect.toFixed(0)}%</span></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin datos de campaña en Kommo.</td></tr>'}</tbody>
+      </table></div>
+      <div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.55"><b>% Efectivo</b> = leads que avanzaron más allá de "No Responde" (llegaron a Agenda o Meet); mientras más alto, más funcional la campaña. <b>Nota:</b> Kommo guarda el <b>formulario/campaña</b> y su ID de Meta, pero no el creativo individual, por eso no separa flyer vs video. Para ver qué creativo (flyer o video) rinde más, revisa la pestaña <b>🖼 Creativos</b> (datos de Meta con miniatura), o configura tu integración Kommo↔Meta para capturar el <i>ad_id</i> por lead.</div>
     </div>`;
 }
 
