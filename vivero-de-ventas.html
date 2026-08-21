@@ -341,6 +341,9 @@
   .meta-live-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
   .meta-live-controls select { border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12.5px; }
   .meta-live-controls .spacer { flex: 1; }
+  .meta-live-controls .meta-custom-range { display: flex; align-items: center; gap: 6px; }
+  .meta-live-controls .meta-custom-range span { font-size: 12px; color: var(--text-secondary); }
+  .meta-live-controls input[type="date"] { border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12.5px; }
   .meta-status-line { font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .meta-status-line .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; animation: pulseAnim2 2s ease-in-out infinite; }
   .meta-status-line.stale .pulse { background: var(--warning); animation: none; }
@@ -923,18 +926,25 @@
     { id: 'act_1533988627924707', label: 'Chamba Pachamama' },
     { id: 'act_761696470067252', label: 'Chamba Altoque' }
   ];
-  var metaLive = { status: 'loading', account: META_ACCOUNTS[0].id, range: 'last30', currency: 'PEN', daily: [], campaigns: [], error: null, updatedAt: null };
+  var metaDefaultRange = metaComputeRange('last30');
+  var metaLive = { status: 'loading', account: META_ACCOUNTS[0].id, range: 'last30', currency: 'PEN', daily: [], campaigns: [], error: null, updatedAt: null, customSince: metaDefaultRange.since, customUntil: metaDefaultRange.until };
   var metaRefreshTimer = null;
 
   function metaPad(n) { return String(n).padStart(2, '0'); }
   function metaToISO(d) { return d.getFullYear() + '-' + metaPad(d.getMonth() + 1) + '-' + metaPad(d.getDate()); }
   function metaComputeRange(v) {
+    // "last7"/"last30"/"thisMonth" terminan AYER (no hoy), igual que la
+    // convención por defecto de Meta Ads Manager — así el día de hoy, que
+    // todavía está acumulando gasto/resultados, no se mezcla a medias con
+    // un rango que se supone ya cerrado, y los números coinciden con lo
+    // que el equipo ve directamente en Meta.
     var now = new Date(); var since, until;
+    var yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
     if (v === 'today') { since = until = new Date(now); }
-    else if (v === 'yesterday') { since = until = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1); }
-    else if (v === 'last7') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6); }
-    else if (v === 'last30') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29); }
-    else if (v === 'thisMonth') { since = new Date(now.getFullYear(), now.getMonth(), 1); until = new Date(now); }
+    else if (v === 'yesterday') { since = until = new Date(yesterday); }
+    else if (v === 'last7') { until = new Date(yesterday); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7); }
+    else if (v === 'last30') { until = new Date(yesterday); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30); }
+    else if (v === 'thisMonth') { since = new Date(now.getFullYear(), now.getMonth(), 1); until = new Date(yesterday); }
     else { since = new Date(now.getFullYear(), now.getMonth() - 1, 1); until = new Date(now.getFullYear(), now.getMonth(), 0); }
     return { since: metaToISO(since), until: metaToISO(until) };
   }
@@ -961,7 +971,18 @@
     if (META_PROXY_URL.indexOf('REEMPLAZA') > -1) { metaLive.status = 'unconfigured'; renderDashboard(); return; }
     metaLive.status = 'loading';
     renderMetaStatusOnly();
-    var range = metaComputeRange(metaLive.range);
+    var range;
+    if (metaLive.range === 'custom') {
+      if (!metaLive.customSince || !metaLive.customUntil || metaLive.customSince > metaLive.customUntil) {
+        metaLive.status = 'error';
+        metaLive.error = 'Elige una fecha de inicio y fin válidas (inicio no puede ser posterior a fin).';
+        refreshAll();
+        return;
+      }
+      range = { since: metaLive.customSince, until: metaLive.customUntil };
+    } else {
+      range = metaComputeRange(metaLive.range);
+    }
     var qs = new URLSearchParams({ account: metaLive.account, since: range.since, until: range.until });
     if (META_ACCESS_KEY) qs.set('key', META_ACCESS_KEY);
     try {
@@ -1072,8 +1093,8 @@
     ];
     var row2 = [
       { label: 'Inversión total', value: fmtMoney(m.totalSpend), sub: m.totalImpr ? fmtNum(m.totalImpr) + ' impresiones' : 'registra tu inversión diaria' },
-      { label: 'CPL (blended)', value: cpl != null ? fmtMoney(cpl) : '—', sub: m.totalPaidLeads + ' leads de canales pagados' },
-      { label: 'Costo por calificado', value: costQual != null ? fmtMoney(costQual) : '—', sub: 'sobre leads de canales pagados' },
+      { label: 'CPL (blended)', value: cpl != null ? fmtMoney2(cpl) : '—', sub: m.totalPaidLeads + ' leads de canales pagados' },
+      { label: 'Costo por calificado', value: costQual != null ? fmtMoney2(costQual) : '—', sub: 'sobre leads de canales pagados' },
       { label: 'CTR', value: ctr != null ? fmtPctDecimal(ctr) : '—', sub: m.totalClicks + ' clics registrados' },
       { label: 'CPC', value: cpc != null ? fmtMoney2(cpc) : '—', sub: 'costo por clic' },
       { label: 'CPM', value: cpm != null ? fmtMoney2(cpm) : '—', sub: 'costo por mil impresiones' }
@@ -1276,8 +1297,8 @@
         '<td>' + (p.key === 'bolsas' ? '—' : fmtMoney(spend)) + '</td>' +
         '<td>' + (ctr != null ? fmtPctDecimal(ctr) : '—') + '</td>' +
         '<td>' + (cpc != null ? fmtMoney2(cpc) : '—') + '</td>' +
-        '<td>' + (cpl != null ? fmtMoney(cpl) : (p.key === 'bolsas' ? 'Orgánico' : '—')) + '</td>' +
-        '<td>' + (costQual != null ? fmtMoney(costQual) : '—') + '</td></tr>';
+        '<td>' + (cpl != null ? fmtMoney2(cpl) : (p.key === 'bolsas' ? 'Orgánico' : '—')) + '</td>' +
+        '<td>' + (costQual != null ? fmtMoney2(costQual) : '—') + '</td></tr>';
     }).join('');
     var blendedCtr = m.totalImpr ? (m.totalClicks / m.totalImpr) * 100 : null;
     var blendedCpc = m.totalClicks ? m.totalSpend / m.totalClicks : null;
@@ -1289,8 +1310,8 @@
       '<tr><td>Total</td><td>' + m.total + '</td><td>' + m.qualifiedTotal + '</td><td>' + fmtMoney(m.totalSpend) + '</td>' +
       '<td>' + (blendedCtr != null ? fmtPctDecimal(blendedCtr) : '—') + '</td>' +
       '<td>' + (blendedCpc != null ? fmtMoney2(blendedCpc) : '—') + '</td>' +
-      '<td>' + (m.totalPaidLeads ? fmtMoney(m.totalSpend / m.totalPaidLeads) : '—') + '</td>' +
-      '<td>' + (m.qualifiedPaid ? fmtMoney(m.totalSpend / m.qualifiedPaid) : '—') + '</td></tr>' +
+      '<td>' + (m.totalPaidLeads ? fmtMoney2(m.totalSpend / m.totalPaidLeads) : '—') + '</td>' +
+      '<td>' + (m.qualifiedPaid ? fmtMoney2(m.totalSpend / m.qualifiedPaid) : '—') + '</td></tr>' +
       '</tbody></table></div></div>';
   }
 
@@ -1319,7 +1340,7 @@
     var tiles = [
       { label: 'Inversión total', value: fmtMoney(totalSpend), sub: 'periodo seleccionado' },
       { label: 'Resultados (' + resultLabel + ')', value: String(totalResults), sub: 'suma del período' },
-      { label: 'Costo por resultado', value: cpl != null ? fmtMoney(cpl) : '—', sub: 'inversión / resultados' },
+      { label: 'Costo por resultado', value: cpl != null ? fmtMoney2(cpl) : '—', sub: 'inversión / resultados' },
       { label: 'CTR', value: ctr != null ? fmtPctDecimal(ctr) : '—', sub: totalClicks + ' clics' },
       { label: 'CPC', value: cpc != null ? fmtMoney2(cpc) : '—', sub: 'costo por clic' },
       { label: 'CPM', value: cpm != null ? fmtMoney2(cpm) : '—', sub: totalImpr + ' impresiones' }
@@ -1330,7 +1351,7 @@
     var chartsHtml = '<div class="chart-grid-3">' +
       renderBarTrend('Inversión diaria', 'Gasto reportado por Meta', spendByDay, 'var(--berry)', function (v) { return fmtMoney(v); }) +
       renderLineChart('CTR diario', 'Clics ÷ impresiones', ctrPoints, 'var(--cat-1)', function (v) { return v.toFixed(2) + '%'; }) +
-      renderLineChart('Costo por resultado diario', 'Inversión ÷ resultados de ese día', cplPoints, 'var(--accent)', function (v) { return fmtMoney(v); }) +
+      renderLineChart('Costo por resultado diario', 'Inversión ÷ resultados de ese día', cplPoints, 'var(--accent)', function (v) { return fmtMoney2(v); }) +
       '</div>';
     return kpiHtml + chartsHtml;
   }
@@ -1347,7 +1368,7 @@
         '<td><span class="status-dot ' + dotClass + '"></span>' + (r.status ? metaStatusLabel(r.status) : '—') + '</td>' +
         '<td>' + fmtMoney(spend) + '</td><td>' + fmtNum(impr) + '</td><td>' + fmtNum(clicks) + '</td>' +
         '<td>' + (rCtr != null ? fmtPctDecimal(rCtr) : '—') + '</td><td>' + (rCpc != null ? fmtMoney2(rCpc) : '—') + '</td>' +
-        '<td>' + fmtNum(res.count) + '</td><td>' + (rCpl != null ? fmtMoney(rCpl) : '—') + '</td></tr>';
+        '<td>' + fmtNum(res.count) + '</td><td>' + (rCpl != null ? fmtMoney2(rCpl) : '—') + '</td></tr>';
     }).join('');
     if (!metaLive.campaigns.length) {
       rows = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);font-family:var(--font-body)">Sin campañas con actividad en este período.</td></tr>';
@@ -1364,10 +1385,14 @@
       if (a.id === metaLive.account) accountLabel = a.label;
       return '<option value="' + a.id + '"' + (a.id === metaLive.account ? ' selected' : '') + '>' + a.label + '</option>';
     }).join('');
-    var rangeLabels = { today: 'Hoy', yesterday: 'Ayer', last7: 'Últimos 7 días', last30: 'Últimos 30 días', thisMonth: 'Mes actual', lastMonth: 'Mes anterior' };
+    var rangeLabels = { today: 'Hoy', yesterday: 'Ayer', last7: 'Últimos 7 días', last30: 'Últimos 30 días', thisMonth: 'Mes actual', lastMonth: 'Mes anterior', custom: 'Personalizado…' };
     var rangeOptions = Object.keys(rangeLabels).map(function (k) {
       return '<option value="' + k + '"' + (k === metaLive.range ? ' selected' : '') + '>' + rangeLabels[k] + '</option>';
     }).join('');
+    var customRangeHtml = metaLive.range === 'custom'
+      ? '<div class="meta-custom-range"><span>Desde</span><input type="date" id="metaSinceInput" value="' + metaLive.customSince + '" max="' + metaLive.customUntil + '">' +
+        '<span>hasta</span><input type="date" id="metaUntilInput" value="' + metaLive.customUntil + '" min="' + metaLive.customSince + '"></div>'
+      : '';
 
     var statusClass = '', statusText;
     if (metaLive.status === 'unconfigured') { statusClass = 'error'; statusText = 'Sin configurar — falta META_PROXY_URL'; }
@@ -1389,6 +1414,7 @@
       '<div class="meta-live-controls">' +
       '<select id="metaAccountSelect">' + accountOptions + '</select>' +
       '<select id="metaRangeSelect">' + rangeOptions + '</select>' +
+      customRangeHtml +
       '<div class="spacer"></div>' +
       '<button type="button" class="btn-ghost" id="metaRefreshBtn" artifact-local>🔄 Actualizar ahora</button>' +
       '</div>' +
@@ -1438,7 +1464,7 @@
       '<div class="panel-grid">' + renderFunnel(m) + renderBarPanel('Leads por plataforma', 'Origen de los postulantes recibidos', platEntries) + '</div>' +
       '<div class="panel-grid">' + renderBarPanel('Leads por formato de anuncio', 'Qué tipo de creatividad los trajo', creaEntries) + renderBarTrend('Leads por día', 'Ingreso de postulantes', m.byDay, 'var(--accent)', function (v) { return v + ' lead' + (v === 1 ? '' : 's'); }) + '</div>' +
       '<div class="chart-grid-2">' + renderBarTrend('Inversión diaria', 'Gasto reportado en Meta Ads', spendByDay, 'var(--berry)', function (v) { return fmtMoney(v); }) + renderLineChart('CTR diario', 'Clics ÷ impresiones de cada día', ctrPoints, 'var(--cat-1)', function (v) { return v.toFixed(2) + '%'; }) + '</div>' +
-      '<div class="chart-grid-2">' + renderLineChart('CPL diario (aprox.)', 'Inversión del día ÷ leads recibidos ese mismo día', cplPoints, 'var(--accent)', function (v) { return fmtMoney(v); }) +
+      '<div class="chart-grid-2">' + renderLineChart('CPL diario (aprox.)', 'Inversión del día ÷ leads recibidos ese mismo día', cplPoints, 'var(--accent)', function (v) { return fmtMoney2(v); }) +
       '<div class="panel"><h3>Cómo leer el CPL diario</h3><p class="panel-hint">Una aproximación, no una atribución exacta</p><p style="font-size:12.5px;color:var(--text-secondary);line-height:1.6">Compara la inversión de un día con los leads que entraron ese mismo día — útil para ver la tendencia, pero un lead puede haber visto el anuncio uno o más días antes de postular. Para el costo por lead más confiable, usa el CPL (blended) del bloque de arriba, calculado sobre todo el periodo.</p></div>' +
       '</div>' +
       renderCostTable(m);
@@ -1450,6 +1476,8 @@
   dashboard.addEventListener('change', function (e) {
     if (e.target.id === 'metaAccountSelect') { metaLive.account = e.target.value; loadMetaLive(); }
     else if (e.target.id === 'metaRangeSelect') { metaLive.range = e.target.value; loadMetaLive(); }
+    else if (e.target.id === 'metaSinceInput') { metaLive.customSince = e.target.value; loadMetaLive(); }
+    else if (e.target.id === 'metaUntilInput') { metaLive.customUntil = e.target.value; loadMetaLive(); }
   });
   dashboard.addEventListener('click', function (e) {
     if (e.target.closest('#metaRefreshBtn')) loadMetaLive();
