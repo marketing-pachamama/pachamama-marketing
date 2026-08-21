@@ -583,8 +583,8 @@
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
 
-  function fmtMoney(n) { return 'S/ ' + Math.round(n).toLocaleString('es-PE'); }
-  function fmtMoney2(n) { return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtMoney(n) { return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtMoney2(n) { return fmtMoney(n); }
   function fmtNum(n) { return Math.round(n).toLocaleString('es-PE'); }
   function fmtPct(n) { if (!isFinite(n)) return '—'; return Math.round(n) + '%'; }
   function fmtPctDecimal(n) { if (!isFinite(n)) return '—'; return n.toFixed(2) + '%'; }
