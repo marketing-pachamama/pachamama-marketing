@@ -940,16 +940,20 @@
   }
   function metaExtractResult(actions) {
     actions = actions || [];
+    // Orden de prioridad: Meta a veces reporta el mismo resultado bajo más de un
+    // action_type (p.ej. "lead" y "onsite_conversion.lead_grouped" para el mismo
+    // evento). Tomamos solo el primero que aparezca en vez de sumarlos todos,
+    // para no contar el mismo lead dos veces.
     var leadTypes = ['lead', 'onsite_conversion.lead_grouped', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead'];
     var msgTypes = ['onsite_conversion.messaging_conversation_started_7d', 'onsite_conversion.total_messaging_connection'];
-    var leads = 0, msgs = 0;
-    actions.forEach(function (a) {
-      var v = Number(a.value) || 0;
-      if (leadTypes.indexOf(a.action_type) > -1) leads += v;
-      if (msgTypes.indexOf(a.action_type) > -1) msgs += v;
-    });
-    if (leads > 0) return { count: leads, label: 'leads' };
-    if (msgs > 0) return { count: msgs, label: 'conversaciones WhatsApp' };
+    var byType = {};
+    actions.forEach(function (a) { byType[a.action_type] = (byType[a.action_type] || 0) + (Number(a.value) || 0); });
+    for (var i = 0; i < leadTypes.length; i++) {
+      if (byType[leadTypes[i]] > 0) return { count: byType[leadTypes[i]], label: 'leads' };
+    }
+    for (var j = 0; j < msgTypes.length; j++) {
+      if (byType[msgTypes[j]] > 0) return { count: byType[msgTypes[j]], label: 'conversaciones WhatsApp' };
+    }
     return { count: 0, label: 'resultados' };
   }
 
