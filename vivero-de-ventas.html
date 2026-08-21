@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vivero de Ventas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F3F5EF;
+    --plane: #ECF0E5;
+    --surface: #FFFFFF;
+    --surface-2: #F5F7F1;
+    --text-primary: #16201A;
+    --text-secondary: #4B5245;
+    --text-muted: #838A78;
+    --border: rgba(15,26,18,0.12);
+    --border-strong: rgba(15,26,18,0.24);
+    --accent: #2E5B3E;
+    --accent-strong: #1F4A30;
+    --accent-soft: #E1EDE3;
+    --accent-ink: #FFFFFF;
+    --berry: #8C2C4C;
+    --berry-strong: #6E2039;
+    --berry-soft: #F5E3EA;
+    --good: #0ca30c;
+    --good-soft: #E1F5E1;
+    --warning: #fab219;
+    --warning-soft: #FFF3DC;
+    --critical: #d03b3b;
+    --critical-soft: #FBE4E4;
+    --stage-1: #BFE0C9;
+    --stage-2: #93CBA6;
+    --stage-3: #63B183;
+    --stage-4: #3D9066;
+    --stage-5: #1F6B45;
+    --cat-1: #2a78d6;
+    --cat-2: #eb6834;
+    --cat-3: #1baf7a;
+    --cat-4: #eda100;
+    --cat-5: #e87ba4;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --shadow-card: 0 1px 2px rgba(15,26,18,0.07), 0 1px 1px rgba(15,26,18,0.05);
+    --shadow-pop: 0 12px 28px rgba(15,26,18,0.14);
+    --radius-md: 12px;
+    --radius-sm: 7px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #10140E;
+      --plane: #0A0D08;
+      --surface: #171C13;
+      --surface-2: #1D2318;
+      --text-primary: #F3F5EF;
+      --text-secondary: #C7CBBE;
+      --text-muted: #8B9080;
+      --border: rgba(255,255,255,0.12);
+      --border-strong: rgba(255,255,255,0.24);
+      --accent: #6FB585;
+      --accent-strong: #86C79A;
+      --accent-soft: rgba(111,181,133,0.16);
+      --accent-ink: #0B1310;
+      --berry: #E08CAE;
+      --berry-strong: #F0A9C3;
+      --berry-soft: rgba(224,140,174,0.16);
+      --good: #0ca30c;
+      --good-soft: rgba(12,163,12,0.18);
+      --warning: #fab219;
+      --warning-soft: rgba(250,178,25,0.18);
+      --critical: #e66767;
+      --critical-soft: rgba(230,103,103,0.18);
+      --stage-1: #2E5B3E;
+      --stage-2: #3E7350;
+      --stage-3: #4F8B63;
+      --stage-4: #63A578;
+      --stage-5: #86C79A;
+      --cat-1: #3987e5;
+      --cat-2: #d95926;
+      --cat-3: #199e70;
+      --cat-4: #c98500;
+      --cat-5: #d55181;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.25);
+      --shadow-pop: 0 16px 32px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10140E;
+    --plane: #0A0D08;
+    --surface: #171C13;
+    --surface-2: #1D2318;
+    --text-primary: #F3F5EF;
+    --text-secondary: #C7CBBE;
+    --text-muted: #8B9080;
+    --border: rgba(255,255,255,0.12);
+    --border-strong: rgba(255,255,255,0.24);
+    --accent: #6FB585;
+    --accent-strong: #86C79A;
+    --accent-soft: rgba(111,181,133,0.16);
+    --accent-ink: #0B1310;
+    --berry: #E08CAE;
+    --berry-strong: #F0A9C3;
+    --berry-soft: rgba(224,140,174,0.16);
+    --good: #0ca30c;
+    --good-soft: rgba(12,163,12,0.18);
+    --warning: #fab219;
+    --warning-soft: rgba(250,178,25,0.18);
+    --critical: #e66767;
+    --critical-soft: rgba(230,103,103,0.18);
+    --stage-1: #2E5B3E;
+    --stage-2: #3E7350;
+    --stage-3: #4F8B63;
+    --stage-4: #63A578;
+    --stage-5: #86C79A;
+    --cat-1: #3987e5;
+    --cat-2: #d95926;
+    --cat-3: #199e70;
+    --cat-4: #c98500;
+    --cat-5: #d55181;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.25);
+    --shadow-pop: 0 16px 32px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
+  button { font-family: inherit; }
+  input, [contenteditable] { font-family: inherit; color: var(--text-primary); }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .app { max-width: 1440px; margin: 0 auto; padding: 0 24px 64px; }
+
+  /* ---------- Topbar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 16px 0;
+    background: linear-gradient(var(--bg) 82%, transparent);
+    margin: 0 -24px; padding-left: 24px; padding-right: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: var(--radius-sm);
+    background: var(--accent-soft); display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex: none;
+  }
+  .brand-text h1 { font-size: 21px; letter-spacing: -0.01em; }
+  .brand-text p { margin: 1px 0 0; font-size: 12.5px; color: var(--text-muted); }
+
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 999px; border: 1px solid var(--border); }
+  .tab {
+    border: none; background: transparent; color: var(--text-secondary);
+    font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .btn-ghost {
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-primary);
+    font-size: 13px; font-weight: 600; padding: 9px 14px; border-radius: 999px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  /* ---------- Config panel ---------- */
+  .config-panel {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 18px; box-shadow: var(--shadow-card);
+  }
+  [data-local-config="open"] .config-panel { display: block; }
+  .config-panel h3 { font-size: 14.5px; margin-bottom: 4px; }
+  .config-panel > p.hint { color: var(--text-muted); font-size: 12.5px; margin: 0 0 14px; }
+  .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .field-block label { display: block; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 6px; }
+  .field-block input {
+    width: 100%; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary);
+    border-radius: var(--radius-sm); padding: 8px 10px; font-size: 13.5px; font-family: var(--font-mono);
+  }
+  .field-block.text input { font-family: var(--font-body); }
+  .config-note { grid-column: 1 / -1; font-size: 12px; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 2px; }
+
+  /* ---------- Views ---------- */
+  .view { display: none; }
+  [data-local-tab="pipeline"] .view-pipeline { display: block; }
+  [data-local-tab="adlog"] .view-adlog { display: block; }
+  [data-local-tab="dashboard"] .view-dashboard { display: block; }
+
+  details.help { background: var(--accent-soft); border-radius: var(--radius-md); padding: 4px 16px; margin-bottom: 16px; }
+  details.help summary { cursor: pointer; padding: 10px 0; font-size: 13.5px; font-weight: 600; color: var(--accent-strong); }
+  details.help p { margin: 0 0 14px; font-size: 13px; color: var(--text-secondary); max-width: 68ch; }
+
+  /* ---------- Forms shared (add-lead / add-ad-entry) ---------- */
+  .add-lead-form {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 14px; margin-bottom: 18px; box-shadow: var(--shadow-card);
+  }
+  .add-lead-form input[type="text"], .add-lead-form input[type="tel"], .add-lead-form input[type="number"], .add-lead-form input[type="date"] {
+    border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary);
+    border-radius: var(--radius-sm); padding: 9px 11px; font-size: 13.5px;
+  }
+  .add-lead-form .field-name { flex: 1 1 200px; min-width: 160px; }
+  .add-lead-form .field-phone { flex: 1 1 150px; min-width: 130px; }
+  .add-lead-form .field-exp { width: 88px; }
+  .add-lead-form .field-location { flex: 1 1 140px; min-width: 120px; }
+  .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-secondary);
+    font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .check-inline { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
+  .check-inline input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .btn-primary {
+    border: none; background: var(--berry); color: #fff; font-weight: 700; font-size: 13.5px;
+    padding: 10px 18px; border-radius: 999px; cursor: pointer; margin-left: auto;
+  }
+  .btn-primary:hover { background: var(--berry-strong); }
+  .form-required-note { flex-basis: 100%; font-size: 11.5px; color: var(--text-muted); }
+
+  /* ---------- Board ---------- */
+  .board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+  .column {
+    flex: 0 0 268px; background: var(--plane); border: 1px solid var(--border); border-radius: var(--radius-md);
+    display: flex; flex-direction: column; max-height: calc(100vh - 230px); min-height: 200px;
+  }
+  .column-head { display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px; }
+  .column-head .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+  .column-head h2 { font-size: 13px; font-family: var(--font-body); font-weight: 700; flex: 1; }
+  .column-head .count {
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px;
+  }
+  .column[data-stage="descartado"] .column-head .count,
+  .column[data-stage="contratado"] .column-head .count { color: var(--text-secondary); }
+  .column-body { flex: 1; overflow-y: auto; padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .column-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 18px 6px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+
+  /* ---------- Lead card ---------- */
+  .lead-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 11px 12px; box-shadow: var(--shadow-card);
+  }
+  .lead-card.card-qualified { border-color: color-mix(in srgb, var(--good) 45%, var(--border-strong)); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+  .card-name { font-weight: 700; font-size: 14px; margin: 0 0 2px; flex: 1; min-width: 0; overflow-wrap: break-word; }
+  .card-name:empty::before { content: 'Nombre del postulante'; color: var(--text-muted); font-weight: 500; }
+  .card-qual-badge {
+    display: none; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+    background: var(--good-soft); color: var(--good); border-radius: 999px; padding: 2px 7px; flex: none; white-space: nowrap;
+  }
+  .card-qualified .card-qual-badge { display: inline-flex; }
+  .card-phone-row { display: flex; align-items: center; gap: 6px; margin: 4px 0 8px; }
+  .card-phone { font-size: 12.5px; color: var(--text-secondary); font-family: var(--font-mono); flex: 1; min-width: 0; overflow-wrap: break-word; }
+  .card-phone:empty::before { content: 'WhatsApp / celular'; color: var(--text-muted); font-family: var(--font-body); }
+  .card-wa {
+    flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; text-decoration: none;
+  }
+  .card-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .badge {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; cursor: pointer; border: none;
+    color: #16181a;
+  }
+  .badge[data-value="meta-leads"] { background: var(--cat-1); color: #fff; }
+  .badge[data-value="meta-wa"] { background: var(--cat-2); color: #fff; }
+  .badge[data-value="tiktok"] { background: var(--cat-3); color: #fff; }
+  .badge[data-value="google"] { background: var(--cat-4); }
+  .badge[data-value="bolsas"] { background: var(--cat-5); color: #fff; }
+  .badge[data-value="video"] { background: var(--cat-1); color: #fff; }
+  .badge[data-value="carrusel"] { background: var(--cat-2); color: #fff; }
+  .badge[data-value="imagen"] { background: var(--cat-3); color: #fff; }
+  .badge[data-value="ugc"] { background: var(--cat-4); }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .meta-exp { display: flex; align-items: center; gap: 4px; }
+  .meta-exp input { width: 42px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: 5px; padding: 2px 4px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
+  .meta-loc { font-size: 12px; }
+  .meta-loc:empty::before { content: 'Ubicación'; color: var(--text-muted); }
+  .card-checks { display: flex; gap: 12px; margin-bottom: 8px; }
+  .card-checks label { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--text-secondary); }
+  .card-checks input { accent-color: var(--good); width: 14px; height: 14px; }
+  .card-notes {
+    font-size: 12px; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 6px 8px; min-height: 30px; margin-bottom: 9px;
+  }
+  .card-notes:empty::before { content: attr(data-placeholder); color: var(--text-muted); }
+  .card-actions { display: flex; gap: 6px; }
+  .card-actions button {
+    flex: 1; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary);
+    font-size: 11.5px; font-weight: 700; padding: 7px 6px; border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .btn-advance { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: var(--accent) !important; }
+  .btn-discard { color: var(--critical) !important; }
+  .btn-reactivate { background: var(--berry) !important; color: #fff !important; border-color: var(--berry) !important; }
+  .column[data-stage="descartado"] .btn-advance,
+  .column[data-stage="descartado"] .btn-discard,
+  .column[data-stage="contratado"] .btn-advance,
+  .column[data-stage="contratado"] .btn-discard { display: none; }
+  .btn-reactivate { display: none; }
+  .column[data-stage="descartado"] .btn-reactivate { display: block; }
+  .hired-flag { display: none; font-size: 11.5px; font-weight: 700; color: var(--good); text-align: center; padding: 7px 0; }
+  .column[data-stage="contratado"] .hired-flag { display: block; }
+
+  /* ---------- Ad performance log ---------- */
+  .log-table-wrap { overflow-x: auto; }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 600px; }
+  .log-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+  .log-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-variant-numeric: tabular-nums; vertical-align: middle; }
+  .log-table td:nth-child(1) { white-space: nowrap; }
+  .log-table input[type="number"] { width: 88px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: 5px; padding: 4px 6px; font-family: var(--font-mono); font-size: 12px; }
+  .ae-del { border: none; background: transparent; color: var(--critical); cursor: pointer; font-size: 15px; padding: 2px 6px; }
+  .log-empty { font-family: var(--font-body); font-size: 12.5px; color: var(--text-muted); padding: 16px 4px; text-align: center; }
+
+  /* ---------- Dashboard ---------- */
+  .dash-updated { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .dash-updated .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; }
+  .meta-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--warning-soft); color: color-mix(in srgb, var(--warning) 55%, var(--text-primary)); }
+  .meta-status .dot2 { width: 6px; height: 6px; border-radius: 50%; background: var(--warning); flex: none; }
+  .meta-status.is-live { background: var(--good-soft); color: color-mix(in srgb, var(--good) 55%, var(--text-primary)); }
+  .meta-status.is-live .dot2 { background: var(--good); }
+
+  /* Live Meta Ads panel (inside Dashboard) */
+  .meta-live-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-card); margin-bottom: 20px; }
+  .meta-live-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .meta-live-head h3 { font-size: 14.5px; }
+  .meta-live-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
+  .meta-live-controls select { border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12.5px; }
+  .meta-live-controls .spacer { flex: 1; }
+  .meta-status-line { font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .meta-status-line .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; animation: pulseAnim2 2s ease-in-out infinite; }
+  .meta-status-line.stale .pulse { background: var(--warning); animation: none; }
+  .meta-status-line.error .pulse { background: var(--critical); animation: none; }
+  @keyframes pulseAnim2 { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) { .meta-status-line .pulse { animation: none !important; } }
+  .meta-error-banner { display: none; background: var(--critical-soft); border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--border)); border-radius: var(--radius-sm); padding: 11px 13px; font-size: 12.5px; margin-bottom: 14px; }
+  .meta-error-banner.show { display: block; }
+  .meta-error-banner b { color: var(--critical); }
+  .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 980px) { .chart-grid-3 { grid-template-columns: 1fr; } }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .status-dot.active { background: var(--good); }
+  .status-dot.paused { background: var(--text-muted); }
+  .status-dot.other { background: var(--warning); }
+
+  .kpi-group { margin-bottom: 14px; }
+  .kpi-group-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin: 0 0 8px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .kpi-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 15px; box-shadow: var(--shadow-card); }
+  .kpi-tile .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  .kpi-tile .kpi-value { font-family: var(--font-mono); font-size: 23px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .kpi-tile .kpi-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 5px; }
+
+  /* Insights */
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }
+  .insight-card { display: flex; gap: 10px; padding: 13px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); font-size: 12.5px; line-height: 1.5; }
+  .insight-card .ic-icon { flex: none; font-size: 16px; line-height: 1.3; }
+  .insight-card b { font-weight: 700; }
+  .insight-card.tone-good { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 35%, var(--border)); }
+  .insight-card.tone-warning { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 40%, var(--border)); }
+  .insight-card.tone-info { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+
+  .panel-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 940px) { .panel-grid, .chart-grid-2 { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-card); }
+  .panel h3 { font-size: 14.5px; margin-bottom: 3px; }
+  .panel .panel-hint { font-size: 12px; color: var(--text-muted); margin: 0 0 16px; }
+
+  .funnel-row { display: grid; grid-template-columns: 118px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .funnel-row .funnel-label { font-size: 12.5px; font-weight: 600; }
+  .funnel-track { background: var(--surface-2); border-radius: 999px; height: 20px; overflow: hidden; }
+  .funnel-fill { height: 100%; border-radius: 999px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; min-width: 26px; }
+  .funnel-fill span { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #fff; }
+  .funnel-conv { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); text-align: right; }
+  .funnel-discard { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 12.5px; }
+  .funnel-discard b { font-family: var(--font-mono); color: var(--critical); }
+
+  .bar-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 14px; }
+  .bar-legend .lg-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
+  .bar-legend .lg-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .bar-row { display: grid; grid-template-columns: 108px 1fr 34px; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .bar-row .bar-name { font-size: 12px; color: var(--text-secondary); }
+  .bar-track { background: var(--surface-2); border-radius: 999px; height: 14px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; min-width: 4px; }
+  .bar-count { font-family: var(--font-mono); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .trend-panel { margin-bottom: 0; }
+  .trend-svg-wrap, .line-svg-wrap { overflow-x: auto; }
+  .trend-empty, .board-empty-note { font-size: 13px; color: var(--text-muted); text-align: center; padding: 30px 10px; }
+
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .cost-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; padding: 0 10px 8px; border-bottom: 1px solid var(--border); }
+  .cost-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .cost-table td:first-child, .cost-table th:first-child { font-family: var(--font-body); font-variant-numeric: normal; }
+  .cost-table tr:last-child td { border-bottom: none; font-weight: 700; background: var(--surface-2); }
+  .cost-table .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; }
+
+  .readonly-banner {
+    display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--text-primary); color: var(--bg); font-size: 12.5px; font-weight: 600;
+    padding: 9px 16px; border-radius: 999px; box-shadow: var(--shadow-pop); z-index: 50;
+  }
+  body.is-readonly .readonly-banner { display: block; }
+
+  @media (max-width: 720px) {
+    .app { padding: 0 14px 48px; }
+    .topbar { margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+    .tabs { order: 3; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app" data-local-tab="pipeline" data-local-config="closed">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🌱</span>
+      <div class="brand-text">
+        <h1>Vivero de Ventas</h1>
+        <p>Grupo Robles · Reclutamiento de Asesores(as) Comerciales</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Vistas">
+      <button type="button" class="tab" data-tab-btn="pipeline" aria-selected="true">Pipeline</button>
+      <button type="button" class="tab" data-tab-btn="adlog" aria-selected="false">TikTok / Google</button>
+      <button type="button" class="tab" data-tab-btn="dashboard" aria-selected="false">Dashboard</button>
+    </nav>
+    <button type="button" class="btn-ghost" data-config-toggle>⚙ Metas de campaña</button>
+  </header>
+
+  <section class="config-panel" aria-label="Metas de campaña">
+    <h3>Metas de campaña</h3>
+    <p class="hint">Las métricas de Meta Ads del Dashboard sí son en vivo para todo el equipo. El Pipeline y estas metas se guardan solo en este navegador.</p>
+    <div class="config-grid">
+      <div class="field-block">
+        <label for="campaignStart">Inicio de campaña</label>
+        <input type="date" id="campaignStart">
+      </div>
+      <div class="field-block">
+        <label for="hireGoal">Meta de contrataciones</label>
+        <input type="number" id="hireGoal" min="0" placeholder="0">
+      </div>
+      <p class="config-note">La inversión de Meta Ads (Chamba Pachamama) se trae en vivo automáticamente desde el Dashboard. Si además corres campañas en TikTok o Google, regístralas día a día en la pestaña “TikTok / Google” para que entren al mismo cálculo de CPL, CTR y CPC.</p>
+    </div>
+  </section>
+
+  <main>
+    <section class="view view-pipeline">
+      <details class="help">
+        <summary>¿Cómo funciona este tablero?</summary>
+        <p>Agrega un postulante, avánzalo por las etapas conforme lo contactas y entrevistas, y usa Descartar / Reactivar según corresponda. El dashboard se recalcula solo. <b>Importante:</b> el Pipeline se guarda solo en este navegador — si otra persona del equipo abre este mismo enlace en su propia computadora, no verá estos postulantes. Las métricas de Meta Ads del Dashboard sí son las mismas para todos, porque se traen en vivo desde la cuenta publicitaria.</p>
+      </details>
+
+      <form id="addLeadForm" class="add-lead-form" artifact-local autocomplete="off">
+        <input type="text" class="field-name" placeholder="Nombre completo" aria-label="Nombre completo" required>
+        <input type="tel" class="field-phone" placeholder="WhatsApp / celular" aria-label="WhatsApp o celular" required>
+        <input type="number" class="field-exp" placeholder="Meses" aria-label="Meses de experiencia" min="0">
+        <input type="text" class="field-location" placeholder="Ubicación" aria-label="Ubicación">
+        <div class="chip-group" data-field="platform" role="group" aria-label="Plataforma de origen">
+          <button type="button" class="chip active" data-value="meta-leads">Meta Leads</button>
+          <button type="button" class="chip" data-value="meta-wa">Meta WhatsApp</button>
+          <button type="button" class="chip" data-value="tiktok">TikTok</button>
+          <button type="button" class="chip" data-value="google">Google</button>
+          <button type="button" class="chip" data-value="bolsas">Bolsa empleo</button>
+        </div>
+        <div class="chip-group" data-field="creative" role="group" aria-label="Formato del anuncio">
+          <button type="button" class="chip active" data-value="video">Video</button>
+          <button type="button" class="chip" data-value="carrusel">Carrusel</button>
+          <button type="button" class="chip" data-value="imagen">Imagen</button>
+          <button type="button" class="chip" data-value="ugc">UGC</button>
+        </div>
+        <label class="check-inline"><input type="checkbox" class="field-zona"> Reside en zona</label>
+        <label class="check-inline"><input type="checkbox" class="field-horario"> Disponible horario</label>
+        <button type="submit" class="btn-primary">+ Agregar postulante</button>
+        <span class="form-required-note">Nombre y WhatsApp son obligatorios · elige plataforma y formato antes de agregar</span>
+      </form>
+
+      <div class="board" id="board">
+        <div class="column" data-stage="nuevo">
+          <div class="column-head"><span class="dot" style="--c:var(--stage-1)"></span><h2>Nuevo lead</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+        <div class="column" data-stage="contactado">
+          <div class="column-head"><span class="dot" style="--c:var(--stage-2)"></span><h2>Contactado</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+        <div class="column" data-stage="entrevista">
+          <div class="column-head"><span class="dot" style="--c:var(--stage-3)"></span><h2>Entrevista agendada</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+        <div class="column" data-stage="entrevistado">
+          <div class="column-head"><span class="dot" style="--c:var(--stage-4)"></span><h2>Entrevistado</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+        <div class="column" data-stage="contratado">
+          <div class="column-head"><span class="dot" style="--c:var(--stage-5)"></span><h2>Contratado</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+        <div class="column" data-stage="descartado">
+          <div class="column-head"><span class="dot" style="--c:var(--critical)"></span><h2>Descartado</h2><span class="count" artifact-local>0</span></div>
+          <div class="column-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-adlog">
+      <details class="help">
+        <summary>¿Qué registro aquí?</summary>
+        <p>Meta Ads (Chamba Pachamama) ya no se registra aquí — sus datos llegan en vivo directo al Dashboard. Usa este registro solo para TikTok y Google: copia aquí cada día la inversión, las impresiones y los clics que veas en cada plataforma, para que entren al mismo cálculo de CPL, CTR y CPC del Dashboard.</p>
+      </details>
+
+      <form id="addAdEntryForm" class="add-lead-form" artifact-local autocomplete="off">
+        <input type="date" class="ae-field-date" aria-label="Fecha" required>
+        <div class="chip-group" data-field="ae-platform" role="group" aria-label="Plataforma">
+          <button type="button" class="chip active" data-value="tiktok">TikTok</button>
+          <button type="button" class="chip" data-value="google">Google</button>
+        </div>
+        <input type="number" class="ae-field-spend" placeholder="Inversión S/" aria-label="Inversión" min="0" step="0.1" style="width:112px">
+        <input type="number" class="ae-field-impr" placeholder="Impresiones" aria-label="Impresiones" min="0" style="width:112px">
+        <input type="number" class="ae-field-clicks" placeholder="Clics" aria-label="Clics" min="0" style="width:92px">
+        <button type="submit" class="btn-primary">+ Registrar día</button>
+        <span class="form-required-note">Copia estos números del Administrador de anuncios de Meta cada día</span>
+      </form>
+
+      <div class="panel">
+        <h3>Registro diario</h3>
+        <p class="panel-hint">Se guarda solo en este navegador · toca la plataforma para corregirla, o edita los números directo en la tabla</p>
+        <div class="log-table-wrap">
+          <table class="log-table">
+            <thead><tr><th>Fecha</th><th>Plataforma</th><th>Inversión S/</th><th>Impresiones</th><th>Clics</th><th></th></tr></thead>
+            <tbody id="adLogBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-dashboard">
+      <div id="dashboard" artifact-local></div>
+    </section>
+  </main>
+</div>
+
+<div class="readonly-banner">Estás viendo este tablero en modo solo lectura — tus cambios no se guardarán</div>
+
+<template id="cardTemplate">
+  <div class="lead-card">
+    <div class="card-top">
+      <p class="card-name" contenteditable="true"></p>
+      <span class="card-qual-badge">✓ Calificado</span>
+    </div>
+    <div class="card-phone-row">
+      <p class="card-phone" contenteditable="true"></p>
+      <a class="card-wa" href="#" target="_blank" rel="noopener" title="Escribir por WhatsApp" aria-label="Escribir por WhatsApp">💬</a>
+    </div>
+    <div class="card-badges">
+      <button type="button" class="badge" data-badge="platform" data-value="meta-leads">Meta Leads</button>
+      <button type="button" class="badge" data-badge="creative" data-value="video">Video</button>
+    </div>
+    <div class="card-meta">
+      <span class="meta-exp"><input type="number" class="f-exp" min="0" value="0"> meses exp.</span>
+      <span class="meta-loc" contenteditable="true"></span>
+    </div>
+    <div class="card-checks">
+      <label><input type="checkbox" class="f-zona"> Reside en zona</label>
+      <label><input type="checkbox" class="f-horario"> Disp. horario</label>
+    </div>
+    <div class="card-notes" contenteditable="true" data-placeholder="Notas de seguimiento…"></div>
+    <div class="card-actions">
+      <button type="button" class="btn-advance">Avanzar ▸</button>
+      <button type="button" class="btn-discard">Descartar</button>
+      <button type="button" class="btn-reactivate">↺ Reactivar</button>
+    </div>
+    <p class="hired-flag">🏆 Vendedor(a) activo</p>
+  </div>
+</template>
+
+<script>
+(function () {
+  'use strict';
+
+  var STAGES = ['nuevo', 'contactado', 'entrevista', 'entrevistado', 'contratado'];
+  var STAGE_LABELS = { nuevo: 'Nuevo lead', contactado: 'Contactado', entrevista: 'Entrevista agendada', entrevistado: 'Entrevistado', contratado: 'Contratado' };
+  var PLATFORMS = [
+    { key: 'meta-leads', label: 'Meta Leads', color: 'var(--cat-1)' },
+    { key: 'meta-wa', label: 'Meta WhatsApp', color: 'var(--cat-2)' },
+    { key: 'tiktok', label: 'TikTok', color: 'var(--cat-3)' },
+    { key: 'google', label: 'Google', color: 'var(--cat-4)' },
+    { key: 'bolsas', label: 'Bolsa empleo', color: 'var(--cat-5)' }
+  ];
+  var AD_PLATFORMS = PLATFORMS.filter(function (p) { return p.key !== 'bolsas'; });
+  var AD_LOG_PLATFORMS = PLATFORMS.filter(function (p) { return p.key === 'tiktok' || p.key === 'google'; });
+  var CREATIVES = [
+    { key: 'video', label: 'Video', color: 'var(--cat-1)' },
+    { key: 'carrusel', label: 'Carrusel', color: 'var(--cat-2)' },
+    { key: 'imagen', label: 'Imagen', color: 'var(--cat-3)' },
+    { key: 'ugc', label: 'UGC', color: 'var(--cat-4)' }
+  ];
+
+  var board = document.getElementById('board');
+  var appRoot = document.querySelector('.app');
+  var dashboard = document.getElementById('dashboard');
+  var cardTemplate = document.getElementById('cardTemplate');
+  var adLogBody = document.getElementById('adLogBody');
+
+  function $(sel, ctx) { return (ctx || document).querySelector(sel); }
+  function $all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+
+  function fmtMoney(n) { return 'S/ ' + Math.round(n).toLocaleString('es-PE'); }
+  function fmtMoney2(n) { return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtNum(n) { return Math.round(n).toLocaleString('es-PE'); }
+  function fmtPct(n) { if (!isFinite(n)) return '—'; return Math.round(n) + '%'; }
+  function fmtPctDecimal(n) { if (!isFinite(n)) return '—'; return n.toFixed(2) + '%'; }
+  function fmtDateShort(d) { var dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }); }
+  function digitsOnly(str) {
+    var d = (str || '').replace(/\D/g, '');
+    if (d.length === 9) d = '51' + d;
+    return d;
+  }
+  function platformInfo(key) { for (var i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].key === key) return PLATFORMS[i]; return PLATFORMS[0]; }
+  function creativeInfo(key) { for (var i = 0; i < CREATIVES.length; i++) if (CREATIVES[i].key === key) return CREATIVES[i]; return CREATIVES[0]; }
+
+  /* ---------------- Tabs & config toggle (local UI state) ---------------- */
+  $all('[data-tab-btn]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      appRoot.setAttribute('data-local-tab', btn.getAttribute('data-tab-btn'));
+      $all('[data-tab-btn]').forEach(function (b) { b.setAttribute('aria-selected', String(b === btn)); });
+      if (btn.getAttribute('data-tab-btn') === 'dashboard') renderDashboard();
+    });
+  });
+  var configToggle = $('[data-config-toggle]');
+  if (configToggle) {
+    configToggle.addEventListener('click', function () {
+      var open = appRoot.getAttribute('data-local-config') === 'open';
+      appRoot.setAttribute('data-local-config', open ? 'closed' : 'open');
+    });
+  }
+
+  function wireChipGroups(formEl) {
+    $all('.chip-group', formEl).forEach(function (group) {
+      group.addEventListener('click', function (e) {
+        var chip = e.target.closest('.chip');
+        if (!chip) return;
+        $all('.chip', group).forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+      });
+    });
+  }
+  function resetChipGroups(formEl) {
+    $all('.chip-group', formEl).forEach(function (group) {
+      $all('.chip', group).forEach(function (c, i) { c.classList.toggle('active', i === 0); });
+    });
+  }
+
+  /* ---------------- Add-lead form (fully local until submit) ---------------- */
+  var addForm = document.getElementById('addLeadForm');
+  wireChipGroups(addForm);
+
+  function updateCardQualified(card) {
+    var exp = Number($('.f-exp', card).value) || 0;
+    var zona = $('.f-zona', card).checked;
+    var horario = $('.f-horario', card).checked;
+    card.classList.toggle('card-qualified', exp >= 6 && zona && horario);
+  }
+
+  function buildCard(data) {
+    var frag = cardTemplate.content.cloneNode(true);
+    var card = frag.querySelector('.lead-card');
+    card.dataset.platform = data.platform;
+    card.dataset.creative = data.creative;
+    card.dataset.date = new Date().toISOString();
+    $('.card-name', card).textContent = data.name;
+    $('.card-phone', card).textContent = data.phone;
+    var wa = digitsOnly(data.phone);
+    $('.card-wa', card).href = wa ? 'https://wa.me/' + wa : '#';
+    var pBadge = card.querySelector('.badge[data-badge="platform"]');
+    var pInfo = platformInfo(data.platform);
+    pBadge.dataset.value = pInfo.key; pBadge.textContent = pInfo.label;
+    var cBadge = card.querySelector('.badge[data-badge="creative"]');
+    var cInfo = creativeInfo(data.creative);
+    cBadge.dataset.value = cInfo.key; cBadge.textContent = cInfo.label;
+    $('.f-exp', card).value = data.exp;
+    $('.meta-loc', card).textContent = data.location;
+    $('.f-zona', card).checked = data.zona;
+    $('.f-horario', card).checked = data.horario;
+    updateCardQualified(card);
+    return card;
+  }
+
+  addForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('.field-name', addForm).value.trim();
+    var phone = $('.field-phone', addForm).value.trim();
+    if (!name || !phone) return;
+    var platform = $('.chip-group[data-field="platform"] .chip.active', addForm);
+    var creative = $('.chip-group[data-field="creative"] .chip.active', addForm);
+    var card = buildCard({
+      name: name,
+      phone: phone,
+      exp: Number($('.field-exp', addForm).value) || 0,
+      location: $('.field-location', addForm).value.trim(),
+      platform: platform ? platform.dataset.value : 'meta-leads',
+      creative: creative ? creative.dataset.value : 'video',
+      zona: $('.field-zona', addForm).checked,
+      horario: $('.field-horario', addForm).checked
+    });
+    var target = board.querySelector('.column[data-stage="nuevo"] .column-body');
+    target.appendChild(card);
+    addForm.reset();
+    resetChipGroups(addForm);
+    refreshAll();
+  });
+
+  /* ---------------- Board interactions (synced region) ---------------- */
+  function moveCard(card, dest) {
+    var col = board.querySelector('.column[data-stage="' + dest + '"] .column-body');
+    if (!col) return;
+    col.appendChild(card);
+    refreshAll();
+  }
+
+  board.addEventListener('click', function (e) {
+    var adv = e.target.closest('.btn-advance');
+    var dis = e.target.closest('.btn-discard');
+    var react = e.target.closest('.btn-reactivate');
+    var badge = e.target.closest('.badge');
+    if (adv) {
+      var card = adv.closest('.lead-card');
+      var cur = card.closest('.column').dataset.stage;
+      var idx = STAGES.indexOf(cur);
+      if (idx > -1 && idx < STAGES.length - 1) moveCard(card, STAGES[idx + 1]);
+      return;
+    }
+    if (dis) { moveCard(dis.closest('.lead-card'), 'descartado'); return; }
+    if (react) { moveCard(react.closest('.lead-card'), 'nuevo'); return; }
+    if (badge) {
+      var list = badge.dataset.badge === 'platform' ? PLATFORMS : CREATIVES;
+      var keys = list.map(function (p) { return p.key; });
+      var i = keys.indexOf(badge.dataset.value);
+      var next = list[(i + 1) % list.length];
+      badge.dataset.value = next.key;
+      badge.textContent = next.label;
+      var card2 = badge.closest('.lead-card');
+      if (badge.dataset.badge === 'platform') card2.dataset.platform = next.key; else card2.dataset.creative = next.key;
+      refreshAll();
+      return;
+    }
+  });
+
+  board.addEventListener('input', function (e) {
+    if (e.target.matches('.f-exp')) { updateCardQualified(e.target.closest('.lead-card')); refreshAll(); }
+    if (e.target.matches('.card-phone')) {
+      var card = e.target.closest('.lead-card');
+      var wa = digitsOnly(e.target.textContent);
+      $('.card-wa', card).href = wa ? 'https://wa.me/' + wa : '#';
+    }
+  });
+  board.addEventListener('change', function (e) {
+    if (e.target.matches('.f-zona, .f-horario')) { updateCardQualified(e.target.closest('.lead-card')); refreshAll(); }
+  });
+
+  /* Campaign goals affect the dashboard live */
+  ['hireGoal', 'campaignStart'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', renderDashboard);
+  });
+
+  /* ---------------- Ad performance log (synced region) ---------------- */
+  var addAdForm = document.getElementById('addAdEntryForm');
+  wireChipGroups(addAdForm);
+
+  function buildAdEntryRow(data) {
+    var tr = document.createElement('tr');
+    tr.className = 'ad-entry';
+    tr.dataset.date = data.date;
+    tr.dataset.platform = data.platform;
+    var pInfo = platformInfo(data.platform);
+    tr.innerHTML =
+      '<td class="ae-date-cell">' + fmtDateShort(data.date) + '</td>' +
+      '<td><button type="button" class="badge ae-badge" data-badge="ae-platform" data-value="' + pInfo.key + '">' + pInfo.label + '</button></td>' +
+      '<td><input type="number" class="ae-spend" min="0" step="0.1" value="' + data.spend + '"></td>' +
+      '<td><input type="number" class="ae-impr" min="0" value="' + data.impressions + '"></td>' +
+      '<td><input type="number" class="ae-clicks" min="0" value="' + data.clicks + '"></td>' +
+      '<td><button type="button" class="ae-del" aria-label="Eliminar registro" title="Eliminar registro">✕</button></td>';
+    return tr;
+  }
+
+  addAdForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var dateVal = $('.ae-field-date', addAdForm).value;
+    if (!dateVal) return;
+    var platformChip = $('.chip-group[data-field="ae-platform"] .chip.active', addAdForm);
+    var row = buildAdEntryRow({
+      date: dateVal,
+      platform: platformChip ? platformChip.dataset.value : 'tiktok',
+      spend: Number($('.ae-field-spend', addAdForm).value) || 0,
+      impressions: Number($('.ae-field-impr', addAdForm).value) || 0,
+      clicks: Number($('.ae-field-clicks', addAdForm).value) || 0
+    });
+    adLogBody.appendChild(row);
+    addAdForm.reset();
+    resetChipGroups(addAdForm);
+    refreshAll();
+  });
+
+  adLogBody.addEventListener('click', function (e) {
+    var del = e.target.closest('.ae-del');
+    var badge = e.target.closest('.ae-badge');
+    if (del) { var tr = del.closest('tr'); if (tr) tr.remove(); refreshAll(); return; }
+    if (badge) {
+      var keys = AD_LOG_PLATFORMS.map(function (p) { return p.key; });
+      var i = keys.indexOf(badge.dataset.value);
+      var next = AD_LOG_PLATFORMS[(i + 1) % AD_LOG_PLATFORMS.length];
+      badge.dataset.value = next.key;
+      badge.textContent = next.label;
+      badge.closest('tr').dataset.platform = next.key;
+      refreshAll();
+    }
+  });
+  adLogBody.addEventListener('input', function (e) {
+    if (e.target.matches('.ae-spend, .ae-impr, .ae-clicks')) refreshAll();
+  });
+
+  function updateAdLogEmpty() {
+    var n = $all('.ad-entry', adLogBody).length;
+    var emptyRow = $('.log-empty-row', adLogBody);
+    if (n === 0 && !emptyRow) {
+      var tr = document.createElement('tr');
+      tr.className = 'log-empty-row';
+      tr.setAttribute('artifact-local', '');
+      tr.innerHTML = '<td colspan="6" class="log-empty">Aún no hay registros diarios.</td>';
+      adLogBody.appendChild(tr);
+    } else if (n > 0 && emptyRow) {
+      emptyRow.remove();
+    }
+  }
+
+  /* ---------------- Counts (local, recomputed) ---------------- */
+  function updateCounts() {
+    $all('.column').forEach(function (col) {
+      var n = $all('.lead-card', col).length;
+      var badge = $('.count', col);
+      if (badge) badge.textContent = String(n);
+      var body = $('.column-body', col);
+      var empty = $('.column-empty', body);
+      if (n === 0 && !empty) {
+        var div = document.createElement('div');
+        div.className = 'column-empty';
+        div.setAttribute('artifact-local', '');
+        div.textContent = 'Sin postulantes aún';
+        body.appendChild(div);
+      } else if (n > 0 && empty) {
+        empty.remove();
+      }
+    });
+  }
+
+  /* ---------------- Metrics ---------------- */
+  /* ---------------- Meta Ads en vivo (Cloudflare proxy) ---------------- */
+  var META_PROXY_URL = 'https://reclutamientopachamama.ia-works126.workers.dev';
+  var META_ACCESS_KEY = 'pachamama2026'; // debe coincidir con el secreto ACCESS_KEY del worker
+  var META_AUTO_REFRESH_MIN = 5;
+  var META_ACCOUNTS = [
+    { id: 'act_1533988627924707', label: 'Chamba Pachamama' },
+    { id: 'act_761696470067252', label: 'Chamba Altoque' }
+  ];
+  var metaLive = { status: 'loading', account: META_ACCOUNTS[0].id, range: 'last30', currency: 'PEN', daily: [], campaigns: [], error: null, updatedAt: null };
+  var metaRefreshTimer = null;
+
+  function metaPad(n) { return String(n).padStart(2, '0'); }
+  function metaToISO(d) { return d.getFullYear() + '-' + metaPad(d.getMonth() + 1) + '-' + metaPad(d.getDate()); }
+  function metaComputeRange(v) {
+    var now = new Date(); var since, until;
+    if (v === 'today') { since = until = new Date(now); }
+    else if (v === 'yesterday') { since = until = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1); }
+    else if (v === 'last7') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6); }
+    else if (v === 'last30') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29); }
+    else if (v === 'thisMonth') { since = new Date(now.getFullYear(), now.getMonth(), 1); until = new Date(now); }
+    else { since = new Date(now.getFullYear(), now.getMonth() - 1, 1); until = new Date(now.getFullYear(), now.getMonth(), 0); }
+    return { since: metaToISO(since), until: metaToISO(until) };
+  }
+  function metaExtractResult(actions) {
+    actions = actions || [];
+    var leadTypes = ['lead', 'onsite_conversion.lead_grouped', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead'];
+    var msgTypes = ['onsite_conversion.messaging_conversation_started_7d', 'onsite_conversion.total_messaging_connection'];
+    var leads = 0, msgs = 0;
+    actions.forEach(function (a) {
+      var v = Number(a.value) || 0;
+      if (leadTypes.indexOf(a.action_type) > -1) leads += v;
+      if (msgTypes.indexOf(a.action_type) > -1) msgs += v;
+    });
+    if (leads > 0) return { count: leads, label: 'leads' };
+    if (msgs > 0) return { count: msgs, label: 'conversaciones WhatsApp' };
+    return { count: 0, label: 'resultados' };
+  }
+
+  async function loadMetaLive() {
+    if (META_PROXY_URL.indexOf('REEMPLAZA') > -1) { metaLive.status = 'unconfigured'; renderDashboard(); return; }
+    metaLive.status = 'loading';
+    renderMetaStatusOnly();
+    var range = metaComputeRange(metaLive.range);
+    var qs = new URLSearchParams({ account: metaLive.account, since: range.since, until: range.until });
+    if (META_ACCESS_KEY) qs.set('key', META_ACCESS_KEY);
+    try {
+      var res = await fetch(META_PROXY_URL + '?' + qs.toString());
+      var body = await res.json().catch(function () { return null; });
+      if (!res.ok || !body || body.error) throw new Error((body && body.error) || ('HTTP ' + res.status));
+      metaLive.currency = (body.account && body.account.currency) || 'PEN';
+      metaLive.daily = body.daily || [];
+      metaLive.campaigns = body.campaigns || [];
+      metaLive.status = 'ok';
+      metaLive.error = null;
+      metaLive.updatedAt = new Date();
+    } catch (err) {
+      metaLive.status = 'error';
+      metaLive.error = (err && err.message) || 'Error desconocido';
+    }
+    refreshAll();
+  }
+
+  function getMetaEntries() {
+    if (!metaLive.daily.length) return [];
+    return metaLive.daily.map(function (r) {
+      return { date: r.date_start, platform: 'meta-leads', spend: Number(r.spend) || 0, impressions: Number(r.impressions) || 0, clicks: Number(r.clicks) || 0 };
+    });
+  }
+
+  function getAdLogEntries() {
+    return $all('.ad-entry', adLogBody).map(function (row) {
+      return {
+        date: row.dataset.date,
+        platform: row.dataset.platform,
+        spend: Number($('.ae-spend', row).value) || 0,
+        impressions: Number($('.ae-impr', row).value) || 0,
+        clicks: Number($('.ae-clicks', row).value) || 0
+      };
+    });
+  }
+
+  function computeMetrics() {
+    var cards = $all('.lead-card', board);
+    var byStage = { nuevo: 0, contactado: 0, entrevista: 0, entrevistado: 0, contratado: 0, descartado: 0 };
+    var byPlatform = {}; PLATFORMS.forEach(function (p) { byPlatform[p.key] = { count: 0, qualified: 0, spend: 0, impressions: 0, clicks: 0 }; });
+    var byCreative = {}; CREATIVES.forEach(function (c) { byCreative[c.key] = { count: 0 }; });
+    var byDay = {};
+    var qualifiedTotal = 0, qualifiedPaid = 0, totalPaidLeads = 0;
+
+    cards.forEach(function (card) {
+      var col = card.closest('.column');
+      var stage = col ? col.dataset.stage : 'nuevo';
+      byStage[stage] = (byStage[stage] || 0) + 1;
+      var plat = card.dataset.platform;
+      var creative = card.dataset.creative;
+      if (byPlatform[plat]) byPlatform[plat].count++;
+      if (byCreative[creative]) byCreative[creative].count++;
+      if (plat !== 'bolsas') totalPaidLeads++;
+      var exp = Number($('.f-exp', card).value) || 0;
+      var zona = $('.f-zona', card).checked;
+      var horario = $('.f-horario', card).checked;
+      var qualified = exp >= 6 && zona && horario;
+      if (qualified) {
+        qualifiedTotal++;
+        if (plat !== 'bolsas') qualifiedPaid++;
+        if (byPlatform[plat]) byPlatform[plat].qualified++;
+      }
+      var dateKey = (card.dataset.date || '').slice(0, 10);
+      if (dateKey) byDay[dateKey] = (byDay[dateKey] || 0) + 1;
+    });
+
+    var total = cards.length;
+    var activeInPipeline = total - byStage.descartado - byStage.contratado;
+
+    var adEntries = getAdLogEntries().concat(getMetaEntries());
+    var totalSpend = 0, totalImpr = 0, totalClicks = 0;
+    var adByDay = {};
+    adEntries.forEach(function (e) {
+      totalSpend += e.spend; totalImpr += e.impressions; totalClicks += e.clicks;
+      if (byPlatform[e.platform]) {
+        byPlatform[e.platform].spend += e.spend;
+        byPlatform[e.platform].impressions += e.impressions;
+        byPlatform[e.platform].clicks += e.clicks;
+      }
+      if (!e.date) return;
+      if (!adByDay[e.date]) adByDay[e.date] = { spend: 0, impressions: 0, clicks: 0 };
+      adByDay[e.date].spend += e.spend;
+      adByDay[e.date].impressions += e.impressions;
+      adByDay[e.date].clicks += e.clicks;
+    });
+
+    function val(id) { var el = document.getElementById(id); return el ? (Number(el.value) || 0) : 0; }
+
+    return {
+      cards: cards, total: total, byStage: byStage, byPlatform: byPlatform, byCreative: byCreative, byDay: byDay,
+      qualifiedTotal: qualifiedTotal, qualifiedPaid: qualifiedPaid, totalPaidLeads: totalPaidLeads,
+      activeInPipeline: activeInPipeline,
+      totalSpend: totalSpend, totalImpr: totalImpr, totalClicks: totalClicks, adByDay: adByDay,
+      hireGoal: val('hireGoal')
+    };
+  }
+
+  /* ---------------- Render: dashboard (artifact-local, script-owned) ---------------- */
+  function renderKpis(m) {
+    var cpl = m.totalPaidLeads ? m.totalSpend / m.totalPaidLeads : null;
+    var costQual = m.qualifiedPaid ? m.totalSpend / m.qualifiedPaid : null;
+    var costHire = m.byStage.contratado ? m.totalSpend / m.byStage.contratado : null;
+    var qualPct = m.total ? (m.qualifiedTotal / m.total) * 100 : 0;
+    var goalPct = m.hireGoal ? Math.min(100, (m.byStage.contratado / m.hireGoal) * 100) : null;
+    var ctr = m.totalImpr ? (m.totalClicks / m.totalImpr) * 100 : null;
+    var cpc = m.totalClicks ? m.totalSpend / m.totalClicks : null;
+    var cpm = m.totalImpr ? (m.totalSpend / m.totalImpr) * 1000 : null;
+
+    var row1 = [
+      { label: 'Leads totales', value: String(m.total), sub: m.activeInPipeline + ' activos en pipeline' },
+      { label: 'Leads calificados', value: fmtPct(qualPct), sub: m.qualifiedTotal + ' de ' + m.total + ' cumplen los 3 filtros' },
+      { label: 'Contratados', value: String(m.byStage.contratado), sub: goalPct != null ? fmtPct(goalPct) + ' de la meta (' + m.hireGoal + ')' : 'define una meta en “Metas de campaña”' },
+      { label: 'Costo por contratación', value: costHire != null ? fmtMoney(costHire) : '—', sub: 'inversión total / contratados' }
+    ];
+    var row2 = [
+      { label: 'Inversión total', value: fmtMoney(m.totalSpend), sub: m.totalImpr ? fmtNum(m.totalImpr) + ' impresiones' : 'registra tu inversión diaria' },
+      { label: 'CPL (blended)', value: cpl != null ? fmtMoney(cpl) : '—', sub: m.totalPaidLeads + ' leads de canales pagados' },
+      { label: 'Costo por calificado', value: costQual != null ? fmtMoney(costQual) : '—', sub: 'sobre leads de canales pagados' },
+      { label: 'CTR', value: ctr != null ? fmtPctDecimal(ctr) : '—', sub: m.totalClicks + ' clics registrados' },
+      { label: 'CPC', value: cpc != null ? fmtMoney2(cpc) : '—', sub: 'costo por clic' },
+      { label: 'CPM', value: cpm != null ? fmtMoney2(cpm) : '—', sub: 'costo por mil impresiones' }
+    ];
+    function tilesHtml(arr) {
+      return arr.map(function (t) {
+        return '<div class="kpi-tile"><div class="kpi-label">' + t.label + '</div><div class="kpi-value">' + t.value + '</div><div class="kpi-sub">' + t.sub + '</div></div>';
+      }).join('');
+    }
+    return '<div class="kpi-group"><p class="kpi-group-label">Resultados de reclutamiento</p><div class="kpi-row">' + tilesHtml(row1) + '</div></div>' +
+      '<div class="kpi-group"><p class="kpi-group-label">Rendimiento publicitario (Meta Ads)</p><div class="kpi-row">' + tilesHtml(row2) + '</div></div>';
+  }
+
+  function generateInsights(m) {
+    var out = [];
+
+    var pairs = [['nuevo', 'contactado'], ['contactado', 'entrevista'], ['entrevista', 'entrevistado'], ['entrevistado', 'contratado']];
+    var worst = null;
+    pairs.forEach(function (pair) {
+      var from = m.byStage[pair[0]], to = m.byStage[pair[1]];
+      if (from > 0) {
+        var rate = (to / from) * 100;
+        if (!worst || rate < worst.rate) worst = { from: pair[0], to: pair[1], rate: rate };
+      }
+    });
+    if (worst && m.total >= 3) {
+      out.push({ icon: '🎯', tone: 'warning', html: 'El mayor cuello de botella del embudo es <b>' + STAGE_LABELS[worst.from] + ' → ' + STAGE_LABELS[worst.to] + '</b> (' + fmtPct(worst.rate) + ' de conversión). Revisa ahí primero el guion o el tiempo de respuesta.' });
+    }
+
+    var platStats = PLATFORMS.filter(function (p) { return p.key !== 'bolsas'; }).map(function (p) {
+      var d = m.byPlatform[p.key];
+      var cpl = (d.count && d.spend) ? d.spend / d.count : null;
+      return { label: p.label, cpl: cpl, count: d.count };
+    }).filter(function (s) { return s.cpl != null && s.count >= 2; });
+    if (platStats.length >= 2) {
+      platStats.sort(function (a, b) { return a.cpl - b.cpl; });
+      var cheapest = platStats[0], priciest = platStats[platStats.length - 1];
+      if (priciest.cpl > cheapest.cpl * 1.3) {
+        out.push({ icon: '💰', tone: 'good', html: '<b>' + cheapest.label + '</b> tiene el CPL más bajo (S/ ' + Math.round(cheapest.cpl) + ') frente a <b>' + priciest.label + '</b> (S/ ' + Math.round(priciest.cpl) + '). Vale la pena mover presupuesto hacia ' + cheapest.label + '.' });
+      }
+    }
+
+    var qualStats = PLATFORMS.map(function (p) {
+      var d = m.byPlatform[p.key];
+      return { label: p.label, rate: d.count ? (d.qualified / d.count) * 100 : null, count: d.count };
+    }).filter(function (s) { return s.rate != null && s.count >= 3; });
+    if (qualStats.length) {
+      qualStats.sort(function (a, b) { return b.rate - a.rate; });
+      var top = qualStats[0];
+      if (top.rate >= 40) {
+        out.push({ icon: '✅', tone: 'info', html: 'Los leads de <b>' + top.label + '</b> son los que más cumplen el perfil (' + fmtPct(top.rate) + ' calificados). Prioriza contactarlos primero.' });
+      }
+    }
+
+    if (m.hireGoal && m.byStage.contratado < m.hireGoal) {
+      var costHire = m.byStage.contratado ? m.totalSpend / m.byStage.contratado : null;
+      if (costHire) {
+        var remaining = m.hireGoal - m.byStage.contratado;
+        out.push({ icon: '📈', tone: 'info', html: 'Llevas <b>' + m.byStage.contratado + ' de ' + m.hireGoal + '</b> contrataciones. Al costo actual (S/ ' + Math.round(costHire) + ' por contratación), llegar a la meta tomaría aprox. <b>S/ ' + Math.round(costHire * remaining) + '</b> más de inversión.' });
+      }
+    }
+
+    var ctrDays = Object.keys(m.adByDay).filter(function (d) { return m.adByDay[d].impressions > 0; }).sort();
+    if (ctrDays.length >= 4) {
+      var half = Math.floor(ctrDays.length / 2);
+      function avgCtr(days) {
+        var impr = 0, clicks = 0;
+        days.forEach(function (d) { impr += m.adByDay[d].impressions; clicks += m.adByDay[d].clicks; });
+        return impr ? (clicks / impr) * 100 : null;
+      }
+      var firstCtr = avgCtr(ctrDays.slice(0, half));
+      var secondCtr = avgCtr(ctrDays.slice(half));
+      if (firstCtr != null && secondCtr != null && firstCtr > 0) {
+        var diff = ((secondCtr - firstCtr) / firstCtr) * 100;
+        if (Math.abs(diff) >= 15) {
+          out.push({
+            icon: diff > 0 ? '📈' : '📉', tone: diff > 0 ? 'good' : 'warning',
+            html: 'El CTR ' + (diff > 0 ? 'subió' : 'bajó') + ' ' + fmtPct(Math.abs(diff)) + ' entre la primera y la segunda mitad del periodo registrado (' + firstCtr.toFixed(2) + '% → ' + secondCtr.toFixed(2) + '%).' + (diff < 0 ? ' Puede ser momento de refrescar el creativo.' : '')
+          });
+        }
+      }
+    }
+
+    if (!out.length) {
+      out.push({ icon: '🌱', tone: 'info', html: 'Registra más postulantes en Pipeline para que aquí aparezcan recomendaciones automáticas — la inversión de Meta ya se está trayendo en vivo.' });
+    }
+    return out.slice(0, 4);
+  }
+
+  function renderInsights(m) {
+    var items = generateInsights(m);
+    return '<div class="panel"><h3>Insights y recomendaciones</h3><p class="panel-hint">Generado a partir de tus datos reales — se actualiza solo</p>' +
+      '<div class="insight-grid">' + items.map(function (it) {
+        return '<div class="insight-card tone-' + it.tone + '"><span class="ic-icon">' + it.icon + '</span><span>' + it.html + '</span></div>';
+      }).join('') + '</div></div>';
+  }
+
+  function renderFunnel(m) {
+    var counts = STAGES.map(function (s) { return m.byStage[s]; });
+    var max = Math.max.apply(null, counts.concat([1]));
+    var stageVars = ['var(--stage-1)', 'var(--stage-2)', 'var(--stage-3)', 'var(--stage-4)', 'var(--stage-5)'];
+    var rows = STAGES.map(function (s, i) {
+      var c = m.byStage[s];
+      var w = Math.max(4, (c / max) * 100);
+      var conv = i === 0 ? '—' : (counts[i - 1] ? fmtPct((c / counts[i - 1]) * 100) : '—');
+      return '<div class="funnel-row">' +
+        '<span class="funnel-label">' + STAGE_LABELS[s] + '</span>' +
+        '<div class="funnel-track"><div class="funnel-fill" style="width:' + w + '%;background:' + stageVars[i] + '"><span>' + c + '</span></div></div>' +
+        '<span class="funnel-conv">' + conv + '</span>' +
+        '</div>';
+    }).join('');
+    var discardRate = m.total ? fmtPct((m.byStage.descartado / m.total) * 100) : '—';
+    return '<div class="panel">' +
+      '<h3>Embudo de reclutamiento</h3>' +
+      '<p class="panel-hint">Conversión respecto a la etapa anterior</p>' +
+      rows +
+      '<div class="funnel-discard"><span>Descartados</span><b>' + m.byStage.descartado + ' · ' + discardRate + ' del total</b></div>' +
+      '</div>';
+  }
+
+  function renderBarPanel(title, hint, entries) {
+    var counts = entries.map(function (e) { return e.count; });
+    var max = Math.max.apply(null, counts.concat([1]));
+    var legend = entries.map(function (e) {
+      return '<span class="lg-item"><span class="lg-swatch" style="background:' + e.color + '"></span>' + e.label + '</span>';
+    }).join('');
+    var rows = entries.map(function (e) {
+      var w = e.count ? Math.max(3, (e.count / max) * 100) : 0;
+      return '<div class="bar-row"><span class="bar-name">' + e.label + '</span>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + e.color + '"></div></div>' +
+        '<span class="bar-count">' + e.count + '</span></div>';
+    }).join('');
+    return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p>' +
+      '<div class="bar-legend">' + legend + '</div>' + rows + '</div>';
+  }
+
+  function renderBarTrend(title, hint, byDayMap, colorVar, formatFn) {
+    var days = Object.keys(byDayMap).sort();
+    if (!days.length) {
+      return '<div class="panel trend-panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><p class="trend-empty">Aún no hay datos suficientes.</p></div>';
+    }
+    if (days.length > 21) days = days.slice(days.length - 21);
+    var counts = days.map(function (d) { return byDayMap[d]; });
+    var max = Math.max.apply(null, counts.concat([0.0001]));
+    var w = Math.max(360, days.length * 34);
+    var h = 130, baseY = 106, barW = Math.min(22, (w / days.length) - 8);
+    var bars = days.map(function (d, i) {
+      var x = i * (w / days.length) + ((w / days.length) - barW) / 2;
+      var bh = Math.max(3, (counts[i] / max) * 80);
+      var y = baseY - bh;
+      var lbl = fmtDateShort(d);
+      return '<g>' +
+        '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="4" fill="' + colorVar + '"><title>' + formatFn(counts[i]) + ' — ' + lbl + '</title></rect>' +
+        '<text x="' + (x + barW / 2) + '" y="122" text-anchor="middle" font-size="9.5" fill="var(--text-muted)" font-family="var(--font-mono)">' + lbl + '</text>' +
+        '</g>';
+    }).join('');
+    return '<div class="panel trend-panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + ' · últimos ' + days.length + ' día(s) · pasa el cursor sobre una barra</p>' +
+      '<div class="trend-svg-wrap"><svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + title + '">' +
+      '<line x1="0" y1="' + baseY + '" x2="' + w + '" y2="' + baseY + '" stroke="var(--border-strong)" stroke-width="1"></line>' +
+      bars + '</svg></div></div>';
+  }
+
+  function renderLineChart(title, hint, points, colorVar, formatFn) {
+    var valid = points.filter(function (p) { return p.value != null; });
+    if (!valid.length) {
+      return '<div class="panel trend-panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><p class="trend-empty">Aún no hay datos suficientes.</p></div>';
+    }
+    if (valid.length > 21) valid = valid.slice(valid.length - 21);
+    var w = Math.max(360, valid.length * 40);
+    var h = 130, baseY = 100, topPad = 16;
+    var max = Math.max.apply(null, valid.map(function (p) { return p.value; }).concat([0.0001]));
+    var plotH = baseY - topPad;
+    var stepX = valid.length > 1 ? w / (valid.length - 1) : w;
+    function xAt(i) { return valid.length > 1 ? i * stepX : w / 2; }
+    function yAt(v) { return baseY - (max > 0 ? (v / max) * plotH : 0); }
+    var linePts = valid.map(function (p, i) { return xAt(i) + ',' + yAt(p.value); }).join(' ');
+    var areaPath = 'M' + xAt(0) + ',' + baseY + ' L' + valid.map(function (p, i) { return xAt(i) + ',' + yAt(p.value); }).join(' L') + ' L' + xAt(valid.length - 1) + ',' + baseY + ' Z';
+    var dots = valid.map(function (p, i) {
+      var isLast = i === valid.length - 1;
+      return '<circle cx="' + xAt(i) + '" cy="' + yAt(p.value) + '" r="' + (isLast ? 5 : 3.5) + '" fill="' + colorVar + '"' + (isLast ? ' stroke="var(--surface)" stroke-width="2"' : '') + '><title>' + formatFn(p.value) + ' — ' + p.label + '</title></circle>';
+    }).join('');
+    return '<div class="panel trend-panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + ' · pasa el cursor sobre un punto</p>' +
+      '<div class="line-svg-wrap"><svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + title + '">' +
+      '<line x1="0" y1="' + baseY + '" x2="' + w + '" y2="' + baseY + '" stroke="var(--border-strong)" stroke-width="1"></line>' +
+      '<path d="' + areaPath + '" fill="' + colorVar + '" opacity="0.12" stroke="none"></path>' +
+      '<polyline points="' + linePts + '" fill="none" stroke="' + colorVar + '" stroke-width="2"></polyline>' +
+      dots + '</svg></div></div>';
+  }
+
+  function renderCostTable(m) {
+    var rows = PLATFORMS.map(function (p) {
+      var d = m.byPlatform[p.key];
+      var spend = d.spend || 0;
+      var ctr = d.impressions ? (d.clicks / d.impressions) * 100 : null;
+      var cpc = d.clicks ? spend / d.clicks : null;
+      var cpl = (d.count && p.key !== 'bolsas') ? spend / d.count : null;
+      var costQual = (d.qualified && p.key !== 'bolsas') ? spend / d.qualified : null;
+      return '<tr><td><span class="swatch" style="background:' + p.color + '"></span>' + p.label + '</td>' +
+        '<td>' + d.count + '</td><td>' + d.qualified + '</td>' +
+        '<td>' + (p.key === 'bolsas' ? '—' : fmtMoney(spend)) + '</td>' +
+        '<td>' + (ctr != null ? fmtPctDecimal(ctr) : '—') + '</td>' +
+        '<td>' + (cpc != null ? fmtMoney2(cpc) : '—') + '</td>' +
+        '<td>' + (cpl != null ? fmtMoney(cpl) : (p.key === 'bolsas' ? 'Orgánico' : '—')) + '</td>' +
+        '<td>' + (costQual != null ? fmtMoney(costQual) : '—') + '</td></tr>';
+    }).join('');
+    var blendedCtr = m.totalImpr ? (m.totalClicks / m.totalImpr) * 100 : null;
+    var blendedCpc = m.totalClicks ? m.totalSpend / m.totalClicks : null;
+    return '<div class="panel">' +
+      '<h3>Costo por plataforma</h3><p class="panel-hint">Meta Ads viene en vivo del Dashboard; TikTok y Google vienen del registro diario en “TikTok / Google”</p>' +
+      '<div style="overflow-x:auto"><table class="cost-table"><thead><tr>' +
+      '<th>Plataforma</th><th>Leads</th><th>Calificados</th><th>Inversión</th><th>CTR</th><th>CPC</th><th>CPL</th><th>Costo/calificado</th>' +
+      '</tr></thead><tbody>' + rows +
+      '<tr><td>Total</td><td>' + m.total + '</td><td>' + m.qualifiedTotal + '</td><td>' + fmtMoney(m.totalSpend) + '</td>' +
+      '<td>' + (blendedCtr != null ? fmtPctDecimal(blendedCtr) : '—') + '</td>' +
+      '<td>' + (blendedCpc != null ? fmtMoney2(blendedCpc) : '—') + '</td>' +
+      '<td>' + (m.totalPaidLeads ? fmtMoney(m.totalSpend / m.totalPaidLeads) : '—') + '</td>' +
+      '<td>' + (m.qualifiedPaid ? fmtMoney(m.totalSpend / m.qualifiedPaid) : '—') + '</td></tr>' +
+      '</tbody></table></div></div>';
+  }
+
+  function metaStatusLabel(s) {
+    var map = { ACTIVE: 'Activa', PAUSED: 'Pausada', DELETED: 'Eliminada', ARCHIVED: 'Archivada', IN_PROCESS: 'En proceso', WITH_ISSUES: 'Con problemas' };
+    return map[s] || s;
+  }
+
+  function renderMetaKpisAndCharts() {
+    var dailyRows = metaLive.daily.slice().sort(function (a, b) { return (a.date_start || '').localeCompare(b.date_start || ''); });
+    var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalResults = 0, resultLabel = 'resultados';
+    var spendByDay = {}, ctrPoints = [], cplPoints = [];
+    dailyRows.forEach(function (r) {
+      var spend = Number(r.spend) || 0, impr = Number(r.impressions) || 0, clicks = Number(r.clicks) || 0;
+      var res = metaExtractResult(r.actions);
+      totalSpend += spend; totalImpr += impr; totalClicks += clicks; totalResults += res.count;
+      if (res.count > 0) resultLabel = res.label;
+      spendByDay[r.date_start] = spend;
+      ctrPoints.push({ label: fmtDateShort(r.date_start), value: impr > 0 ? (clicks / impr) * 100 : null });
+      cplPoints.push({ label: fmtDateShort(r.date_start), value: res.count > 0 ? spend / res.count : null });
+    });
+    var ctr = totalImpr ? (totalClicks / totalImpr) * 100 : null;
+    var cpc = totalClicks ? totalSpend / totalClicks : null;
+    var cpm = totalImpr ? (totalSpend / totalImpr) * 1000 : null;
+    var cpl = totalResults ? totalSpend / totalResults : null;
+    var tiles = [
+      { label: 'Inversión total', value: fmtMoney(totalSpend), sub: 'periodo seleccionado' },
+      { label: 'Resultados (' + resultLabel + ')', value: String(totalResults), sub: 'suma del período' },
+      { label: 'Costo por resultado', value: cpl != null ? fmtMoney(cpl) : '—', sub: 'inversión / resultados' },
+      { label: 'CTR', value: ctr != null ? fmtPctDecimal(ctr) : '—', sub: totalClicks + ' clics' },
+      { label: 'CPC', value: cpc != null ? fmtMoney2(cpc) : '—', sub: 'costo por clic' },
+      { label: 'CPM', value: cpm != null ? fmtMoney2(cpm) : '—', sub: totalImpr + ' impresiones' }
+    ];
+    var kpiHtml = '<div class="kpi-row">' + tiles.map(function (t) {
+      return '<div class="kpi-tile"><div class="kpi-label">' + t.label + '</div><div class="kpi-value">' + t.value + '</div><div class="kpi-sub">' + t.sub + '</div></div>';
+    }).join('') + '</div>';
+    var chartsHtml = '<div class="chart-grid-3">' +
+      renderBarTrend('Inversión diaria', 'Gasto reportado por Meta', spendByDay, 'var(--berry)', function (v) { return fmtMoney(v); }) +
+      renderLineChart('CTR diario', 'Clics ÷ impresiones', ctrPoints, 'var(--cat-1)', function (v) { return v.toFixed(2) + '%'; }) +
+      renderLineChart('Costo por resultado diario', 'Inversión ÷ resultados de ese día', cplPoints, 'var(--accent)', function (v) { return fmtMoney(v); }) +
+      '</div>';
+    return kpiHtml + chartsHtml;
+  }
+
+  function renderMetaCampaignsTable() {
+    var rows = metaLive.campaigns.map(function (r) {
+      var spend = Number(r.spend) || 0, impr = Number(r.impressions) || 0, clicks = Number(r.clicks) || 0;
+      var res = metaExtractResult(r.actions);
+      var rCtr = impr ? (clicks / impr) * 100 : null;
+      var rCpc = clicks ? spend / clicks : null;
+      var rCpl = res.count ? spend / res.count : null;
+      var dotClass = r.status === 'ACTIVE' ? 'active' : (r.status === 'PAUSED' ? 'paused' : 'other');
+      return '<tr><td>' + r.campaign_name + '</td>' +
+        '<td><span class="status-dot ' + dotClass + '"></span>' + (r.status ? metaStatusLabel(r.status) : '—') + '</td>' +
+        '<td>' + fmtMoney(spend) + '</td><td>' + fmtNum(impr) + '</td><td>' + fmtNum(clicks) + '</td>' +
+        '<td>' + (rCtr != null ? fmtPctDecimal(rCtr) : '—') + '</td><td>' + (rCpc != null ? fmtMoney2(rCpc) : '—') + '</td>' +
+        '<td>' + fmtNum(res.count) + '</td><td>' + (rCpl != null ? fmtMoney(rCpl) : '—') + '</td></tr>';
+    }).join('');
+    if (!metaLive.campaigns.length) {
+      rows = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);font-family:var(--font-body)">Sin campañas con actividad en este período.</td></tr>';
+    }
+    return '<div class="panel"><h3>Campañas de Meta Ads</h3><p class="panel-hint">Desglose por campaña · usa los selectores de arriba para cambiar cuenta o período</p>' +
+      '<div style="overflow-x:auto"><table class="cost-table"><thead><tr>' +
+      '<th>Campaña</th><th>Estado</th><th>Inversión</th><th>Impresiones</th><th>Clics</th><th>CTR</th><th>CPC</th><th>Resultados</th><th>Costo/resultado</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+  }
+
+  function renderMetaLivePanel() {
+    var accountLabel = 'Chamba Pachamama';
+    var accountOptions = META_ACCOUNTS.map(function (a) {
+      if (a.id === metaLive.account) accountLabel = a.label;
+      return '<option value="' + a.id + '"' + (a.id === metaLive.account ? ' selected' : '') + '>' + a.label + '</option>';
+    }).join('');
+    var rangeLabels = { today: 'Hoy', yesterday: 'Ayer', last7: 'Últimos 7 días', last30: 'Últimos 30 días', thisMonth: 'Mes actual', lastMonth: 'Mes anterior' };
+    var rangeOptions = Object.keys(rangeLabels).map(function (k) {
+      return '<option value="' + k + '"' + (k === metaLive.range ? ' selected' : '') + '>' + rangeLabels[k] + '</option>';
+    }).join('');
+
+    var statusClass = '', statusText;
+    if (metaLive.status === 'unconfigured') { statusClass = 'error'; statusText = 'Sin configurar — falta META_PROXY_URL'; }
+    else if (metaLive.status === 'loading') { statusText = 'Actualizando…'; }
+    else if (metaLive.status === 'error') { statusClass = 'error'; statusText = 'Error al actualizar — reintenta con 🔄'; }
+    else { statusText = 'Actualizado ' + (metaLive.updatedAt ? metaLive.updatedAt.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '') + ' · se refresca solo cada ' + META_AUTO_REFRESH_MIN + ' min'; }
+
+    var errorBanner = metaLive.status === 'error' ? '<div class="meta-error-banner show"><b>No se pudo cargar Meta Ads.</b> ' + metaLive.error + '</div>' : '';
+
+    var body;
+    if (metaLive.status === 'ok') body = renderMetaKpisAndCharts() + renderMetaCampaignsTable();
+    else if (metaLive.status === 'unconfigured') body = '<p class="trend-empty">Este archivo necesita la URL del Cloudflare Worker en META_PROXY_URL.</p>';
+    else if (metaLive.status === 'error' && !metaLive.updatedAt) body = '<p class="trend-empty">No hay datos todavía.</p>';
+    else if (metaLive.status === 'loading' && !metaLive.updatedAt) body = '<p class="trend-empty">Cargando datos de Meta Ads…</p>';
+    else body = renderMetaKpisAndCharts() + renderMetaCampaignsTable();
+
+    return '<div class="meta-live-panel">' +
+      '<div class="meta-live-head"><h3>📊 Meta Ads en vivo</h3><span class="meta-status is-live"><span class="dot2"></span>' + accountLabel + ' conectado</span></div>' +
+      '<div class="meta-live-controls">' +
+      '<select id="metaAccountSelect">' + accountOptions + '</select>' +
+      '<select id="metaRangeSelect">' + rangeOptions + '</select>' +
+      '<div class="spacer"></div>' +
+      '<button type="button" class="btn-ghost" id="metaRefreshBtn" artifact-local>🔄 Actualizar ahora</button>' +
+      '</div>' +
+      '<div class="meta-status-line' + (statusClass ? ' ' + statusClass : '') + '"><span class="pulse"></span><span>' + statusText + '</span></div>' +
+      errorBanner + body +
+      '</div>';
+  }
+
+  function renderMetaStatusOnly() { renderDashboard(); }
+
+  function renderDashboard() {
+    var m = computeMetrics();
+
+    if (!m.total && !m.totalSpend) {
+      dashboard.innerHTML = renderMetaLivePanel() +
+        '<div class="dash-updated"><span class="pulse"></span>Actualizado en vivo</div>' +
+        renderKpis(m) +
+        '<div class="panel"><p class="board-empty-note">Aún no hay postulantes en Pipeline. Las métricas de Meta Ads de arriba ya están en vivo — agrega tu primer postulante para ver también el embudo de reclutamiento.</p></div>';
+      return;
+    }
+
+    var platEntries = PLATFORMS.map(function (p) { return { label: p.label, color: p.color, count: m.byPlatform[p.key].count }; });
+    var creaEntries = CREATIVES.map(function (c) { return { label: c.label, color: c.color, count: m.byCreative[c.key].count }; });
+
+    var adDayKeys = Object.keys(m.adByDay).sort();
+    var ctrPoints = adDayKeys.map(function (d) {
+      var e = m.adByDay[d];
+      return { label: fmtDateShort(d), value: e.impressions > 0 ? (e.clicks / e.impressions) * 100 : null };
+    });
+    var spendByDay = {}; adDayKeys.forEach(function (d) { spendByDay[d] = m.adByDay[d].spend; });
+
+    var cplDayKeySet = {};
+    Object.keys(m.byDay).forEach(function (d) { cplDayKeySet[d] = true; });
+    adDayKeys.forEach(function (d) { cplDayKeySet[d] = true; });
+    var cplDayKeys = Object.keys(cplDayKeySet).sort();
+    var cplPoints = cplDayKeys.map(function (d) {
+      var leads = m.byDay[d] || 0;
+      var spend = (m.adByDay[d] || {}).spend || 0;
+      return { label: fmtDateShort(d), value: leads > 0 ? spend / leads : null };
+    });
+
+    dashboard.innerHTML =
+      renderMetaLivePanel() +
+      '<div class="dash-updated"><span class="pulse"></span>Actualizado en vivo · se recalcula con cada cambio del equipo</div>' +
+      renderKpis(m) +
+      renderInsights(m) +
+      '<div class="panel-grid">' + renderFunnel(m) + renderBarPanel('Leads por plataforma', 'Origen de los postulantes recibidos', platEntries) + '</div>' +
+      '<div class="panel-grid">' + renderBarPanel('Leads por formato de anuncio', 'Qué tipo de creatividad los trajo', creaEntries) + renderBarTrend('Leads por día', 'Ingreso de postulantes', m.byDay, 'var(--accent)', function (v) { return v + ' lead' + (v === 1 ? '' : 's'); }) + '</div>' +
+      '<div class="chart-grid-2">' + renderBarTrend('Inversión diaria', 'Gasto reportado en Meta Ads', spendByDay, 'var(--berry)', function (v) { return fmtMoney(v); }) + renderLineChart('CTR diario', 'Clics ÷ impresiones de cada día', ctrPoints, 'var(--cat-1)', function (v) { return v.toFixed(2) + '%'; }) + '</div>' +
+      '<div class="chart-grid-2">' + renderLineChart('CPL diario (aprox.)', 'Inversión del día ÷ leads recibidos ese mismo día', cplPoints, 'var(--accent)', function (v) { return fmtMoney(v); }) +
+      '<div class="panel"><h3>Cómo leer el CPL diario</h3><p class="panel-hint">Una aproximación, no una atribución exacta</p><p style="font-size:12.5px;color:var(--text-secondary);line-height:1.6">Compara la inversión de un día con los leads que entraron ese mismo día — útil para ver la tendencia, pero un lead puede haber visto el anuncio uno o más días antes de postular. Para el costo por lead más confiable, usa el CPL (blended) del bloque de arriba, calculado sobre todo el periodo.</p></div>' +
+      '</div>' +
+      renderCostTable(m);
+  }
+
+  function refreshAll() { updateCounts(); updateAdLogEmpty(); renderDashboard(); }
+
+  /* ---------------- Meta live panel controls (delegated — panel is rebuilt on each render) ---------------- */
+  dashboard.addEventListener('change', function (e) {
+    if (e.target.id === 'metaAccountSelect') { metaLive.account = e.target.value; loadMetaLive(); }
+    else if (e.target.id === 'metaRangeSelect') { metaLive.range = e.target.value; loadMetaLive(); }
+  });
+  dashboard.addEventListener('click', function (e) {
+    if (e.target.closest('#metaRefreshBtn')) loadMetaLive();
+  });
+
+  /* ---------------- React to remote edits (other viewers / Claude) ---------------- */
+  document.addEventListener('claude:edit', function () { refreshAll(); });
+  document.addEventListener('claude:sync-off', function () { document.body.classList.add('is-readonly'); });
+  document.addEventListener('claude:sync-lost', function () { document.body.classList.add('is-readonly'); });
+
+  /* ---------------- Init ---------------- */
+  refreshAll();
+  loadMetaLive();
+  metaRefreshTimer = setInterval(loadMetaLive, META_AUTO_REFRESH_MIN * 60 * 1000);
+})();
+</script>
+</body>
+</html>
