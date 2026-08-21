@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero Meta Ads · Chamba Pachamama</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F3F5EF; --plane: #ECF0E5; --surface: #FFFFFF; --surface-2: #F5F7F1;
+    --text-primary: #16201A; --text-secondary: #4B5245; --text-muted: #838A78;
+    --border: rgba(15,26,18,0.12); --border-strong: rgba(15,26,18,0.24);
+    --accent: #2E5B3E; --accent-strong: #1F4A30; --accent-soft: #E1EDE3; --accent-ink: #FFFFFF;
+    --berry: #8C2C4C; --berry-strong: #6E2039; --berry-soft: #F5E3EA;
+    --good: #0ca30c; --good-soft: #E1F5E1;
+    --warning: #fab219; --warning-soft: #FFF3DC;
+    --critical: #d03b3b; --critical-soft: #FBE4E4;
+    --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; --cat-5: #e87ba4;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --shadow-card: 0 1px 2px rgba(15,26,18,0.07), 0 1px 1px rgba(15,26,18,0.05);
+    --shadow-pop: 0 12px 28px rgba(15,26,18,0.14);
+    --radius-md: 12px; --radius-sm: 7px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #10140E; --plane: #0A0D08; --surface: #171C13; --surface-2: #1D2318;
+      --text-primary: #F3F5EF; --text-secondary: #C7CBBE; --text-muted: #8B9080;
+      --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.24);
+      --accent: #6FB585; --accent-strong: #86C79A; --accent-soft: rgba(111,181,133,0.16); --accent-ink: #0B1310;
+      --berry: #E08CAE; --berry-strong: #F0A9C3; --berry-soft: rgba(224,140,174,0.16);
+      --good: #0ca30c; --good-soft: rgba(12,163,12,0.18);
+      --warning: #fab219; --warning-soft: rgba(250,178,25,0.18);
+      --critical: #e66767; --critical-soft: rgba(230,103,103,0.18);
+      --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.25);
+      --shadow-pop: 0 16px 32px rgba(0,0,0,0.5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text-primary); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
+  button { font-family: inherit; }
+  select { font-family: inherit; color: var(--text-primary); }
+  a { color: var(--accent-strong); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .brand-mark { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 20px; flex: none; }
+  .brand-text h1 { font-size: 21px; letter-spacing: -0.01em; }
+  .brand-text p { margin: 1px 0 0; font-size: 12.5px; color: var(--text-muted); }
+
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .controls select {
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-primary);
+    border-radius: var(--radius-sm); padding: 8px 11px; font-size: 13px;
+  }
+  .spacer { flex: 1; }
+  .btn-ghost { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-primary); font-size: 12.5px; font-weight: 600; padding: 8px 13px; border-radius: 999px; cursor: pointer; }
+  .btn-ghost:hover { background: var(--surface-2); }
+
+  .status-line { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .status-line .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; animation: pulseAnim 2s ease-in-out infinite; }
+  .status-line.stale .pulse { background: var(--warning); animation: none; }
+  .status-line.error .pulse { background: var(--critical); animation: none; }
+  @keyframes pulseAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none !important; } }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 15px; box-shadow: var(--shadow-card); }
+  .kpi-tile .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  .kpi-tile .kpi-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .kpi-tile .kpi-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 5px; }
+
+  .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 980px) { .chart-grid-3 { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-card); }
+  .panel h3 { font-size: 14px; margin-bottom: 3px; }
+  .panel .panel-hint { font-size: 11.5px; color: var(--text-muted); margin: 0 0 14px; }
+  .trend-svg-wrap { overflow-x: auto; }
+  .trend-empty { font-size: 12.5px; color: var(--text-muted); text-align: center; padding: 30px 10px; }
+
+  .cost-table-wrap { overflow-x: auto; }
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+  .cost-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; padding: 0 10px 8px; border-bottom: 1px solid var(--border); }
+  .cost-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .cost-table td:first-child, .cost-table th:first-child { font-family: var(--font-body); font-variant-numeric: normal; }
+  .cost-table tr:last-child td { border-bottom: none; font-weight: 700; background: var(--surface-2); }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .status-dot.active { background: var(--good); }
+  .status-dot.paused { background: var(--text-muted); }
+  .status-dot.other { background: var(--warning); }
+
+  .setup-banner { display: none; background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 40%, var(--border)); border-radius: var(--radius-md); padding: 16px 18px; font-size: 13px; margin-bottom: 18px; max-width: 72ch; }
+  .setup-banner.show { display: block; }
+  .setup-banner code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: var(--font-mono); font-size: 11.5px; }
+
+  .error-banner { display: none; background: var(--critical-soft); border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--border)); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12.5px; color: var(--text-primary); margin-bottom: 18px; }
+  .error-banner.show { display: block; }
+  .error-banner b { color: var(--critical); }
+
+  .footer-note { font-size: 11.5px; color: var(--text-muted); margin-top: 26px; max-width: 68ch; }
+  .skeleton { opacity: 0.5; filter: grayscale(0.3); }
+
+  @media (max-width: 640px) { .wrap { padding: 20px 14px 48px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">📊</span>
+    <div class="brand-text">
+      <h1>Tablero Meta Ads</h1>
+      <p>Grupo Robles · Chamba Pachamama — se actualiza solo, sin que nadie toque nada</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <select id="accountSelect">
+      <option value="act_1533988627924707">Chamba Pachamama</option>
+      <option value="act_761696470067252">Chamba Altoque</option>
+    </select>
+    <select id="rangeSelect">
+      <option value="today">Hoy</option>
+      <option value="yesterday">Ayer</option>
+      <option value="last7" selected>Últimos 7 días</option>
+      <option value="last30">Últimos 30 días</option>
+      <option value="thisMonth">Mes actual</option>
+      <option value="lastMonth">Mes anterior</option>
+    </select>
+    <div class="spacer"></div>
+    <button type="button" class="btn-ghost" id="refreshBtn">🔄 Actualizar ahora</button>
+  </div>
+  <div class="status-line" id="statusLine"><span class="pulse"></span><span id="statusText">Cargando…</span></div>
+
+  <div class="setup-banner" id="setupBanner">
+    <b>Falta configurar el proxy.</b> Este archivo necesita la URL de tu Cloudflare Worker en la línea <code>PROXY_URL</code> del script (al final del archivo) para poder mostrar datos. Sigue los pasos de despliegue que te compartieron junto con este archivo.
+  </div>
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="chart-grid-3" id="chartGrid"></div>
+
+  <div class="panel">
+    <h3>Campañas</h3>
+    <p class="panel-hint">Desglose por campaña en el período seleccionado</p>
+    <div class="cost-table-wrap">
+      <table class="cost-table">
+        <thead><tr><th>Campaña</th><th>Estado</th><th>Inversión</th><th>Impresiones</th><th>Clics</th><th>CTR</th><th>CPC</th><th>Resultados</th><th>Costo/resultado</th></tr></thead>
+        <tbody id="campaignsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="footer-note">Costo por resultado diario es aproximado (inversión del día ÷ resultados atribuidos ese día por Meta). "Resultados" prioriza leads de formulario instantáneo; si la cuenta corre Click-to-WhatsApp se muestran las conversaciones iniciadas como resultado alterno. Se actualiza solo cada 5 minutos — puedes dejar esta pestaña abierta en una pantalla del equipo.</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ======================================================================
+   * CONFIGURACIÓN — edita estas dos líneas después de desplegar tu worker
+   * (ver worker-meta-proxy.js y los pasos de despliegue).
+   * ==================================================================== */
+  var PROXY_URL = 'https://reclutamientopachamama.ia-works126.workers.dev';
+  var ACCESS_KEY = 'pachamama2026'; // debe coincidir con el secreto ACCESS_KEY del worker
+  var AUTO_REFRESH_MINUTES = 5;
+  /* ==================================================================== */
+
+  var state = { currency: 'PEN' };
+  var refreshTimer = null;
+
+  function $(sel) { return document.querySelector(sel); }
+
+  function fmtMoney(n) { if (n == null || !isFinite(n)) return '—'; return (state.currency === 'PEN' ? 'S/ ' : state.currency + ' ') + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtMoney0(n) { if (n == null || !isFinite(n)) return '—'; return (state.currency === 'PEN' ? 'S/ ' : state.currency + ' ') + Math.round(n).toLocaleString('es-PE'); }
+  function fmtNum(n) { if (n == null || !isFinite(n)) return '—'; return Math.round(n).toLocaleString('es-PE'); }
+  function fmtPct(n) { if (n == null || !isFinite(n)) return '—'; return n.toFixed(2) + '%'; }
+  function fmtDateShort(d) { var dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+  function computeRange(v) {
+    var now = new Date();
+    var since, until;
+    if (v === 'today') { since = until = new Date(now); }
+    else if (v === 'yesterday') { since = until = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1); }
+    else if (v === 'last7') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6); }
+    else if (v === 'last30') { until = new Date(now); since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29); }
+    else if (v === 'thisMonth') { since = new Date(now.getFullYear(), now.getMonth(), 1); until = new Date(now); }
+    else { since = new Date(now.getFullYear(), now.getMonth() - 1, 1); until = new Date(now.getFullYear(), now.getMonth(), 0); }
+    var labels = { today: 'Hoy', yesterday: 'Ayer', last7: 'Últimos 7 días', last30: 'Últimos 30 días', thisMonth: 'Mes actual', lastMonth: 'Mes anterior' };
+    return { since: toISO(since), until: toISO(until), label: labels[v] || v };
+  }
+
+  function extractResultCount(actions, costPerAction) {
+    actions = actions || [];
+    var leadTypes = ['lead', 'onsite_conversion.lead_grouped', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead'];
+    var msgTypes = ['onsite_conversion.messaging_conversation_started_7d', 'onsite_conversion.total_messaging_connection'];
+    var leads = 0, msgs = 0;
+    actions.forEach(function (a) {
+      var v = Number(a.value) || 0;
+      if (leadTypes.indexOf(a.action_type) > -1) leads += v;
+      if (msgTypes.indexOf(a.action_type) > -1) msgs += v;
+    });
+    if (leads > 0) return { count: leads, label: 'leads' };
+    if (msgs > 0) return { count: msgs, label: 'conversaciones WhatsApp' };
+    return { count: 0, label: 'resultados' };
+  }
+
+  function setStatus(mode, text) {
+    var line = $('#statusLine');
+    line.classList.remove('stale', 'error');
+    if (mode) line.classList.add(mode);
+    $('#statusText').textContent = text;
+  }
+
+  async function load() {
+    if (PROXY_URL.indexOf('REEMPLAZA-CON-TU-WORKER') > -1) {
+      $('#setupBanner').classList.add('show');
+      setStatus('error', 'Sin configurar');
+      return;
+    }
+    $('#setupBanner').classList.remove('show');
+    $('#errorBanner').classList.remove('show');
+    setStatus(null, 'Actualizando…');
+
+    var accountId = $('#accountSelect').value;
+    var range = computeRange($('#rangeSelect').value);
+    var qs = new URLSearchParams({ account: accountId, since: range.since, until: range.until });
+    if (ACCESS_KEY) qs.set('key', ACCESS_KEY);
+
+    try {
+      var res = await fetch(PROXY_URL + '?' + qs.toString());
+      var body = await res.json().catch(function () { return null; });
+      if (!res.ok || !body || body.error) {
+        throw new Error((body && body.error) || ('HTTP ' + res.status));
+      }
+      state.currency = (body.account && body.account.currency) || 'PEN';
+      renderDashboard(body, range);
+      setStatus(null, 'Actualizado ' + new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) + ' · se refresca solo cada ' + AUTO_REFRESH_MINUTES + ' min');
+    } catch (err) {
+      var box = $('#errorBanner');
+      box.innerHTML = '<b>No se pudo cargar el tablero.</b> ' + (err && err.message ? err.message : 'Error desconocido.');
+      box.classList.add('show');
+      setStatus('error', 'Error al actualizar — reintentando en el próximo ciclo');
+    }
+  }
+
+  function renderBarTrend(title, hint, days, values, colorVar, formatFn) {
+    if (!days.length) return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><p class="trend-empty">Sin datos en este período.</p></div>';
+    var w = Math.max(260, days.length * 30), h = 120, baseY = 96, barW = Math.min(20, (w / days.length) - 7);
+    var max = Math.max.apply(null, values.concat([0.0001]));
+    var bars = days.map(function (d, i) {
+      var x = i * (w / days.length) + ((w / days.length) - barW) / 2;
+      var bh = Math.max(2, (values[i] / max) * 70);
+      var y = baseY - bh;
+      return '<g><rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="3" fill="' + colorVar + '"><title>' + formatFn(values[i]) + ' — ' + fmtDateShort(d) + '</title></rect>' +
+        '<text x="' + (x + barW / 2) + '" y="112" text-anchor="middle" font-size="9" fill="var(--text-muted)" font-family="var(--font-mono)">' + fmtDateShort(d) + '</text></g>';
+    }).join('');
+    return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><div class="trend-svg-wrap"><svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><line x1="0" y1="' + baseY + '" x2="' + w + '" y2="' + baseY + '" stroke="var(--border-strong)"></line>' + bars + '</svg></div></div>';
+  }
+  function renderLineChart(title, hint, days, values, colorVar, formatFn) {
+    var pts = days.map(function (d, i) { return { label: fmtDateShort(d), value: values[i] }; }).filter(function (p) { return p.value != null; });
+    if (!pts.length) return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><p class="trend-empty">Sin datos en este período.</p></div>';
+    var w = Math.max(260, pts.length * 34), h = 120, baseY = 92, topPad = 14;
+    var max = Math.max.apply(null, pts.map(function (p) { return p.value; }).concat([0.0001]));
+    var stepX = pts.length > 1 ? w / (pts.length - 1) : w;
+    function xAt(i) { return pts.length > 1 ? i * stepX : w / 2; }
+    function yAt(v) { return baseY - (max > 0 ? (v / max) * (baseY - topPad) : 0); }
+    var line = pts.map(function (p, i) { return xAt(i) + ',' + yAt(p.value); }).join(' ');
+    var area = 'M' + xAt(0) + ',' + baseY + ' L' + pts.map(function (p, i) { return xAt(i) + ',' + yAt(p.value); }).join(' L') + ' L' + xAt(pts.length - 1) + ',' + baseY + ' Z';
+    var dots = pts.map(function (p, i) { var last = i === pts.length - 1; return '<circle cx="' + xAt(i) + '" cy="' + yAt(p.value) + '" r="' + (last ? 4.5 : 3) + '" fill="' + colorVar + '"><title>' + formatFn(p.value) + ' — ' + p.label + '</title></circle>'; }).join('');
+    return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p><div class="trend-svg-wrap"><svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><line x1="0" y1="' + baseY + '" x2="' + w + '" y2="' + baseY + '" stroke="var(--border-strong)"></line><path d="' + area + '" fill="' + colorVar + '" opacity="0.12"></path><polyline points="' + line + '" fill="none" stroke="' + colorVar + '" stroke-width="2"></polyline>' + dots + '</svg></div></div>';
+  }
+
+  function statusLabel(s) {
+    var map = { ACTIVE: 'Activa', PAUSED: 'Pausada', DELETED: 'Eliminada', ARCHIVED: 'Archivada', IN_PROCESS: 'En proceso', WITH_ISSUES: 'Con problemas' };
+    return map[s] || s;
+  }
+
+  function renderDashboard(body, range) {
+    var dailyRows = body.daily || [], campaignRows = body.campaigns || [];
+    var totalSpend = 0, totalImpr = 0, totalClicks = 0, totalResults = 0, resultLabel = 'resultados';
+    var days = [], spendByDay = [], ctrByDay = [], cplByDay = [];
+    dailyRows.slice().sort(function (a, b) { return (a.date_start || '').localeCompare(b.date_start || ''); }).forEach(function (r) {
+      var spend = Number(r.spend) || 0, impr = Number(r.impressions) || 0, clicks = Number(r.clicks) || 0;
+      var res = extractResultCount(r.actions, r.cost_per_action_type);
+      totalSpend += spend; totalImpr += impr; totalClicks += clicks; totalResults += res.count;
+      if (res.count > 0) resultLabel = res.label;
+      days.push(r.date_start); spendByDay.push(spend);
+      ctrByDay.push(impr > 0 ? (clicks / impr) * 100 : null);
+      cplByDay.push(res.count > 0 ? spend / res.count : null);
+    });
+
+    var ctr = totalImpr ? (totalClicks / totalImpr) * 100 : null;
+    var cpc = totalClicks ? totalSpend / totalClicks : null;
+    var cpm = totalImpr ? (totalSpend / totalImpr) * 1000 : null;
+    var cpl = totalResults ? totalSpend / totalResults : null;
+
+    var tiles = [
+      { label: 'Inversión total', value: fmtMoney0(totalSpend), sub: range.label },
+      { label: 'Resultados (' + resultLabel + ')', value: fmtNum(totalResults), sub: 'suma del período' },
+      { label: 'Costo por resultado', value: cpl != null ? fmtMoney(cpl) : '—', sub: 'inversión / resultados' },
+      { label: 'CTR', value: ctr != null ? fmtPct(ctr) : '—', sub: fmtNum(totalClicks) + ' clics' },
+      { label: 'CPC', value: cpc != null ? fmtMoney(cpc) : '—', sub: 'costo por clic' },
+      { label: 'CPM', value: cpm != null ? fmtMoney(cpm) : '—', sub: fmtNum(totalImpr) + ' impresiones' }
+    ];
+    $('#kpiRow').innerHTML = tiles.map(function (t) {
+      return '<div class="kpi-tile"><div class="kpi-label">' + t.label + '</div><div class="kpi-value">' + t.value + '</div><div class="kpi-sub">' + t.sub + '</div></div>';
+    }).join('');
+
+    $('#chartGrid').innerHTML =
+      renderBarTrend('Inversión diaria', 'Gasto reportado por Meta', days, spendByDay, 'var(--berry)', fmtMoney0) +
+      renderLineChart('CTR diario', 'Clics ÷ impresiones', days, ctrByDay, 'var(--cat-1)', fmtPct) +
+      renderLineChart('Costo por resultado diario', 'Aproximado — inversión ÷ resultados de ese día', days, cplByDay, 'var(--accent)', fmtMoney0);
+
+    var rows = campaignRows.map(function (r) {
+      var spend = Number(r.spend) || 0, impr = Number(r.impressions) || 0, clicks = Number(r.clicks) || 0;
+      var res = extractResultCount(r.actions, r.cost_per_action_type);
+      var rCtr = impr ? (clicks / impr) * 100 : null;
+      var rCpc = clicks ? spend / clicks : null;
+      var rCpl = res.count ? spend / res.count : null;
+      var dotClass = r.status === 'ACTIVE' ? 'active' : (r.status === 'PAUSED' ? 'paused' : 'other');
+      return '<tr><td>' + r.campaign_name + '</td>' +
+        '<td><span class="status-dot ' + dotClass + '"></span>' + (r.status ? statusLabel(r.status) : '—') + '</td>' +
+        '<td>' + fmtMoney0(spend) + '</td><td>' + fmtNum(impr) + '</td><td>' + fmtNum(clicks) + '</td>' +
+        '<td>' + (rCtr != null ? fmtPct(rCtr) : '—') + '</td><td>' + (rCpc != null ? fmtMoney(rCpc) : '—') + '</td>' +
+        '<td>' + fmtNum(res.count) + '</td><td>' + (rCpl != null ? fmtMoney0(rCpl) : '—') + '</td></tr>';
+    }).join('');
+    var totalsRow = '<tr><td>Total</td><td></td><td>' + fmtMoney0(totalSpend) + '</td><td>' + fmtNum(totalImpr) + '</td><td>' + fmtNum(totalClicks) + '</td>' +
+      '<td>' + (ctr != null ? fmtPct(ctr) : '—') + '</td><td>' + (cpc != null ? fmtMoney(cpc) : '—') + '</td><td>' + fmtNum(totalResults) + '</td><td>' + (cpl != null ? fmtMoney0(cpl) : '—') + '</td></tr>';
+    $('#campaignsBody').innerHTML = (rows || '') + totalsRow;
+    if (!campaignRows.length) {
+      $('#campaignsBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);font-family:var(--font-body)">Sin campañas con actividad en este período.</td></tr>';
+    }
+  }
+
+  $('#refreshBtn').addEventListener('click', load);
+  $('#accountSelect').addEventListener('change', load);
+  $('#rangeSelect').addEventListener('change', load);
+
+  load();
+  refreshTimer = setInterval(load, AUTO_REFRESH_MINUTES * 60 * 1000);
+})();
+</script>
+</body>
+</html>
