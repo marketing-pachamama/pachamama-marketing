@@ -293,6 +293,9 @@
   .badge[data-value="carrusel"] { background: var(--cat-2); color: #fff; }
   .badge[data-value="imagen"] { background: var(--cat-3); color: #fff; }
   .badge[data-value="ugc"] { background: var(--cat-4); }
+  .badge[data-value="palta"] { background: var(--cat-1); color: #fff; }
+  .badge[data-value="pitahaya"] { background: var(--cat-2); color: #fff; }
+  .badge[data-value="otro"] { background: var(--cat-5); }
   .card-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
   .meta-exp { display: flex; align-items: center; gap: 4px; }
   .meta-exp input { width: 42px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary); border-radius: 5px; padding: 2px 4px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
@@ -494,10 +497,15 @@
           <button type="button" class="chip" data-value="imagen">Imagen</button>
           <button type="button" class="chip" data-value="ugc">UGC</button>
         </div>
+        <div class="chip-group" data-field="segment" role="group" aria-label="Segmento/producto">
+          <button type="button" class="chip active" data-value="palta">Palta Hass</button>
+          <button type="button" class="chip" data-value="pitahaya">Pitahaya</button>
+          <button type="button" class="chip" data-value="otro">Otro</button>
+        </div>
         <label class="check-inline"><input type="checkbox" class="field-zona"> Reside en zona</label>
         <label class="check-inline"><input type="checkbox" class="field-horario"> Disponible horario</label>
         <button type="submit" class="btn-primary">+ Agregar postulante</button>
-        <span class="form-required-note">Nombre y WhatsApp son obligatorios · elige plataforma y formato antes de agregar</span>
+        <span class="form-required-note">Nombre y WhatsApp son obligatorios · elige plataforma, formato y segmento antes de agregar</span>
       </form>
 
       <div class="board" id="board">
@@ -549,6 +557,7 @@
     <div class="card-badges">
       <button type="button" class="badge" data-badge="platform" data-value="meta-leads">Meta Leads</button>
       <button type="button" class="badge" data-badge="creative" data-value="video">Video</button>
+      <button type="button" class="badge" data-badge="segment" data-value="palta">Palta Hass</button>
     </div>
     <div class="card-meta">
       <span class="meta-exp"><input type="number" class="f-exp" min="0" value="0"> meses exp.</span>
@@ -588,6 +597,11 @@
     { key: 'imagen', label: 'Imagen', color: 'var(--cat-3)' },
     { key: 'ugc', label: 'UGC', color: 'var(--cat-4)' }
   ];
+  var SEGMENTS = [
+    { key: 'palta', label: 'Palta Hass', color: 'var(--cat-1)' },
+    { key: 'pitahaya', label: 'Pitahaya', color: 'var(--cat-2)' },
+    { key: 'otro', label: 'Otro', color: 'var(--cat-5)' }
+  ];
 
   var board = document.getElementById('board');
   var appRoot = document.querySelector('.app');
@@ -610,6 +624,7 @@
   }
   function platformInfo(key) { for (var i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].key === key) return PLATFORMS[i]; return PLATFORMS[0]; }
   function creativeInfo(key) { for (var i = 0; i < CREATIVES.length; i++) if (CREATIVES[i].key === key) return CREATIVES[i]; return CREATIVES[0]; }
+  function segmentInfo(key) { for (var i = 0; i < SEGMENTS.length; i++) if (SEGMENTS[i].key === key) return SEGMENTS[i]; return SEGMENTS[0]; }
 
   /* ---------------- Tabs & config toggle (local UI state) ---------------- */
   $all('[data-tab-btn]').forEach(function (btn) {
@@ -664,6 +679,7 @@
     card.dataset.id = data.id || makeLeadId();
     card.dataset.platform = data.platform;
     card.dataset.creative = data.creative;
+    card.dataset.segment = data.segment || SEGMENTS[0].key;
     card.dataset.date = data.date || new Date().toISOString();
     $('.card-name', card).textContent = data.name;
     $('.card-phone', card).textContent = data.phone;
@@ -675,6 +691,9 @@
     var cBadge = card.querySelector('.badge[data-badge="creative"]');
     var cInfo = creativeInfo(data.creative);
     cBadge.dataset.value = cInfo.key; cBadge.textContent = cInfo.label;
+    var sBadge = card.querySelector('.badge[data-badge="segment"]');
+    var sInfo = segmentInfo(card.dataset.segment);
+    sBadge.dataset.value = sInfo.key; sBadge.textContent = sInfo.label;
     $('.f-exp', card).value = data.exp;
     $('.meta-loc', card).textContent = data.location;
     $('.f-zona', card).checked = data.zona;
@@ -694,6 +713,7 @@
       phone: $('.card-phone', card).textContent.trim(),
       platform: card.dataset.platform || 'meta-leads',
       creative: card.dataset.creative || 'video',
+      segment: card.dataset.segment || 'palta',
       exp: Number($('.f-exp', card).value) || 0,
       location: $('.meta-loc', card).textContent.trim(),
       zona: $('.f-zona', card).checked,
@@ -732,6 +752,7 @@
     if (!name || !phone) return;
     var platform = $('.chip-group[data-field="platform"] .chip.active', addForm);
     var creative = $('.chip-group[data-field="creative"] .chip.active', addForm);
+    var segment = $('.chip-group[data-field="segment"] .chip.active', addForm);
     var card = buildCard({
       name: name,
       phone: phone,
@@ -739,6 +760,7 @@
       location: $('.field-location', addForm).value.trim(),
       platform: platform ? platform.dataset.value : 'meta-leads',
       creative: creative ? creative.dataset.value : 'video',
+      segment: segment ? segment.dataset.value : 'palta',
       zona: $('.field-zona', addForm).checked,
       horario: $('.field-horario', addForm).checked
     });
@@ -785,14 +807,16 @@
     if (dis) { moveCard(dis.closest('.lead-card'), 'descartado'); return; }
     if (react) { moveCard(react.closest('.lead-card'), 'nuevo'); return; }
     if (badge) {
-      var list = badge.dataset.badge === 'platform' ? PLATFORMS : CREATIVES;
+      var list = badge.dataset.badge === 'platform' ? PLATFORMS : (badge.dataset.badge === 'creative' ? CREATIVES : SEGMENTS);
       var keys = list.map(function (p) { return p.key; });
       var i = keys.indexOf(badge.dataset.value);
       var next = list[(i + 1) % list.length];
       badge.dataset.value = next.key;
       badge.textContent = next.label;
       var card2 = badge.closest('.lead-card');
-      if (badge.dataset.badge === 'platform') card2.dataset.platform = next.key; else card2.dataset.creative = next.key;
+      if (badge.dataset.badge === 'platform') card2.dataset.platform = next.key;
+      else if (badge.dataset.badge === 'creative') card2.dataset.creative = next.key;
+      else card2.dataset.segment = next.key;
       refreshAll();
       savePipelineNow();
       return;
@@ -1051,6 +1075,7 @@
     var byStage = { nuevo: 0, contactado: 0, entrevista: 0, entrevistado: 0, contratado: 0, descartado: 0 };
     var byPlatform = {}; PLATFORMS.forEach(function (p) { byPlatform[p.key] = { count: 0, qualified: 0, spend: 0, impressions: 0, clicks: 0 }; });
     var byCreative = {}; CREATIVES.forEach(function (c) { byCreative[c.key] = { count: 0 }; });
+    var bySegment = {}; SEGMENTS.forEach(function (s) { bySegment[s.key] = { count: 0 }; });
     var byDay = {};
     var qualifiedTotal = 0, qualifiedPaid = 0, totalPaidLeads = 0;
 
@@ -1060,8 +1085,10 @@
       byStage[stage] = (byStage[stage] || 0) + 1;
       var plat = card.dataset.platform;
       var creative = card.dataset.creative;
+      var segment = card.dataset.segment;
       if (byPlatform[plat]) byPlatform[plat].count++;
       if (byCreative[creative]) byCreative[creative].count++;
+      if (bySegment[segment]) bySegment[segment].count++;
       if (plat !== 'bolsas') totalPaidLeads++;
       var exp = Number($('.f-exp', card).value) || 0;
       var zona = $('.f-zona', card).checked;
@@ -1099,7 +1126,7 @@
     function val(id) { var el = document.getElementById(id); return el ? (Number(el.value) || 0) : 0; }
 
     return {
-      cards: cards, total: total, byStage: byStage, byPlatform: byPlatform, byCreative: byCreative, byDay: byDay,
+      cards: cards, total: total, byStage: byStage, byPlatform: byPlatform, byCreative: byCreative, bySegment: bySegment, byDay: byDay,
       qualifiedTotal: qualifiedTotal, qualifiedPaid: qualifiedPaid, totalPaidLeads: totalPaidLeads,
       activeInPipeline: activeInPipeline,
       totalSpend: totalSpend, totalImpr: totalImpr, totalClicks: totalClicks, adByDay: adByDay,
@@ -1471,6 +1498,7 @@
 
     var platEntries = PLATFORMS.map(function (p) { return { label: p.label, color: p.color, count: m.byPlatform[p.key].count }; });
     var creaEntries = CREATIVES.map(function (c) { return { label: c.label, color: c.color, count: m.byCreative[c.key].count }; });
+    var segEntries = SEGMENTS.map(function (s) { return { label: s.label, color: s.color, count: m.bySegment[s.key].count }; });
 
     var adDayKeys = Object.keys(m.adByDay).sort();
     var ctrPoints = adDayKeys.map(function (d) {
@@ -1495,7 +1523,7 @@
       renderKpis(m) +
       renderInsights(m) +
       '<div class="panel-grid">' + renderFunnel(m) + renderBarPanel('Leads por plataforma', 'Origen de los postulantes recibidos', platEntries) + '</div>' +
-      '<div class="panel-grid">' + renderBarPanel('Leads por formato de anuncio', 'Qué tipo de creatividad los trajo', creaEntries) + renderBarTrend('Leads por día', 'Ingreso de postulantes', m.byDay, 'var(--accent)', function (v) { return v + ' lead' + (v === 1 ? '' : 's'); }) + '</div>' +
+      '<div class="chart-grid-3">' + renderBarPanel('Leads por formato de anuncio', 'Qué tipo de creatividad los trajo', creaEntries) + renderBarPanel('Leads por segmento', 'Producto/proyecto asociado al postulante', segEntries) + renderBarTrend('Leads por día', 'Ingreso de postulantes', m.byDay, 'var(--accent)', function (v) { return v + ' lead' + (v === 1 ? '' : 's'); }) + '</div>' +
       '<div class="chart-grid-2">' + renderBarTrend('Inversión diaria', 'Gasto reportado en Meta Ads', spendByDay, 'var(--berry)', function (v) { return fmtMoney(v); }) + renderLineChart('CTR diario', 'Clics ÷ impresiones de cada día', ctrPoints, 'var(--cat-1)', function (v) { return v.toFixed(2) + '%'; }) + '</div>' +
       '<div class="chart-grid-2">' + renderLineChart('CPL diario (aprox.)', 'Inversión del día ÷ leads recibidos ese mismo día', cplPoints, 'var(--accent)', function (v) { return fmtMoney2(v); }) +
       '<div class="panel"><h3>Cómo leer el CPL diario</h3><p class="panel-hint">Una aproximación, no una atribución exacta</p><p style="font-size:12.5px;color:var(--text-secondary);line-height:1.6">Compara la inversión de un día con los leads que entraron ese mismo día — útil para ver la tendencia, pero un lead puede haber visto el anuncio uno o más días antes de postular. Para el costo por lead más confiable, usa el CPL (blended) del bloque de arriba, calculado sobre todo el periodo.</p></div>' +
