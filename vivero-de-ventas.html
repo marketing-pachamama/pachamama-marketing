@@ -1,4 +1,4 @@
-<!doctype html> 
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -269,7 +269,7 @@
   .column[data-stage="descartado"] .column-head .count,
   .column[data-stage="contratado"] .column-head .count { color: var(--text-secondary); }
   .column-body { flex: 1; overflow-y: auto; padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
-  .column-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 18px 6px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+  .column-empty, .search-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 18px 6px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
 
   /* ---------- Lead card ---------- */
   .lead-card {
@@ -386,6 +386,19 @@
   .meta-error-banner { display: none; background: var(--critical-soft); border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--border)); border-radius: var(--radius-sm); padding: 11px 13px; font-size: 12.5px; margin-bottom: 14px; }
   .meta-error-banner.show { display: block; }
   .meta-error-banner b { color: var(--critical); }
+
+  /* ---------- Buscador de postulantes (Pipeline) ---------- */
+  .pipeline-search { position: relative; margin-bottom: 14px; }
+  .pipeline-search input {
+    width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); background: var(--bg);
+    color: var(--text-primary); border-radius: 999px; padding: 10px 16px 10px 38px; font-size: 13.5px;
+  }
+  .pipeline-search input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pipeline-search::before {
+    content: "🔍"; position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; opacity: 0.6; pointer-events: none;
+  }
+  .pipeline-search input::-webkit-search-cancel-button { cursor: pointer; }
   .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
   @media (max-width: 980px) { .chart-grid-3 { grid-template-columns: 1fr; } }
   .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
@@ -496,6 +509,10 @@
 
       <div class="meta-status-line" id="pipelineStatusLine"><span class="pulse"></span><span>Cargando Pipeline compartido…</span></div>
       <div class="meta-error-banner" id="pipelineErrorBanner"></div>
+
+      <div class="pipeline-search">
+        <input type="search" id="pipelineSearchInput" placeholder="Buscar por nombre, WhatsApp, correo o ubicación…" aria-label="Buscar postulante">
+      </div>
 
       <form id="addLeadForm" class="add-lead-form" artifact-local autocomplete="off">
         <div class="form-row form-row-fields">
@@ -884,7 +901,46 @@
         empty.remove();
       }
     });
+    applyPipelineSearch();
   }
+
+  /* ---------------- Buscador de postulantes (Pipeline) ---------------- */
+  var pipelineSearchInput = document.getElementById('pipelineSearchInput');
+  function normalizeSearchText(s) {
+    return (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function applyPipelineSearch() {
+    var q = normalizeSearchText(pipelineSearchInput ? pipelineSearchInput.value.trim() : '');
+    $all('.column').forEach(function (col) {
+      var cards = $all('.lead-card', col);
+      var visibleCount = 0;
+      cards.forEach(function (card) {
+        var haystack = normalizeSearchText(
+          ($('.card-name', card) ? $('.card-name', card).textContent : '') + ' ' +
+          ($('.card-phone', card) ? $('.card-phone', card).textContent : '') + ' ' +
+          ($('.meta-email', card) ? $('.meta-email', card).textContent : '') + ' ' +
+          ($('.meta-loc', card) ? $('.meta-loc', card).textContent : '')
+        );
+        var match = !q || haystack.indexOf(q) !== -1;
+        card.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+      });
+      var body = $('.column-body', col);
+      var noMatch = $('.search-empty', body);
+      if (q && cards.length > 0 && visibleCount === 0) {
+        if (!noMatch) {
+          var div = document.createElement('div');
+          div.className = 'search-empty';
+          div.setAttribute('artifact-local', '');
+          div.textContent = 'Sin resultados para tu búsqueda';
+          body.appendChild(div);
+        }
+      } else if (noMatch) {
+        noMatch.remove();
+      }
+    });
+  }
+  if (pipelineSearchInput) pipelineSearchInput.addEventListener('input', applyPipelineSearch);
 
   /* ---------------- Pipeline compartido (Cloudflare KV vía el mismo proxy) ---------------- */
   var PIPELINE_URL = 'https://reclutamientopachamama.ia-works126.workers.dev/pipeline';
