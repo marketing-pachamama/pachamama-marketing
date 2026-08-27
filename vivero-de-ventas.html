@@ -460,7 +460,13 @@
     color: inherit; transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
   .posting-card:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); border-left-color: var(--berry); }
-  .posting-card-title { font-size: 13px; font-weight: 700; line-height: 1.35; margin-bottom: 12px; min-height: 2.7em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .posting-card-title { font-size: 13px; font-weight: 700; line-height: 1.35; margin-bottom: 8px; min-height: 2.7em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .posting-card-date { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .posting-card-date .pcd-icon { font-size: 10.5px; }
+  .posting-card-date.posting-card-date-empty { opacity: 0.6; font-style: italic; }
+  .posting-card-date .pcd-days { font-weight: 700; color: var(--text-secondary); }
+  .posting-card-date .pcd-days.tone-new { color: var(--good); }
+  .posting-card-date .pcd-days.tone-old { color: var(--warning); }
   .posting-card-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 12px; }
   .posting-card-metrics .m-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
   .posting-card-metrics .m-value { font-family: var(--font-mono); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-strong); }
@@ -480,17 +486,19 @@
   .posting-editor-table .pp-platforms-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-right: 8px; white-space: nowrap; }
   .posting-editor-table .pp-platform-chips { display: inline-flex; flex-wrap: wrap; gap: 5px; vertical-align: middle; }
   .posting-editor-table .pp-platform-chips .chip { padding: 4px 10px; font-size: 11px; }
-  .posting-editor-table input[type="text"], .posting-editor-table input[type="url"], .posting-editor-table input[type="number"] {
+  .posting-editor-table input[type="text"], .posting-editor-table input[type="url"], .posting-editor-table input[type="number"], .posting-editor-table input[type="date"] {
     width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-primary);
     border-radius: var(--radius-sm); padding: 7px 9px; font-size: 12.5px;
   }
   .posting-editor-table input[type="number"] { font-family: var(--font-mono); }
-  .posting-editor-table .col-title { width: 27%; }
-  .posting-editor-table .col-count { width: 10%; }
-  .posting-editor-table .col-hired { width: 10%; }
-  .posting-editor-table .col-link { width: 28%; }
-  .posting-editor-table .col-active { width: 14%; text-align: center; }
+  .posting-editor-table .col-title { width: 22%; }
+  .posting-editor-table .col-date { width: 14%; }
+  .posting-editor-table .col-count { width: 9%; }
+  .posting-editor-table .col-hired { width: 9%; }
+  .posting-editor-table .col-link { width: 24%; }
+  .posting-editor-table .col-active { width: 13%; text-align: center; }
   .posting-editor-table .col-del { width: 40px; text-align: center; }
+  .posting-editor-table input[type="date"] { font-family: var(--font-mono); font-size: 12px; }
   .posting-add-row { margin-top: 12px; }
 
   .pp-toggle {
@@ -1707,6 +1715,31 @@
     return 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   }
 
+  function fmtDateLong(dateStr) {
+    if (!dateStr) return null;
+    var d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function postingDaysLive(dateStr) {
+    if (!dateStr) return null;
+    var d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+    return diff >= 0 ? diff : null;
+  }
+
+  function sortPostingsByCreated(list) {
+    return list.slice().sort(function (a, b) {
+      if (!a.created && !b.created) return 0;
+      if (!a.created) return 1;
+      if (!b.created) return -1;
+      return b.created.localeCompare(a.created);
+    });
+  }
+
   function loadPandapePostings() {
     try {
       var raw = localStorage.getItem(PANDAPE_POSTINGS_KEY);
@@ -1720,6 +1753,7 @@
           hired: Number(p.hired) || 0,
           url: typeof p.url === 'string' ? p.url : '',
           active: p.active !== false,
+          created: typeof p.created === 'string' ? p.created : '',
           platforms: Array.isArray(p.platforms) ? p.platforms.filter(function (k) { return PANDAPE_PLATFORM_KEYS.indexOf(k) > -1; }) : []
         };
       });
@@ -1738,7 +1772,7 @@
   }
 
   function renderPostingCards() {
-    var active = pandapePostings.filter(function (p) { return p.active && p.title.trim(); });
+    var active = sortPostingsByCreated(pandapePostings.filter(function (p) { return p.active && p.title.trim(); }));
     var totalApplicants = active.reduce(function (sum, p) { return sum + (Number(p.applicants) || 0); }, 0);
     var totalHired = active.reduce(function (sum, p) { return sum + (Number(p.hired) || 0); }, 0);
     var summary = '<div class="posting-summary-row">' +
@@ -1748,15 +1782,23 @@
       '</div>';
     var body;
     if (!active.length) {
-      body = '<p class="board-empty-note">Todavía no hay publicaciones activas registradas. Agrégalas en "Editar publicaciones" más abajo (título, postulantes, contratados y el link de PandaPé de cada vacante).</p>';
+      body = '<p class="board-empty-note">Todavía no hay publicaciones activas registradas. Agrégalas en "Editar publicaciones" más abajo (título, fecha de creación, postulantes, contratados y el link de PandaPé de cada vacante).</p>';
     } else {
       body = '<div class="posting-grid">' + active.map(function (p) {
         var href = escapeHtml(p.url && p.url.trim() ? p.url.trim() : PANDAPE_DEFAULT_URL);
         var platformsLine = (p.platforms && p.platforms.length)
           ? '<div class="posting-card-platforms">Publicado en: ' + p.platforms.map(platformLabel).map(escapeHtml).join(', ') + '</div>'
           : '';
+        var dateLabel = fmtDateLong(p.created);
+        var days = postingDaysLive(p.created);
+        var daysTone = days == null ? '' : days <= 14 ? ' tone-new' : days > 45 ? ' tone-old' : '';
+        var daysText = days == null ? '' : ' <span class="pcd-days' + daysTone + '">· hace ' + days + (days === 1 ? ' día' : ' días') + '</span>';
+        var dateLine = dateLabel
+          ? '<div class="posting-card-date"><span class="pcd-icon" aria-hidden="true">📅</span>' + dateLabel + daysText + '</div>'
+          : '<div class="posting-card-date posting-card-date-empty"><span class="pcd-icon" aria-hidden="true">📅</span>Sin fecha de creación</div>';
         return '<a class="posting-card" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
           '<div class="posting-card-title">' + escapeHtml(p.title) + '</div>' +
+          dateLine +
           '<div class="posting-card-metrics">' +
           '<div><div class="m-label">Postulantes</div><div class="m-value">' + (Number(p.applicants) || 0) + '</div></div>' +
           '<div><div class="m-label">Contratados</div><div class="m-value hired">' + (Number(p.hired) || 0) + '</div></div>' +
@@ -1771,19 +1813,20 @@
 
   function renderPostingEditorRows() {
     if (!pandapePostings.length) {
-      return '<tr><td colspan="6" class="board-empty-note" style="padding:16px 4px;">Sin publicaciones registradas todavía.</td></tr>';
+      return '<tr><td colspan="7" class="board-empty-note" style="padding:16px 4px;">Sin publicaciones registradas todavía.</td></tr>';
     }
     return pandapePostings.map(function (p) {
       var platforms = p.platforms || [];
       return '<tr class="pp-main-row" data-id="' + p.id + '">' +
         '<td class="col-title"><input type="text" class="pp-title" value="' + escapeHtml(p.title) + '" placeholder="Nombre de la publicación"></td>' +
+        '<td class="col-date"><input type="date" class="pp-created" value="' + escapeHtml(p.created) + '"></td>' +
         '<td class="col-count"><input type="number" class="pp-count" min="0" value="' + (Number(p.applicants) || 0) + '"></td>' +
         '<td class="col-hired"><input type="number" class="pp-hired" min="0" value="' + (Number(p.hired) || 0) + '"></td>' +
         '<td class="col-link"><input type="url" class="pp-url" value="' + escapeHtml(p.url) + '" placeholder="https://ats.pandape.com/Company/Vacancy/..."></td>' +
         '<td class="col-active"><button type="button" class="pp-toggle' + (p.active ? ' is-on' : '') + '" aria-pressed="' + (p.active ? 'true' : 'false') + '">' + (p.active ? 'Activa' : 'Inactiva') + '</button></td>' +
         '<td class="col-del"><button type="button" class="card-delete pp-del" title="Eliminar publicación" aria-label="Eliminar publicación">🗑</button></td>' +
         '</tr>' +
-        '<tr class="pp-platforms-row" data-id="' + p.id + '"><td colspan="6">' +
+        '<tr class="pp-platforms-row" data-id="' + p.id + '"><td colspan="7">' +
         '<span class="pp-platforms-label">Publicado en:</span>' +
         '<div class="chip-group pp-platform-chips">' + PANDAPE_PLATFORMS.map(function (pl) {
           return '<button type="button" class="chip pp-platform-chip' + (platforms.indexOf(pl.key) > -1 ? ' active' : '') + '" data-platform="' + pl.key + '">' + pl.label + '</button>';
@@ -1796,7 +1839,7 @@
     pandapeView.innerHTML =
       '<div class="panel">' +
       '<h3>Publicaciones activas en PandaPé</h3>' +
-      '<p class="panel-hint">Postulantes y contratados por vacante — haz clic en una publicación para abrirla directo en PandaPé. ' +
+      '<p class="panel-hint">Postulantes y contratados por vacante, ordenadas de la más reciente a la más antigua — haz clic en una publicación para abrirla directo en PandaPé. ' +
       '<a href="' + PANDAPE_DEFAULT_URL + '" target="_blank" rel="noopener noreferrer" style="color:var(--berry-strong);font-weight:600;">Abrir PandaPé ↗</a></p>' +
       '<div id="postingCardsArea">' + renderPostingCards() + '</div>' +
       '</div>' +
@@ -1804,7 +1847,7 @@
       '<details class="ad-detail-table" open>' +
       '<summary>Editar publicaciones</summary>' +
       '<table class="posting-editor-table"><thead><tr>' +
-      '<th class="col-title">Título</th><th class="col-count">Postulantes</th><th class="col-hired">Contratados</th><th class="col-link">Link de PandaPé</th><th class="col-active">Estado</th><th class="col-del"></th>' +
+      '<th class="col-title">Título</th><th class="col-date">Fecha de creación</th><th class="col-count">Postulantes</th><th class="col-hired">Contratados</th><th class="col-link">Link de PandaPé</th><th class="col-active">Estado</th><th class="col-del"></th>' +
       '</tr></thead><tbody id="postingEditorBody">' + renderPostingEditorRows() + '</tbody></table>' +
       '<button type="button" class="btn-ghost posting-add-row" id="postingAddBtn">+ Agregar publicación</button>' +
       '</details>' +
@@ -1822,6 +1865,7 @@
     var posting = findPosting(row.dataset.id);
     if (!posting) return;
     if (e.target.classList.contains('pp-title')) posting.title = e.target.value;
+    else if (e.target.classList.contains('pp-created')) posting.created = e.target.value;
     else if (e.target.classList.contains('pp-count')) posting.applicants = Number(e.target.value) || 0;
     else if (e.target.classList.contains('pp-hired')) posting.hired = Number(e.target.value) || 0;
     else if (e.target.classList.contains('pp-url')) posting.url = e.target.value;
@@ -1832,7 +1876,8 @@
 
   pandapeView.addEventListener('click', function (e) {
     if (e.target.closest('#postingAddBtn')) {
-      pandapePostings.push({ id: makePostingId(), title: '', applicants: 0, hired: 0, url: '', active: true, platforms: [] });
+      var todayStr = new Date().toISOString().slice(0, 10);
+      pandapePostings.push({ id: makePostingId(), title: '', applicants: 0, hired: 0, url: '', active: true, created: todayStr, platforms: [] });
       savePandapePostings();
       renderPandapeView();
       var lastInput = pandapeView.querySelector('#postingEditorBody tr:last-child .pp-title');
