@@ -394,11 +394,12 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="navtab" data-s="embudo" onclick="showSection(this,'embudo')">🔻 Embudo</button>
       <button class="navtab" data-s="insights" onclick="showSection(this,'insights')">💡 Insights</button>
       <button class="navtab" data-s="recomendaciones" onclick="showSection(this,'recomendaciones')">✅ Plan de acción</button>
+      <button class="navtab" data-s="leads" onclick="showSection(this,'leads');leadsOnOpen()">👤 Leads</button>
     </div>
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v2.4</b> (Embudo: observación de No Responde + atribución por campaña/anuncio)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.1</b> (clave de acceso al backend de Gerencia + pestaña Leads)</div>
   </div>
 </div>
 
@@ -437,6 +438,38 @@ const DAILY_LEAD_OVERRIDES = {
   }
 };
 // ╚═══════════════════════════════════════════════╝
+
+// ═══════════════ v3 · CLAVE DE ACCESO AL BACKEND DE GERENCIA ═══════════════
+// El backend (Render) exige la cabecera X-API-Key en todo /api/*. La clave NO va escrita en este
+// archivo (la página es pública): cada persona la escribe una vez y queda guardada solo en su navegador.
+// Solo se tocan las llamadas a ese backend; Meta y Kommo (Cloudflare) siguen exactamente igual.
+// Si la persona deja la clave vacía, no se le vuelve a preguntar en esa sesión y el panel
+// "Datos clave" muestra su aviso de siempre, sin afectar al resto del dashboard.
+(function(){
+  var BACKEND='pachamama-backend-v0v0.onrender.com', STORE='pm_api_key', SKIP='pm_api_key_omitida';
+  var _fetch=window.fetch.bind(window);
+  function clave(){
+    var k='';try{k=localStorage.getItem(STORE)||'';}catch(e){}
+    if(k)return k;
+    try{if(sessionStorage.getItem(SKIP))return '';}catch(e){}
+    k=(window.prompt('Clave de acceso a los datos de Gerencia (déjala vacía para omitir):')||'').trim();
+    if(k){try{localStorage.setItem(STORE,k);}catch(e){}}
+    else{try{sessionStorage.setItem(SKIP,'1');}catch(e){}}
+    return k;
+  }
+  window.fetch=function(input,init){
+    var url=(typeof input==='string')?input:((input&&input.url)||'');
+    if(url.indexOf(BACKEND)===-1)return _fetch(input,init);
+    var k=clave();
+    if(!k)return _fetch(input,init);
+    init=init||{};
+    var h=new Headers(init.headers||{});h.set('X-API-Key',k);init.headers=h;
+    return _fetch(input,init).then(function(r){
+      if(r.status===401){try{localStorage.removeItem(STORE);}catch(e){}}
+      return r;
+    });
+  };
+})();
 
 // ═══════════════ STATE ═══════════════
 let TOKEN='', preset='today', product='palta', charts={}, LAST_DATA=null, SHEET_URL='', FUNNEL_ROWS=[];
@@ -787,7 +820,8 @@ function renderAll(D){
     <div class="section" id="sec-audiencias"></div>
     <div class="section" id="sec-embudo"></div>
     <div class="section" id="sec-insights"></div>
-    <div class="section" id="sec-recomendaciones"></div>`;
+    <div class="section" id="sec-recomendaciones"></div>
+    <div class="section" id="sec-leads"></div>`;
   const activeTab=document.querySelector('.navtab.on')?.dataset?.s||'resumen';
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
   document.getElementById('sec-'+activeTab)?.classList.add('on');
@@ -800,6 +834,7 @@ function renderAll(D){
   const ins=computeInsights(m,mPrev,D);
   renderInsights(ins,D);
   renderRecomendaciones(ins,D,m);
+  try{renderLeads(D);}catch(e){const s=document.getElementById('sec-leads');if(s)s.innerHTML='<div class="erbox">⚠ No se pudo dibujar la pestaña de leads: '+esc(e.message)+'</div>';}
 }
 
 // Build daily series from campaign-level daily rows (correct per-objective sum)
@@ -1380,6 +1415,210 @@ function doShare(){
   const acct=document.getElementById('acctDash').value,from=document.getElementById('df').value,to=document.getElementById('dt').value;
   const url=`${location.href.split('?')[0]}?account=${acct}&from=${from}&to=${to}&product=${product}${preset?'&preset='+preset:''}`;
   if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>toast('✓ Enlace copiado'));else toast('Enlace: '+url.slice(0,40)+'…');
+}
+
+// ═══════════════ v3 · PESTAÑA LEADS (lead por lead, con su asesor) ═══════════════
+// Lee /api/historial del backend de Gerencia: la MISMA ruta de solo lectura que usa el Sala de
+// Control. No escribe nada en Kommo. Se carga SOLO al abrir esta pestaña (no en cada carga del
+// dashboard) y guarda la respuesta 5 minutos por rango de fechas, para no sobrecargar el CRM.
+// Pendiente: filtro por anuncio y búsqueda por teléfono (el backend aún no entrega esos datos).
+const LEADS_URL="https://pachamama-backend-v0v0.onrender.com/api/historial";
+const LEADS_KOMMO="https://asistentegerenciaparadiseinmueblescom.kommo.com/leads/detail/";
+const LEADS_TTL_MS=5*60*1000, LEADS_MAX_DIAS=93, LEADS_PAGINA=300;
+let LEADS_CACHE={key:'',ts:0,data:null}, LEADS_LOADING=false, LEADS_ERR='', LEADS_VER_TODO=false;
+let LEADS_F={asesor:'',campania:'',etapa:'',atencion:'',reasig:false,q:''};
+
+function leadsN(v){return Number(v||0).toLocaleString('es-PE');}
+// 'YYYY-MM-DD' (día en Lima, UTC-5) -> segundos unix del inicio (o del final) de ese día.
+function leadsLimaSec(ymd,finDelDia){
+  const p=String(ymd||'').split('-').map(Number);
+  if(p.length!==3||p.some(isNaN))return null;
+  const base=Date.UTC(p[0],p[1]-1,p[2]+(finDelDia?1:0))/1000+5*3600;
+  return finDelDia?base-1:base;
+}
+function leadsRango(){
+  const s=(LAST_DATA&&LAST_DATA.since)||(document.getElementById('df')||{}).value;
+  const u=(LAST_DATA&&LAST_DATA.until)||(document.getElementById('dt')||{}).value;
+  const desde=leadsLimaSec(s,false), hastaFin=leadsLimaSec(u,true);
+  if(desde==null||hastaFin==null||hastaFin<desde)return null;
+  const hasta=Math.min(hastaFin,Math.floor(Date.now()/1000));
+  return {s,u,desde,hasta,dias:Math.round((hastaFin-desde+1)/86400),key:s+'|'+u};
+}
+function leadsTabActiva(){const b=document.querySelector('.navtab.on');return !!(b&&b.dataset.s==='leads');}
+function leadsDatos(){const r=leadsRango();return(r&&LEADS_CACHE.data&&LEADS_CACHE.key===r.key)?LEADS_CACHE.data:null;}
+function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.sla_objetivo_min)||10;}
+
+function leadsOnOpen(){leadsCargar(false);}
+function renderLeads(D){leadsPintar();if(leadsTabActiva())leadsCargar(false);}
+
+async function leadsCargar(forzar){
+  const r=leadsRango();
+  if(!r||r.dias>LEADS_MAX_DIAS){leadsPintar();return;}
+  const fresco=LEADS_CACHE.key===r.key&&LEADS_CACHE.data&&(Date.now()-LEADS_CACHE.ts)<LEADS_TTL_MS;
+  if(fresco&&!forzar){leadsPintar();return;}
+  if(LEADS_LOADING)return;
+  LEADS_LOADING=true;LEADS_ERR='';leadsPintar();
+  try{
+    const resp=await fetch(LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta,{cache:'no-store'});
+    if(resp.status===401)throw new Error('CLAVE');
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+    LEADS_CACHE={key:r.key,ts:Date.now(),data:data};LEADS_VER_TODO=false;
+  }catch(e){LEADS_ERR=(e&&e.message)||'error desconocido';}
+  finally{
+    LEADS_LOADING=false;leadsPintar();
+    // Si mientras cargaba se cambió el rango de fechas, trae el rango nuevo.
+    const r2=leadsRango();
+    if(!LEADS_ERR&&leadsTabActiva()&&r2&&r2.key!==LEADS_CACHE.key&&r2.dias<=LEADS_MAX_DIAS)leadsCargar(false);
+  }
+}
+
+function leadsFiltrar(filas){
+  const q=(LEADS_F.q||'').trim().toLowerCase();
+  return filas.filter(function(f){
+    if(LEADS_F.asesor&&(f.asesor_final||'—')!==LEADS_F.asesor)return false;
+    if(LEADS_F.campania&&(f.campania||'Directo / mensaje')!==LEADS_F.campania)return false;
+    if(LEADS_F.etapa&&(f.etapa_actual||'—')!==LEADS_F.etapa)return false;
+    if(LEADS_F.atencion&&(f.semaforo||'sin')!==LEADS_F.atencion)return false;
+    if(LEADS_F.reasig&&!f.reasignado)return false;
+    if(q&&String(f.nombre||'').toLowerCase().indexOf(q)===-1)return false;
+    return true;
+  });
+}
+function leadsSet(k,v){LEADS_F[k]=v;LEADS_VER_TODO=false;leadsPintarCuerpo();}
+function leadsVerTodo(){LEADS_VER_TODO=true;leadsPintarCuerpo();}
+
+function leadsFecha(iso){
+  if(!iso)return'—';
+  try{return new Date(iso).toLocaleString('es-PE',{timeZone:'America/Lima',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+  catch(e){return'—';}
+}
+function leadsMin(m){
+  if(m==null||isNaN(m))return'—';
+  m=Number(m);
+  if(m<60)return(Math.round(m*10)/10).toLocaleString('es-PE')+' min';
+  const h=Math.floor(m/60);
+  if(h>=24)return Math.floor(h/24)+' d '+(h%24)+' h';
+  return h+' h '+Math.round(m%60)+' min';
+}
+function leadsBadge(f){
+  if(f.semaforo==='verde')return'<span class="badge g">A tiempo</span>';
+  if(f.semaforo==='amarillo')return'<span class="badge a">Tarde</span>';
+  if(f.semaforo==='rojo')return'<span class="badge r">Muy tarde</span>';
+  return'<span class="badge n">Sin atender</span>';
+}
+function leadsCitaTxt(f){
+  if(!f.cita_ts)return'';
+  const est={proxima:'próxima',realizada:'realizada',vencida:'vencida'}[f.cita_estado]||'';
+  return(f.cita_tipo?f.cita_tipo+' · ':'')+leadsFecha(new Date(f.cita_ts*1000).toISOString())+(est?' ('+est+')':'');
+}
+function leadsOpciones(valores,sel,todos){
+  return '<option value="">'+esc(todos)+'</option>'+valores.map(function(v){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(v)+'</option>';}).join('');
+}
+function leadsUnicos(filas,fn){
+  const set={};filas.forEach(function(f){set[fn(f)]=1;});
+  return Object.keys(set).sort(function(a,b){if(a==='—')return 1;if(b==='—')return -1;return a.localeCompare(b,'es');});
+}
+
+function leadsPintar(){
+  const sec=document.getElementById('sec-leads');if(!sec)return;
+  const r=leadsRango(), d=leadsDatos(), sla=leadsSla();
+  let h='<div class="sechead"><h2>👤 Leads · lead por lead</h2><span class="cnt">'+(r?esc(r.s===r.u?r.s:r.s+' → '+r.u):'')+'</span></div>'
+    +'<p class="subtitle">Cada persona que entró en el período: la campaña por la que llegó, el asesor que la tiene, en qué etapa está y cuánto tardaron en contactarla. Datos en vivo del CRM a través del panel de Gerencia, solo lectura. '
+    +'Atención: <b>a tiempo</b> hasta '+sla+' min · <b>tarde</b> hasta 30 min · <b>muy tarde</b> más de 30 min. Clic en un nombre para abrirlo en Kommo.</p>';
+  const reintentar='<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(true)">↻ Reintentar</button></div>';
+  if(!r){sec.innerHTML=h+'<div class="empty">Elige un rango de fechas arriba para ver los leads.</div>';return;}
+  if(r.dias>LEADS_MAX_DIAS){sec.innerHTML=h+'<div class="erbox">El rango elegido tiene '+leadsN(r.dias)+' días. Para no sobrecargar el CRM, esta pestaña trabaja con hasta 3 meses: elige un rango más corto arriba.</div>';return;}
+  if(LEADS_LOADING){sec.innerHTML=h+'<div class="loading"><div class="spinner"></div>Cargando leads desde el CRM… puede tardar unos segundos.</div>';return;}
+  if(LEADS_ERR==='CLAVE'){sec.innerHTML=h+'<div class="erbox">⚠ Falta la clave de Gerencia o no es correcta. Cierra esta pestaña del navegador, ábrela de nuevo e ingresa la clave cuando la pida. El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
+  if(LEADS_ERR){sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
+  if(!d){sec.innerHTML=h+'<div class="empty">Los leads se cargan al abrir esta pestaña.<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(false)">Cargar leads del período</button></div></div>';return;}
+
+  const filas=d.filas||[];
+  const asesores=leadsUnicos(filas,function(f){return f.asesor_final||'—';});
+  const campanias=leadsUnicos(filas,function(f){return f.campania||'Directo / mensaje';});
+  const etapas=leadsUnicos(filas,function(f){return f.etapa_actual||'—';});
+  if(LEADS_F.asesor&&asesores.indexOf(LEADS_F.asesor)===-1)LEADS_F.asesor='';
+  if(LEADS_F.campania&&campanias.indexOf(LEADS_F.campania)===-1)LEADS_F.campania='';
+  if(LEADS_F.etapa&&etapas.indexOf(LEADS_F.etapa)===-1)LEADS_F.etapa='';
+  const atn=[['verde','A tiempo'],['amarillo','Tarde'],['rojo','Muy tarde'],['sin','Sin atender']];
+  const upd=d.actualizado?new Date(d.actualizado).toLocaleString('es-PE',{timeZone:'America/Lima'}):'';
+
+  h+='<div class="filters">'
+    +'<div class="fgroup"><div class="fgroup-lbl">Asesor</div><select class="fsel" onchange="leadsSet(\'asesor\',this.value)">'+leadsOpciones(asesores,LEADS_F.asesor,'Todos')+'</select></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Campaña</div><select class="fsel" onchange="leadsSet(\'campania\',this.value)">'+leadsOpciones(campanias,LEADS_F.campania,'Todas')+'</select></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Etapa</div><select class="fsel" onchange="leadsSet(\'etapa\',this.value)">'+leadsOpciones(etapas,LEADS_F.etapa,'Todas')+'</select></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Atención</div><select class="fsel" onchange="leadsSet(\'atencion\',this.value)"><option value="">Todas</option>'+atn.map(function(a){return '<option value="'+a[0]+'"'+(LEADS_F.atencion===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre del lead" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><label style="display:flex;align-items:center;gap:7px;height:34px;margin:0;font-size:13px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;margin:0;padding:0;accent-color:var(--pink)"'+(LEADS_F.reasig?' checked':'')+' onchange="leadsSet(\'reasig\',this.checked)"> Solo reasignados</label></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pb" onclick="leadsCargar(true)">↻ Actualizar leads</button><button class="pb" onclick="leadsExportar()">⬇ Exportar a Excel</button></div></div>'
+    +'</div>'
+    +'<div id="leadsBody"></div>'
+    +'<div style="font-size:11px;color:var(--hint);margin-top:8px;line-height:1.6">Pendiente: filtrar por anuncio y buscar por teléfono (el panel de Gerencia todavía no entrega esos datos).'+(upd?' · Actualizado: '+esc(upd):'')+'</div>';
+  sec.innerHTML=h;
+  leadsPintarCuerpo();
+}
+
+function leadsPintarCuerpo(){
+  const box=document.getElementById('leadsBody'), d=leadsDatos();
+  if(!box||!d)return;
+  const todas=d.filas||[], rows=leadsFiltrar(todas), sla=leadsSla();
+  const n=rows.length, at=rows.filter(function(f){return f.tiempo_min!=null;});
+  const ver=rows.filter(function(f){return f.semaforo==='verde';}).length;
+  const pct=n?ver/n*100:0, sin=n-at.length;
+  const prom=at.length?at.reduce(function(s,f){return s+Number(f.tiempo_min||0);},0)/at.length:null;
+  const reas=rows.filter(function(f){return f.reasignado;}).length;
+  const st=pct>=75?'g':pct>=60?'a':'r';
+  let h='<div class="kgrid">'
+    +kc('👥 Leads',leadsN(n),null,null,null,true,n===todas.length?'Todos los del período':'De '+leadsN(todas.length)+' en el período')
+    +kc('⏱ Contactados a tiempo',n?pct.toFixed(0)+'%':'–',n?st:null,n?(st==='g'?'Cumple':st==='a'?'Vigilar':'Bajo meta'):null,null,true,'Meta ≥75% en '+sla+' min o menos · '+leadsN(ver)+' de '+leadsN(n))
+    +kc('⌛ Sin atender',leadsN(sin),null,null,null,false,n?(sin/n*100).toFixed(0)+'% del total':'')
+    +kc('🕒 Tiempo promedio',prom==null?'–':leadsMin(prom),null,null,null,false,'Hasta el primer contacto')
+    +kc('🔁 Reasignados',leadsN(reas),null,null,null,false,'Pasaron por más de un asesor')
+    +'</div>';
+  const vis=LEADS_VER_TODO?rows:rows.slice(0,LEADS_PAGINA);
+  h+='<div class="tcard"><div class="tcard-h"><span>Detalle de leads</span><span style="font-size:12px;color:var(--muted);font-weight:600">'+leadsN(n)+' lead(s)</span></div><div class="tscroll"><table>'
+    +'<thead><tr><th>Entrada</th><th>Lead</th><th>Campaña</th><th>Asesor</th><th>Etapa</th><th>1er contacto</th><th>Atención</th><th>Reasig.</th><th>Cita</th></tr></thead><tbody>';
+  h+=vis.length?vis.map(function(f){
+    const cita=leadsCitaTxt(f);
+    return '<tr>'
+      +'<td class="num">'+leadsFecha(f.entrada)+'</td>'
+      +'<td class="namecell" title="'+esc(f.nombre)+'"><a href="'+LEADS_KOMMO+encodeURIComponent(f.id)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(f.nombre||('Lead '+f.id))+'</a></td>'
+      +'<td>'+esc(f.campania||'Directo / mensaje')+'</td>'
+      +'<td>'+esc(f.asesor_final||'—')+'</td>'
+      +'<td>'+esc(f.etapa_actual||'—')+'</td>'
+      +'<td class="num">'+leadsMin(f.tiempo_min)+'</td>'
+      +'<td>'+leadsBadge(f)+'</td>'
+      +'<td class="num">'+(f.reasignaciones?leadsN(f.reasignaciones):'—')+'</td>'
+      +'<td>'+(cita?esc(cita):'—')+'</td>'
+      +'</tr>';
+  }).join(''):'<tr><td colspan="9" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
+  h+='</tbody></table></div>';
+  if(!LEADS_VER_TODO&&rows.length>LEADS_PAGINA)h+='<div style="padding:12px 16px;text-align:center"><button class="pb" onclick="leadsVerTodo()">Ver los '+leadsN(rows.length-LEADS_PAGINA)+' restantes</button></div>';
+  h+='</div>';
+  box.innerHTML=h;
+}
+
+function leadsExportar(){
+  const d=leadsDatos();if(!d)return;
+  const rows=leadsFiltrar(d.filas||[]);
+  const lab={verde:'A tiempo',amarillo:'Tarde',rojo:'Muy tarde'};
+  // Protege contra fórmulas en Excel y escapa comillas.
+  const celda=function(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+  const cab=['Fecha de entrada','Lead','ID Kommo','Campaña','Asesor','Etapa','Minutos hasta 1er contacto','Atención','Reasignaciones','Cita'];
+  const lineas=[cab.map(celda).join(';')].concat(rows.map(function(f){
+    return [leadsFecha(f.entrada),f.nombre,f.id,f.campania||'Directo / mensaje',f.asesor_final||'—',f.etapa_actual||'—',
+      f.tiempo_min==null?'':String(f.tiempo_min).replace('.',','),lab[f.semaforo]||'Sin atender',f.reasignaciones||0,leadsCitaTxt(f)].map(celda).join(';');
+  }));
+  const blob=new Blob(['﻿'+lineas.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const r=leadsRango();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='leads_'+(r?(r.s===r.u?r.s:r.s+'_a_'+r.u):'periodo')+'.csv';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  toast('✓ Exportados '+rows.length+' leads');
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
