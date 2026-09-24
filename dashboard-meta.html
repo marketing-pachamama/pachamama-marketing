@@ -142,6 +142,32 @@ input:focus,select:focus{border-color:var(--pink);background:var(--surface);box-
 .sol{display:inline-block;margin-left:5px;font-family:inherit;font-size:10.5px;font-weight:500;letter-spacing:0;opacity:.62;white-space:nowrap}
 .hc-val .sol,.kc-val .sol{display:block;margin:4px 0 0;font-size:11.5px}
 td .sol{display:block;margin:2px 0 0}
+/* v3.5 · recuadro destacado "Cuánto cuesta no contestar a tiempo" */
+.din-alerta{position:relative;border-radius:var(--r);padding:20px 22px 16px;background:var(--surface);border:1px solid var(--border);border-left:6px solid var(--hint);box-shadow:var(--shadow)}
+.din-alerta.r{border-color:rgba(224,36,94,.28);border-left-color:var(--red);background:linear-gradient(120deg,var(--r-bg) 0%,var(--surface) 62%)}
+.din-alerta.g{border-color:rgba(29,158,117,.28);border-left-color:var(--green);background:linear-gradient(120deg,var(--g-bg) 0%,var(--surface) 62%)}
+.dal-ojo{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.din-alerta.r .dal-ojo{color:var(--r-tx)}
+.din-alerta.g .dal-ojo{color:var(--g-tx)}
+.dal-frase{font-family:'Sora',sans-serif;font-size:clamp(17px,2.2vw,22px);font-weight:600;line-height:1.35;letter-spacing:-.01em;max-width:64ch;text-wrap:balance}
+.dal-frase b{font-weight:800}
+.dal-monto{color:var(--r-tx);white-space:nowrap}
+.dal-frase .sol{font-size:12px;opacity:.7}
+.dal-msg{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.dal-barra{display:flex;height:12px;border-radius:7px;overflow:hidden;background:var(--bg2);margin:16px 0 8px}
+.dal-barra i{display:block;height:100%}
+.dal-leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted)}
+.dal-leyenda span{display:inline-flex;align-items:center;gap:6px}
+.dal-leyenda b{width:9px;height:9px;border-radius:3px;display:inline-block}
+.dal-leyenda strong{color:var(--text);font-variant-numeric:tabular-nums}
+.dal-datos{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border2)}
+.dal-datos>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dal-datos span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--hint)}
+.dal-datos strong{font-family:'Sora',sans-serif;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.dal-datos em{font-style:normal;font-size:11px;color:var(--muted)}
+.dal-datos .dal-cta{margin-left:auto}
+.dal-nota{font-size:11px;color:var(--hint);line-height:1.55;margin-top:12px;max-width:110ch}
+@media(max-width:640px){.dal-datos .dal-cta{margin-left:0}}
 .kc-meta{display:flex;align-items:center;gap:7px;font-size:11px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
 .pill.g{background:var(--g-bg);color:var(--g-tx)}
@@ -404,7 +430,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.4</b> (montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.5</b> (calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -854,6 +880,7 @@ function renderAll(D){
   renderAudiencias(D);
   renderEmbudo(D);
   try{renderDinero(D);}catch(e){const s=document.getElementById('sec-dinero');if(s)s.innerHTML='<div class="erbox">⚠ No se pudo dibujar la pestaña Lead → dinero: '+esc(e.message)+'</div>';}
+  try{renderCalidad(D);}catch(e){console.warn('Fase 3 (calidad):',e);}
   const ins=computeInsights(m,mPrev,D);
   renderInsights(ins,D);
   renderRecomendaciones(ins,D,m);
@@ -1858,6 +1885,7 @@ async function dinCargarExtra(forzar){
     DIN_EXTRA=Object.assign({},DIN_EXTRA,{cargando:false,err:(e&&e.message)||'error',data:DIN_EXTRA.key===key?DIN_EXTRA.data:null,key:DIN_EXTRA.key===key?key:''});
   }
   dinPintar();
+  try{calPintar();}catch(e){} // la comparación por campaña del Embudo usa los mismos formularios
 }
 
 // ── Bloques ──
@@ -1945,28 +1973,46 @@ function dinCampanasHtml(D,filasPer,filasHist,f){
     +'<div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">La campaña de cada lead sale del <b>formulario de Meta</b> por el que entró (etiqueta fb… en Kommo), cruzado con el formulario que usa cada anuncio en Meta ('+leadsN(sinForm)+' formulario(s) encontrados). '
     +'"'+DIN_SIN_CAMPANA+'" = leads cuyo formulario ya no está en ningún anuncio (anuncio borrado) o que solo traen una etiqueta Form_ sin formulario. Cliente = etapa Venta.</div></div>';
 }
+// v3.5 · Recuadro destacado (pedido de la jefa): la cifra en riesgo en una frase grande, la barra de
+// atención (a tiempo / tarde / muy tarde / sin atender) y un botón para ver esos leads.
+function dinIrALeads(){const b=document.querySelector('.navtab[data-s="leads"]');if(b){showSection(b,'leads');leadsOnOpen();}}
 function dinNoContestarHtml(D,invPer,leadsPer){
   const r=leadsRango(),d=leadsDatos();
-  const tit='<div class="cc-ttl">⏰ Cuánto cuesta no contestar a tiempo</div><div class="cc-desc">Leads de formulario que no se contactaron en '+leadsSla()+' min o menos, valorizados con lo que costó cada lead en el período (con IGV). Usa los datos de la pestaña 👤 Leads.</div>';
-  if(!r)return tit+'<div class="empty">Elige un rango de fechas arriba.</div>';
-  if(r.dias>LEADS_MAX_DIAS)return tit+'<div class="empty">Se calcula para rangos de hasta 3 meses. Elige un rango más corto arriba.</div>';
-  if(LEADS_LOADING)return tit+'<div class="loading"><div class="spinner"></div>Calculando con los datos del CRM…</div>';
+  const ojo='<div class="dal-ojo">⏰ Cuánto cuesta no contestar a tiempo</div>';
+  const caja=function(clase,cuerpo){return'<div class="din-alerta '+clase+'">'+ojo+cuerpo+'</div>';};
+  const msg=function(t,boton){return caja('n','<div class="dal-msg">'+t+'</div>'+(boton?'<button class="pb" onclick="leadsCargar(false)">Calcular ahora</button>':''));};
+  if(!r)return msg('Elige un rango de fechas arriba.');
+  if(r.dias>LEADS_MAX_DIAS)return msg('Se calcula para rangos de hasta 3 meses. Elige un rango más corto arriba.');
+  if(LEADS_LOADING)return caja('n','<div class="loading" style="padding:18px 0"><div class="spinner"></div>Calculando con los datos del CRM…</div>');
   if(!d){
     const pista=LEADS_ERR&&LEADS_ERR!=='CLAVE'?leadsPista(LEADS_ERR):'';
     const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia. ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')):'';
-    return tit+'<div class="empty">'+err+'<div style="margin-top:10px"><button class="pb" onclick="leadsCargar(false)">Calcular ahora</button></div></div>';
+    return msg(err+'Se calcula con los datos del CRM de la pestaña 👤 Leads para el período elegido.',true);
   }
-  const todas=d.filas||[],form=todas.filter(function(x){return x.campania&&x.campania!=='Directo / mensaje';});
+  const todas=d.filas||[],esForm=function(x){return x.campania&&x.campania!=='Directo / mensaje';},form=todas.filter(esForm);
   const tarde=form.filter(function(x){return x.semaforo!=='verde';}),sin=tarde.filter(function(x){return x.tiempo_min==null;}).length;
-  const otras=todas.length-form.length,otrasTarde=todas.filter(function(x){return!(x.campania&&x.campania!=='Directo / mensaje')&&x.semaforo!=='verde';}).length;
-  if(!(leadsPer>0)||!(invPer>0))return tit+'<div class="empty">No hay leads de formulario o inversión en el período para calcular cuánto costó cada lead.</div>';
-  const cpl=invPer/leadsPer,valor=tarde.length*cpl,sem=r.dias/7;
-  return tit+'<div class="kgrid">'
-    +kc('⌛ Fuera de tiempo',leadsN(tarde.length),tarde.length?'r':'g',tarde.length?'Revisar':'Todos a tiempo',null,false,'de '+leadsN(form.length)+' leads de formulario · '+leadsN(sin)+' sin atender')
-    +kc('💸 Inversión en esos leads',curS(valor,D.currency),null,null,null,false,leadsN(tarde.length)+' × '+cur(cpl,D.currency)+' por lead (con IGV)')
-    +(r.dias>=7?kc('📆 Por semana',curS(valor/sem,D.currency),null,null,null,false,'Promedio de '+sem.toFixed(1).replace('.',',')+' semanas'):'')
-    +'</div><div style="font-size:11px;color:var(--hint);line-height:1.55">No es plata perdida segura: es lo que costó traer leads que se atendieron tarde o nunca, donde es más probable perderlos. '
-    +(otras?leadsN(otras)+' leads más del período entraron por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se valorizan porque no tienen campaña.':'')+'</div>';
+  const cuenta=function(s){return form.filter(function(x){return x.semaforo===s;}).length;};
+  const ver=cuenta('verde'),ama=cuenta('amarillo'),roj=cuenta('rojo');
+  const otras=todas.length-form.length,otrasTarde=todas.filter(function(x){return!esForm(x)&&x.semaforo!=='verde';}).length;
+  if(!form.length||!(leadsPer>0)||!(invPer>0))return msg('No hay leads de formulario o inversión en el período para calcular cuánto costó cada lead.');
+  const cpl=invPer/leadsPer,valor=tarde.length*cpl,sem=r.dias/7,pctT=tarde.length/form.length*100;
+  const seg=function(n,col,tit){return n?'<i style="width:'+(n/form.length*100).toFixed(2)+'%;background:'+col+'" title="'+tit+': '+n+'"></i>':'';};
+  const leyenda=function(col,t,n){return'<span><b style="background:'+col+'"></b>'+t+' <strong>'+leadsN(n)+'</strong></span>';};
+  const frase=tarde.length
+    ?'<b>'+leadsN(tarde.length)+' de '+leadsN(form.length)+'</b> leads de formulario no se contactaron en '+leadsSla()+' min: <b class="dal-monto">'+cur(valor,D.currency)+'</b> de inversión en riesgo'+sol(valor)
+    :'Los <b>'+leadsN(form.length)+'</b> leads de formulario del período se contactaron en '+leadsSla()+' min o menos.';
+  return caja(tarde.length?'r':'g',
+    '<div class="dal-frase">'+frase+'</div>'
+    +'<div class="dal-barra" role="img" aria-label="A tiempo '+ver+', tarde '+ama+', muy tarde '+roj+', sin atender '+sin+'">'+seg(ver,GREEN,'A tiempo')+seg(ama,AMBER,'Tarde')+seg(roj,RED,'Muy tarde')+seg(sin,'#93a59b','Sin atender')+'</div>'
+    +'<div class="dal-leyenda">'+leyenda(GREEN,'A tiempo',ver)+leyenda(AMBER,'Tarde (hasta 30 min)',ama)+leyenda(RED,'Muy tarde',roj)+leyenda('#93a59b','Sin atender',sin)+'</div>'
+    +'<div class="dal-datos">'
+      +'<div><span>Fuera de tiempo</span><strong>'+pctT.toFixed(0)+'%</strong><em>meta: máximo 25%</em></div>'
+      +'<div><span>Costo de cada lead</span><strong>'+cur(cpl,D.currency)+'</strong><em>con IGV'+(TC_PEN?' · S/ '+(cpl*TC_PEN).toFixed(2):'')+'</em></div>'
+      +(r.dias>=7?'<div><span>Por semana</span><strong>'+cur(valor/sem,D.currency)+'</strong><em>promedio de '+sem.toFixed(1).replace('.',',')+' semanas</em></div>':'')
+      +(tarde.length?'<div class="dal-cta"><button class="pb on" onclick="dinIrALeads()">Ver estos leads →</button></div>':'')
+    +'</div>'
+    +'<div class="dal-nota">No es plata perdida segura: es lo que costó traer leads que se atendieron tarde o nunca, donde es más probable perderlos. '
+    +(otras?leadsN(otras)+' leads más del período entraron por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se valorizan porque no tienen campaña.':'')+'</div>');
 }
 
 function renderDinero(D){dinPintar();dinCargarExtra(false);}
@@ -1980,6 +2026,7 @@ function dinPintar(){
   const invHist=X?conIGV((X.hist||[]).reduce(function(s,r){return s+parseFloat(r.spend||0);},0)*f):null;
   h+='<div style="margin-bottom:16px">'+dinPresupuestoHtml(D)+'</div>';
   if(!ok){
+    h+='<div id="dineroSla" style="margin-bottom:16px" data-inv="0" data-leads="0">'+dinNoContestarHtml(D,0,0)+'</div>';
     h+='<div class="erbox">⚠ No se pudo leer el CRM (Kommo): '+esc(D.kommoError||(KOMMO_DATA&&KOMMO_DATA.error)||'sin datos')+'. Sin el CRM no se pueden calcular las etapas ni las ventas.</div>';
     sec.innerHTML=h;return;
   }
@@ -1988,10 +2035,10 @@ function dinPintar(){
   const filasPer=dinEnRango(meta,D.since,D.until);
   const filasHist=X?dinEnRango(meta,DIN_HIST_DESDE,'9999-12-31'):null;
   const totalPer=todas.filter(function(r){const x=(r.fecha||'').slice(0,10);return x&&x>=D.since&&x<=D.until;}).length;
+  h+='<div id="dineroSla" style="margin-bottom:16px" data-inv="'+invPer+'" data-leads="'+filasPer.length+'">'+dinNoContestarHtml(D,invPer,filasPer.length)+'</div>';
   h+='<div style="margin-bottom:16px">'+dinCascadaHtml(D,filasPer,filasHist,invPer,invHist,totalPer)+'</div>';
   h+='<div style="margin-bottom:16px">'+dinRetornoHtml(D,filasPer,filasHist,invPer,invHist)+'</div>';
   h+='<div style="margin-bottom:16px">'+dinCampanasHtml(D,filasPer,filasHist||[],f)+'</div>';
-  h+='<div class="cc" id="dineroSla" data-inv="'+invPer+'" data-leads="'+filasPer.length+'">'+dinNoContestarHtml(D,invPer,filasPer.length)+'</div>';
   if(DIN_EXTRA.err)h+='<div class="icard warn" style="margin-top:12px"><span class="ico">⚠</span><div>No se pudieron '+(X?'actualizar':'leer')+' los datos de Meta de esta pestaña ('+esc(DIN_EXTRA.err)+').'+(X?' Se muestran los últimos de hoy.':'')+' <button class="pb" style="height:28px;padding:0 12px;font-size:12px;margin-left:6px" onclick="dinCargarExtra(true)">↻ Reintentar datos de Meta</button></div></div>';
   sec.innerHTML=h;
 }
@@ -1999,6 +2046,214 @@ function dinPintar(){
 function dinSlaActualizar(){
   const c=document.getElementById('dineroSla');if(!c||!LAST_DATA)return;
   c.innerHTML=dinNoContestarHtml(LAST_DATA,Number(c.getAttribute('data-inv'))||0,Number(c.getAttribute('data-leads'))||0);
+}
+
+// ═══════════════ v3.5 · FASE 3 · CALIDAD DE LOS DATOS Y DE LOS CREATIVOS ═══════════════
+// Solo LEE. Agrega bloques al FINAL de tres pestañas existentes, sin tocar lo que ya dibujan:
+//  · Embudo: leads de Meta contra leads que llegaron al CRM, y "No responde" por campaña.
+//  · Creativos: costo por lead de cada anuncio semana a semana (últimas 8 semanas).
+//  · Audiencias: desglose por ubicación (Feed, Reels, Stories…) y por dispositivo.
+// Hace 3 consultas propias a Meta por el mismo puente de Cloudflare. No consulta el servidor de Gerencia.
+// OJO: el puente de Kommo fecha cada lead en hora UTC (un lead de las 8 p. m. de Lima figura al día
+// siguiente); por eso la comparación Meta–CRM se juzga por el total del período y no día por día.
+// Para quitarlo: borrar este bloque y su línea en renderAll.
+const CAL_SEMANAS=8;
+let CAL_EXTRA={key:'',data:null,err:'',cargando:false};
+const CAL_UBIC={'facebook|feed':'Facebook · Feed','facebook|facebook_reels':'Facebook · Reels','facebook|facebook_stories':'Facebook · Stories',
+  'facebook|facebook_reels_overlay':'Facebook · Anuncios sobre Reels','facebook|instream_video':'Facebook · Videos (in-stream)','facebook|marketplace':'Facebook · Marketplace',
+  'facebook|search':'Facebook · Búsqueda','facebook|facebook_profile_feed':'Facebook · Feed de perfiles','facebook|facebook_notification':'Facebook · Notificaciones',
+  'facebook|video_feeds':'Facebook · Videos','facebook|right_hand_column':'Facebook · Columna derecha','instagram|feed':'Instagram · Feed',
+  'instagram|instagram_reels':'Instagram · Reels','instagram|instagram_stories':'Instagram · Stories','instagram|instagram_explore':'Instagram · Explorar',
+  'instagram|instagram_explore_grid_home':'Instagram · Explorar','instagram|instagram_search':'Instagram · Búsqueda','instagram|instagram_profile_feed':'Instagram · Perfil',
+  'messenger|messenger_inbox':'Messenger','messenger|messenger_stories':'Messenger · Stories','audience_network|an_classic':'Audience Network','threads|threads_feed':'Threads'};
+const CAL_DISP={android_smartphone:'Celular Android',iphone:'iPhone',desktop:'Computadora',ipad:'iPad',android_tablet:'Tablet Android',ipod:'iPod',other:'Otros'};
+
+function calAddDias(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function calFechaCorta(iso){return parseInt(iso.slice(8,10),10)+'/'+parseInt(iso.slice(5,7),10);}
+function calPct(n,t){return t>0?n/t*100:0;}
+
+async function calCargar(forzar){
+  const sel=document.getElementById('acctDash');const acct=sel&&sel.value;const D=LAST_DATA;if(!acct||!D)return;
+  const hoy=dinHoyLima(),key=acct+'|'+D.since+'|'+D.until+'|'+hoy;
+  if(!forzar&&CAL_EXTRA.key===key&&CAL_EXTRA.data)return;
+  if(CAL_EXTRA.cargando&&CAL_EXTRA.key===key)return;
+  CAL_EXTRA={key:key,data:null,err:'',cargando:true};calPintar();
+  const tr={since:D.since,until:D.until},desde=calAddDias(hoy,-(CAL_SEMANAS*7-1));
+  try{
+    const res=await Promise.all([
+      api(acct+'/insights',{fields:'ad_id,ad_name,campaign_name,spend,frequency,actions,cost_per_action_type',time_range:{since:desde,until:hoy},level:'ad',time_increment:7,limit:1000}),
+      api(acct+'/insights',{fields:'spend,impressions,clicks,actions,cost_per_action_type',time_range:tr,level:'account',breakdowns:'publisher_platform,platform_position',limit:200}),
+      api(acct+'/insights',{fields:'spend,impressions,clicks,actions,cost_per_action_type',time_range:tr,level:'account',breakdowns:'impression_device',limit:200})
+    ]);
+    if(CAL_EXTRA.key!==key)return; // el filtro cambió mientras cargaba: se descarta
+    CAL_EXTRA={key:key,cargando:false,err:'',data:{semanal:res[0].data||[],desde:desde,hoy:hoy,ubic:res[1].data||[],disp:res[2].data||[]}};
+  }catch(e){if(CAL_EXTRA.key!==key)return;CAL_EXTRA={key:key,cargando:false,err:(e&&e.message)||'error',data:null};}
+  calPintar();
+}
+function renderCalidad(D){calPintar();calCargar(false);}
+function calPintar(){
+  const D=LAST_DATA;if(!D)return;
+  calPonerBloque(D,'sec-embudo','calEmbudo',calEmbudoHtml,calEmbudoGraficos);
+  calPonerBloque(D,'sec-creativos','calCreativos',calCreativosHtml,calCreativosGraficos);
+  calPonerBloque(D,'sec-audiencias','calAudiencias',calAudienciasHtml,null);
+}
+function calPonerBloque(D,secId,id,html,graficos){
+  const sec=document.getElementById(secId);if(!sec)return;
+  let box=document.getElementById(id);
+  if(!box&&sec.insertAdjacentHTML){sec.insertAdjacentHTML('beforeend','<div id="'+id+'" class="cal-bloque"></div>');box=document.getElementById(id);}
+  if(!box)return;
+  try{box.innerHTML=html(D);if(graficos)graficos(D);}
+  catch(e){box.innerHTML='<div class="erbox">⚠ No se pudo dibujar este bloque: '+esc(e.message)+'</div>';}
+}
+function calEstadoMeta(){
+  if(CAL_EXTRA.cargando)return'<div class="loading"><div class="spinner"></div>Cargando datos de Meta…</div>';
+  if(CAL_EXTRA.err)return'<div class="erbox">⚠ No se pudieron leer los datos de Meta ('+esc(CAL_EXTRA.err)+'). <button class="pb" style="height:28px;padding:0 12px;font-size:12px;margin-left:6px" onclick="calCargar(true)">↻ Reintentar</button></div>';
+  return'<div class="loading"><div class="spinner"></div>Cargando…</div>';
+}
+
+// ── EMBUDO · Meta contra CRM, y "No responde" por campaña ──
+function calCuadra(meta,crm){
+  if(meta<10&&crm<10)return{st:'n',t:'Pocos datos'};
+  const d=Math.abs(crm-meta)/Math.max(meta,1)*100;
+  if(d<=10)return{st:'g',t:'Cuadra'};
+  if(d<=25)return{st:'a',t:'Revisar'};
+  return{st:'r',t:'No cuadra'};
+}
+function calMetaPorCampana(D){const m={};campRowsData(D).forEach(function(r){if(r.formLeads>0||!r.conv)m[r.name]=(m[r.name]||0)+r.formLeads;});return m;}
+function calEmbudoHtml(D){
+  const rango=D.since===D.until?D.since:D.since+' → '+D.until;
+  let h='<div class="sechead" style="margin-top:28px"><h2>🔍 Calidad de los datos</h2><span class="cnt">'+esc(rango)+'</span></div>'
+    +'<p class="subtitle">Dos controles para confiar en los números: si los leads que cuenta Meta llegan al CRM, y qué campaña trae más gente que no responde. Solo leads de formulario de Meta, en el período elegido arriba.</p>';
+  if(!(KOMMO_DATA&&KOMMO_DATA.ok===true))return h+'<div class="erbox">Sin los datos del CRM no se puede hacer esta comparación.</div>';
+  const X=DIN_EXTRA.data;
+  const filas=dinEnRango(dinFilasMeta(KOMMO_DATA.rows||[],X?X.formularios:null),D.since,D.until);
+  const metaCamp=calMetaPorCampana(D);
+  const metaTot=Object.keys(metaCamp).reduce(function(s,k){return s+metaCamp[k];},0),crmTot=filas.length;
+  const c=calCuadra(metaTot,crmTot),dif=crmTot-metaTot;
+  const lectura=c.st==='n'?'Muy pocos leads en el período para comparar: elige un rango más largo.'
+    :dif<0?'Al CRM llegaron <b>'+leadsN(-dif)+' leads menos</b> de los que contó Meta. '+(c.st==='g'?'Es una diferencia normal (horarios de corte, duplicados fusionados).':'Conviene revisar que la conexión de los formularios de Meta con Kommo no esté perdiendo leads.')
+    :dif>0?'El CRM tiene <b>'+leadsN(dif)+' leads más</b> que Meta. '+(c.st==='g'?'Es una diferencia normal.':'Puede haber leads duplicados, leads que Meta no atribuyó a un anuncio, o leads de días vecinos (el CRM fecha en hora UTC).')
+    :'Los números coinciden exactamente.';
+  h+='<div class="crow"><div class="cc"><div class="cc-ttl">🔗 Leads de Meta contra leads en el CRM</div><div class="cc-desc">Meta cuenta cada formulario enviado; el CRM, cada lead que se creó con etiqueta de formulario.</div>'
+    +'<div class="kgrid">'+kc('📣 Según Meta',leadsN(metaTot),null,null,null,true,'Formularios enviados')+kc('🗂 En el CRM',leadsN(crmTot),c.st,c.t,null,true,(dif>=0?'+':'−')+leadsN(Math.abs(dif))+' ('+(metaTot?(Math.abs(dif)/metaTot*100).toFixed(0):'0')+'%) · verde hasta 10%, ámbar hasta 25%')+'</div>'
+    +'<div style="font-size:12.5px;line-height:1.6">'+lectura+'</div></div>'
+    +'<div class="cc"><div class="cc-ttl">📅 Por día</div><div class="cc-desc">Referencial: el CRM fecha en hora UTC, así que los leads que entran después de las 7 p. m. de Lima figuran al día siguiente. Las diferencias de un día se compensan con el siguiente; lo que importa es el total.</div><div class="chart-h"><canvas id="calChDia"></canvas></div></div></div>';
+  // Por campaña
+  if(!X){h+='<div class="tcard"><div class="tcard-h">📋 Por campaña</div>'+(DIN_EXTRA.err?'<div class="empty">No se pudo leer qué formulario usa cada anuncio ('+esc(DIN_EXTRA.err)+').</div>':'<div class="loading"><div class="spinner"></div>Cargando campañas…</div>')+'</div>';}
+  else{
+    const crmCamp={},nr={};
+    filas.forEach(function(r){crmCamp[r.campana]=(crmCamp[r.campana]||0)+1;if(/no responde/i.test(r.etapaKommo||''))nr[r.campana]=(nr[r.campana]||0)+1;});
+    const nombres=Object.keys(Object.assign({},metaCamp,crmCamp)).filter(function(n){return(metaCamp[n]||0)+(crmCamp[n]||0)>0;})
+      .sort(function(a,b){if(a===DIN_SIN_CAMPANA)return 1;if(b===DIN_SIN_CAMPANA)return -1;return((crmCamp[b]||0)+(metaCamp[b]||0))-((crmCamp[a]||0)+(metaCamp[a]||0));});
+    const nrTot=Object.keys(nr).reduce(function(s,k){return s+nr[k];},0),prom=calPct(nrTot,crmTot);
+    h+='<div class="tcard"><div class="tcard-h"><span>📋 Por campaña</span><span style="font-size:12px;color:var(--muted);font-weight:600">"No responde" promedio: '+prom.toFixed(0)+'%</span></div><div class="tscroll"><table>'
+      +'<thead><tr><th>Campaña</th><th>Leads según Meta</th><th>Leads en el CRM</th><th>¿Cuadra?</th><th>No responde</th><th>% No responde</th><th>Frente al promedio</th></tr></thead><tbody>';
+    h+=nombres.length?nombres.map(function(n){
+      const m=metaCamp[n]||0,k=crmCamp[n]||0,sinC=n===DIN_SIN_CAMPANA,cu=sinC?{st:'n',t:'Sin campaña'}:calCuadra(m,k);
+      const q=nr[n]||0,p=calPct(q,k);
+      const ns=k<10?{st:'n',t:'Pocos leads'}:p>=prom+10?{st:'r',t:'Mucho silencio'}:p>prom?{st:'a',t:'Sobre el promedio'}:{st:'g',t:'Bajo el promedio'};
+      return'<tr><td class="namecell" title="'+esc(n)+'"><b>'+esc(n)+'</b></td><td class="num">'+(sinC?'—':leadsN(m))+'</td><td class="num">'+leadsN(k)+'</td><td><span class="badge '+cu.st+'">'+cu.t+'</span></td>'
+        +'<td class="num">'+leadsN(q)+'</td><td class="num">'+(k?p.toFixed(0)+'%':'—')+'<div class="minibar" style="margin-left:8px;width:60px"><i style="width:'+Math.min(100,p).toFixed(0)+'%;background:'+(ns.st==='r'?RED:ns.st==='a'?AMBER:GREEN)+'"></i></div></td><td><span class="badge '+ns.st+'">'+ns.t+'</span></td></tr>';
+    }).join(''):'<tr><td colspan="7" class="empty">Sin leads de formulario en el período.</td></tr>';
+    h+='</tbody></table></div><div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">"No responde" = leads que hoy están en la etapa "No responde" de Kommo. Una campaña con mucho más silencio que el promedio suele indicar un anuncio que atrae a curiosos o un formulario demasiado fácil de enviar. Los leads muy recientes todavía pueden cambiar de etapa. "'+DIN_SIN_CAMPANA+'" = el formulario ya no está en ningún anuncio.</div></div>';
+  }
+  return h;
+}
+function calEmbudoGraficos(D){
+  const cv=document.getElementById('calChDia');if(!cv||!(KOMMO_DATA&&KOMMO_DATA.ok===true))return;
+  const meta={};((D.daily&&D.daily.data)||[]).forEach(function(r){const d=r.date_start;if(!d||d<D.since||d>D.until)return;meta[d]=(meta[d]||0)+rowResults(r).leads;});
+  const crm={};dinEnRango(dinFilasMeta(KOMMO_DATA.rows||[],null),D.since,D.until).forEach(function(r){crm[r.fecha]=(crm[r.fecha]||0)+1;});
+  const dias=[];for(let d=D.since;d<=D.until;d=calAddDias(d,1)){dias.push(d);if(dias.length>400)break;}
+  if(dias.length<2){cv.parentElement.innerHTML='<div class="empty">Elige un rango de varios días para ver la comparación diaria.</div>';return;}
+  if(charts.calDia){try{charts.calDia.destroy();}catch(e){}}
+  charts.calDia=new Chart(cv,{type:'bar',data:{labels:dias.map(calFechaCorta),datasets:[
+    {label:'Según Meta',data:dias.map(function(d){return meta[d]||0;}),backgroundColor:hexA(PINK,.8),borderRadius:4},
+    {label:'En el CRM',data:dias.map(function(d){return crm[d]||0;}),backgroundColor:hexA(LIME,.9),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,color:tickColor()}}},scales:{x:{grid:{display:false},ticks:{color:tickColor(),font:{size:10},maxTicksLimit:14}},y:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:10},precision:0}}}}});
+}
+
+// ── CREATIVOS · costo por lead de cada anuncio, semana a semana ──
+function calAnunciosSemanales(X){
+  const semanas=[];for(let i=0;i<CAL_SEMANAS;i++)semanas.push(calAddDias(X.desde,i*7));
+  const ads={};
+  (X.semanal||[]).forEach(function(r){
+    const id=r.ad_id||r.ad_name||'—';
+    const a=ads[id]=ads[id]||{id:id,name:r.ad_name||'—',camp:r.campaign_name||'',sem:{},spend:0,leads:0};
+    const w=r.date_start,s=parseFloat(r.spend||0),l=rowResults(r).leads;
+    const x=a.sem[w]=a.sem[w]||{s:0,l:0,f:0};x.s+=s;x.l+=l;x.f=Math.max(x.f,parseFloat(r.frequency||0));a.spend+=s;a.leads+=l;
+  });
+  const lista=Object.keys(ads).map(function(k){return ads[k];}).filter(function(a){return a.leads>0;}).sort(function(a,b){return b.spend-a.spend;}).slice(0,8);
+  lista.forEach(function(a){
+    const suma=function(ws){return ws.reduce(function(t,w){const x=a.sem[w];if(x){t.s+=x.s;t.l+=x.l;}return t;},{s:0,l:0});};
+    const ult=suma(semanas.slice(-2)),prev=suma(semanas.slice(0,-2));
+    if(ult.l<3||prev.l<3)a.tend={st:'n',t:'Pocos datos'};
+    else{const r=(ult.s/ult.l)/(prev.s/prev.l),p=Math.round((r-1)*100); // se decide con el mismo % redondeado que se muestra
+      a.tend=p>=30?{st:'r',t:'Se está cansando',r:r}:p<=-20?{st:'g',t:'Mejorando',r:r}:{st:'n',t:'Estable',r:r};}
+    if(ult.s>=5&&ult.l===0)a.tend={st:'r',t:'Gasta sin leads'}; // al menos US$ 5 en las últimas 2 semanas sin ningún lead
+    const w=a.sem[semanas[semanas.length-1]];a.frecUlt=w?w.f:0;
+  });
+  return{semanas:semanas,lista:lista};
+}
+function calCreativosHtml(D){
+  let h='<div class="sechead" style="margin-top:28px"><h2>📉 Costo por lead de cada anuncio, semana a semana</h2><span class="cnt">Últimas '+CAL_SEMANAS+' semanas</span></div>'
+    +'<p class="subtitle">Para ver cuándo un anuncio empieza a cansarse: su costo por lead sube aunque siga gastando. Siempre muestra las últimas '+CAL_SEMANAS+' semanas, sin importar el filtro de fechas. Los 8 anuncios con más inversión que trajeron leads.</p>';
+  const X=CAL_EXTRA.data;if(!X)return h+calEstadoMeta();
+  const A=calAnunciosSemanales(X);
+  if(!A.lista.length)return h+'<div class="empty">Ningún anuncio trajo leads en las últimas '+CAL_SEMANAS+' semanas.</div>';
+  const celda=function(x){if(!x||!(x.s>0))return'<td class="num" style="color:var(--hint)">—</td>';if(!x.l)return'<td class="num" style="color:'+RED+'" title="Gastó '+cur(x.s,D.currency)+' sin leads">sin leads</td>';const v=x.s/x.l,st=cplStatus(v,D.product);return'<td class="num" style="color:'+(st==='n'?'inherit':STCOL[st])+'" title="'+cur(x.s,D.currency)+' / '+x.l+' leads">'+cur(v,D.currency).replace('US$ ','$')+'</td>';};
+  h+='<div class="cc" style="margin-bottom:16px"><div class="cc-ttl">📈 Evolución del costo por lead</div><div class="cc-desc">Los 5 anuncios con más inversión. Si una línea sube semana a semana, ese anuncio se está cansando.</div><div class="chart-h"><canvas id="calChCpl"></canvas></div></div>';
+  h+='<div class="tcard"><div class="tcard-h"><span>📋 Costo por lead por semana ('+esc(D.currency==='USD'?'US$':D.currency)+', sin IGV)</span><span style="font-size:12px;color:var(--muted);font-weight:600">Color = meta de costo por lead</span></div><div class="tscroll"><table>'
+    +'<thead><tr><th>Anuncio</th>'+A.semanas.map(function(w){return'<th title="Semana del '+calFechaCorta(w)+' al '+calFechaCorta(calAddDias(w,6))+'">'+calFechaCorta(w)+'</th>';}).join('')+'<th>Tendencia</th><th>Frec. última semana</th></tr></thead><tbody>'
+    +A.lista.map(function(a){return'<tr><td class="namecell" title="'+esc(a.name+' · '+a.camp)+'">'+esc(a.name)+'<div style="font-size:10.5px;color:var(--muted);font-weight:500">'+esc(a.camp)+'</div></td>'+A.semanas.map(function(w){return celda(a.sem[w]);}).join('')
+      +'<td><span class="badge '+a.tend.st+'">'+a.tend.t+(a.tend.r?' '+(a.tend.r>=1?'+':'−')+Math.abs((a.tend.r-1)*100).toFixed(0)+'%':'')+'</span></td><td class="num"><span style="color:'+STCOL[freqStatus(a.frecUlt)]+'">'+(a.frecUlt?a.frecUlt.toFixed(1):'—')+'</span></td></tr>';}).join('')
+    +'</tbody></table></div><div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">Tendencia = costo por lead de las últimas 2 semanas contra el de las 6 anteriores. "Se está cansando" = subió 30% o más; "Mejorando" = bajó 20% o más. Cada columna es una semana que empieza en esa fecha; la última incluye hoy.</div></div>';
+  return h;
+}
+function calCreativosGraficos(D){
+  const cv=document.getElementById('calChCpl'),X=CAL_EXTRA.data;if(!cv||!X)return;
+  const A=calAnunciosSemanales(X),top=A.lista.slice(0,5);
+  if(charts.calCpl){try{charts.calCpl.destroy();}catch(e){}}
+  const ds=top.map(function(a,i){return{label:a.name.length>28?a.name.slice(0,27)+'…':a.name,data:A.semanas.map(function(w){const x=a.sem[w];return x&&x.l>0?x.s/x.l:null;}),borderColor:PALETTE[i%PALETTE.length],backgroundColor:PALETTE[i%PALETTE.length],tension:.3,pointRadius:3,borderWidth:2.2,spanGaps:false};});
+  const b=BENCH.cpl[D.product];
+  if(b)ds.push({label:'Meta máx.',data:A.semanas.map(function(){return b.max;}),borderColor:AMBER,borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false});
+  charts.calCpl=new Chart(cv,{type:'line',data:{labels:A.semanas.map(calFechaCorta),datasets:ds},options:baseOpts({curr:D.currency,money:true})});
+}
+
+// ── AUDIENCIAS · por ubicación y por dispositivo ──
+function calFilasDesglose(rows,nombre){
+  const tot=rows.reduce(function(s,r){return s+parseFloat(r.spend||0);},0);
+  const out=[];let otros={label:'Otros',spend:0,leads:0,clicks:0,impressions:0};
+  rows.forEach(function(r){
+    const x={label:nombre(r),spend:parseFloat(r.spend||0),leads:rowTotal(r),clicks:parseInt(r.clicks||0,10),impressions:parseInt(r.impressions||0,10)};
+    if(!(x.spend>0)&&!x.leads)return;
+    if(x.leads===0&&x.spend<tot*0.01){otros.spend+=x.spend;otros.clicks+=x.clicks;otros.impressions+=x.impressions;return;}
+    out.push(x);
+  });
+  out.sort(function(a,b){return b.spend-a.spend;});
+  if(otros.spend>0)out.push(otros);
+  return{filas:out,tot:tot,leads:out.reduce(function(s,r){return s+r.leads;},0)};
+}
+function calTablaDesglose(D,titulo,res,col,encabezado){
+  const cuerpo=res.filas.length?res.filas.map(function(r){
+    const cpl=r.leads>0?r.spend/r.leads:0,st=r.leads>0?cplStatus(cpl,D.product):null;
+    return'<tr><td class="namecell">'+esc(r.label)+'</td><td class="num">'+curS(r.spend,D.currency)+'</td><td class="num">'+calPct(r.spend,res.tot).toFixed(0)+'%<div class="minibar" style="margin-left:8px;width:50px"><i style="width:'+calPct(r.spend,res.tot).toFixed(0)+'%;background:'+col+'"></i></div></td>'
+      +'<td class="num">'+leadsN(r.leads)+'</td><td class="num">'+(r.leads>0?'<span style="color:'+(st&&st!=='n'?STCOL[st]:'inherit')+'">'+cur(cpl,D.currency)+'</span>'+sol(cpl):'–')+'</td><td class="num">'+(r.impressions>0?pct(r.clicks/r.impressions*100):'–')+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="empty">Sin datos en el período.</td></tr>';
+  return'<div class="tcard"><div class="tcard-h">'+titulo+'</div><div class="tscroll"><table><thead><tr><th>'+encabezado+'</th><th>Inversión</th><th>% del gasto</th><th>Leads</th><th>CPL</th><th>CTR</th></tr></thead><tbody>'+cuerpo+'</tbody></table></div></div>';
+}
+function calAudienciasHtml(D){
+  let h='<div class="sechead" style="margin-top:28px"><h2>📱 Dónde se ven los anuncios</h2><span class="cnt">'+esc(D.since===D.until?D.since:D.since+' → '+D.until)+'</span></div>'
+    +'<p class="subtitle">En qué lugar de Facebook e Instagram (Feed, Reels, Stories…) y en qué dispositivo se gasta y se consiguen los leads. Sirve para decidir dónde poner cada formato de creativo. Período elegido arriba; color del CPL = meta.</p>';
+  const X=CAL_EXTRA.data;if(!X)return h+calEstadoMeta();
+  const ub=calFilasDesglose(X.ubic,function(r){const k=(r.publisher_platform||'')+'|'+(r.platform_position||'');return CAL_UBIC[k]||((r.publisher_platform||'')+' · '+String(r.platform_position||'').replace(/_/g,' '));});
+  const dv=calFilasDesglose(X.disp,function(r){return CAL_DISP[r.impression_device]||String(r.impression_device||'—').replace(/_/g,' ');});
+  const conLeads=ub.filas.filter(function(r){return r.leads>=10&&r.label!=='Otros';});
+  if(conLeads.length&&ub.leads>0){
+    const top=conLeads.slice().sort(function(a,b){return b.leads-a.leads;})[0],bar=conLeads.slice().sort(function(a,b){return a.spend/a.leads-b.spend/b.leads;})[0];
+    h+='<div class="icard good"><span class="ico">📍</span><div><b>'+esc(top.label)+'</b> trae el '+calPct(top.leads,ub.leads).toFixed(0)+'% de los leads. '+(bar.label!==top.label?'La ubicación con el lead más barato (con al menos 10 leads) es <b>'+esc(bar.label)+'</b>: '+cur(bar.spend/bar.leads,D.currency)+' por lead.':'Además es la que tiene el lead más barato: '+cur(bar.spend/bar.leads,D.currency)+'.')+'</div></div>';
+  }
+  h+=calTablaDesglose(D,'📍 Por ubicación',ub,PINK,'Ubicación')+calTablaDesglose(D,'📱 Por dispositivo',dv,DARK,'Dispositivo');
+  return h;
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
