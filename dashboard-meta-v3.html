@@ -1843,15 +1843,20 @@ function dinPresupuestoHtml(D){
   const dim=new Date(y,mo,0).getDate(),ritmo=g/Math.max(1,dia),proy=ritmo*dim,pctG=g/DIN_PRESUPUESTO_USD*100,pctP=proy/DIN_PRESUPUESTO_USD*100;
   const quedan=dim-dia+1,resta=DIN_PRESUPUESTO_USD-g,ideal=resta>0?resta/quedan:0;
   const st=pctP>105?'r':pctP<85?'a':'g',stLbl={r:'Se pasará',a:'Por debajo',g:'En ritmo'}[st];
-  const tc=dinFactor(D),usd=dinUsd,pen=function(n){return tc!==1?' · '+cur(n*tc,'PEN'):'';};
+  // Montos principales en soles (dólar oficial del día). El presupuesto se fija en dólares, así que el
+  // dólar queda como referencia debajo. Sin tipo de cambio, todo se muestra en dólares.
+  const tc=dinFactor(D),enSoles=tc!==1;
+  const mon=function(n){return enSoles?cur(n*tc,'PEN'):dinUsd(n);};
+  const ref=function(n){return enSoles?' ('+dinUsd(n)+')':'';};
   const w=Math.min(100,pctG);
   return'<div class="cc">'+tit
+    +(enSoles?'<div style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px">Presupuesto en soles: <b>'+cur(DIN_PRESUPUESTO_USD*tc,'PEN')+'</b> al dólar oficial de hoy (S/ '+tc.toFixed(3)+'). Referencial: Meta cobra en dólares.</div>':'')
     +'<div class="kgrid">'
-    +kc('💵 Gastado este mes',usd(g),null,null,null,false,'Del 1 al '+dia+pen(g)+' · con IGV '+usd(conIGV(g)))
+    +kc('💵 Gastado este mes',mon(g),null,null,null,false,'Del 1 al '+dia+ref(g)+' · con IGV '+mon(conIGV(g)))
     +kc('📊 Del presupuesto',pctG.toFixed(0)+'%',null,null,null,false,'Van '+dia+' de '+dim+' días ('+(dia/dim*100).toFixed(0)+'% del mes)')
-    +kc('⚡ Ritmo diario',usd(ritmo),null,null,null,false,'Promedio del mes'+pen(ritmo))
-    +kc('🔮 Proyección a fin de mes',usd(proy),st,stLbl,null,false,pctP.toFixed(0)+'% del presupuesto · con IGV '+usd(conIGV(proy)))
-    +kc('🎯 Para cerrar en US$ '+DIN_PRESUPUESTO_USD.toLocaleString('es-PE'),resta>0?usd(ideal):'Tope alcanzado',resta>0?null:'r',resta>0?null:'Tope alcanzado',null,false,resta>0?'Por día, durante los '+quedan+' días que quedan (incluye hoy)':'Ya se gastó '+usd(-resta)+' por encima')
+    +kc('⚡ Ritmo diario',mon(ritmo),null,null,null,false,'Promedio del mes'+ref(ritmo))
+    +kc('🔮 Proyección a fin de mes',mon(proy),st,stLbl,null,false,pctP.toFixed(0)+'% del presupuesto'+ref(proy)+' · con IGV '+mon(conIGV(proy)))
+    +kc('🎯 Para cerrar en el presupuesto',resta>0?mon(ideal):'Tope alcanzado',resta>0?null:'r',resta>0?null:'Tope alcanzado',null,false,resta>0?'Por día'+ref(ideal)+', durante los '+quedan+' días que quedan (incluye hoy)':'Ya se gastó '+mon(-resta)+ref(-resta)+' por encima')
     +'</div>'
     +'<div class="fbar-track" style="margin-top:4px"><div class="fbar-fill" style="width:'+Math.max(2,w)+'%;background:'+(pctG>100?RED:pctG>(dia/dim*100)*1.05?AMBER:GREEN)+'">'+pctG.toFixed(0)+'%</div></div>'
     +'<div style="font-size:11px;color:var(--hint);margin-top:6px;line-height:1.55">El gasto de hoy todavía está en curso. "En ritmo" = la proyección queda entre 85% y 105% del presupuesto.</div>'
