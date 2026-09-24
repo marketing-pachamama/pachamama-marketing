@@ -399,7 +399,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.1</b> (clave de acceso al backend de Gerencia + pestaña Leads)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.2</b> (pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -460,6 +460,7 @@ const DAILY_LEAD_OVERRIDES = {
   window.fetch=function(input,init){
     var url=(typeof input==='string')?input:((input&&input.url)||'');
     if(url.indexOf(BACKEND)===-1)return _fetch(input,init);
+    if(url.indexOf('/tipo-cambio')!==-1)return _fetch(input,init); // dato público: no pide clave
     var k=clave();
     if(!k)return _fetch(input,init);
     init=init||{};
@@ -542,9 +543,9 @@ function ctrLabel(v){if(v<BENCH.ctr.bad)return'Bajo';if(v<BENCH.ctr.ok)return'Re
 function cpcStatus(v){if(v>BENCH.cpc.ok)return'r';if(v>BENCH.cpc.good)return'a';return'g';}
 function freqStatus(v){if(v>BENCH.freq.watch)return'r';if(v>BENCH.freq.ok)return'a';return'g';}
 function freqLabel(v){if(v<BENCH.freq.low)return'Baja exposición';if(v<=BENCH.freq.ok)return'Saludable';if(v<=BENCH.freq.watch)return'Vigilar';return'Fatiga';}
-function cplStatus(v,prod){const b=BENCH.cpl[prod];if(!b)return'a';if(v<=b.max)return'g';if(v<=b.max*1.2)return'a';return'r';}
+function cplStatus(v,prod){if(LAST_DATA&&LAST_DATA.currency&&LAST_DATA.currency!=='PEN')return'n';const b=BENCH.cpl[prod];if(!b)return'a';if(v<=b.max)return'g';if(v<=b.max*1.2)return'a';return'r';}
 const STCOL={g:LIME,a:AMBER,r:RED,n:'#93a59b'};
-const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico'};
+const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico',n:'Sin comparar'};
 
 // ═══════════════ API ═══════════════
 async function api(path,params={}){
@@ -679,7 +680,16 @@ async function loadData(){
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
     let kommoError=null;try{await fetchKommoFunnel();}catch(e){kommoError=e.message;}
     let pachamamaError=null;try{await fetchPachamamaBackend();}catch(e){pachamamaError=e.message;}
-    LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,currency,since,until,product,funnelError,kommoError,pachamamaError};
+    // v3.2 · Montos en soles: Meta cobra en dólares. Se convierte UNA sola vez aquí, antes de
+    // cualquier cálculo, así todo lo demás (tarjetas, gráficos, semáforos) queda en soles.
+    const fx=await tcPrepararConversion(currency);
+    const cv=fx.k?(x=>tcConvertirResp(x,fx.k)):(x=>x);
+    BENCH.cpl=(fx.moneda==='PEN')?BENCH_CPL_SOLES:{palta:null,pitahaya:null,other:null};
+    LAST_DATA={acctIns:cv(acctIns),acctInsPrev:cv(acctInsPrev),campaigns:cv(campaigns),
+      adsWithIns:fx.k?adsWithIns.map(a=>({...a,_ins:tcConvertirFila(a._ins,fx.k)})):adsWithIns,
+      ageGender:cv(ageGender),region:cv(region),platform:cv(platform),daily:cv(daily),
+      currency:fx.moneda,monedaOrigen:currency,tc:fx.tc,tcError:fx.error,
+      since,until,product,funnelError,kommoError,pachamamaError};
     renderAll(LAST_DATA);
   }catch(e){
     document.getElementById('main').innerHTML=`<div class="erbox">⚠ Error al cargar datos: ${esc(e.message)}<br><small>Verifica que el token tenga permisos ads_read y ads_management.</small></div>`;
@@ -813,7 +823,7 @@ function renderAll(D){
   const m=buildMetrics((D.acctIns.data||[])[0],D.campaigns.data,D._adj);
   const mPrev=buildMetrics((D.acctInsPrev.data||[])[0]);
   const main=document.getElementById('main');
-  main.innerHTML=`
+  main.innerHTML=`${tcAvisoHtml(D)}
     <div class="section on" id="sec-resumen"></div>
     <div class="section" id="sec-campanas"></div>
     <div class="section" id="sec-creativos"></div>
@@ -871,7 +881,7 @@ function renderResumen(m,mPrev,D){
   if(preset==='this_month'){
     const now=new Date(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),dayN=now.getDate();
     const projSpend=m.spend/dayN*dim, projLeads=Math.round(m.leads/dayN*dim);
-    pacingHtml=`<span style="color:var(--muted)">Proyección fin de mes: <b>${cur_(projSpend)}</b> · <b>${fmt(projLeads)} leads</b></span>`;
+    pacingHtml=`<span style="color:var(--muted)">Proyección fin de mes: <b>${cur_(projSpend)}</b> (con IGV ${cur_(conIGV(projSpend))}) · <b>${fmt(projLeads)} leads</b></span>`;
   }
 
   sec.innerHTML=`
@@ -879,9 +889,9 @@ function renderResumen(m,mPrev,D){
     <p class="subtitle">Visión consolidada de inversión, alcance y eficiencia, comparada contra el período anterior equivalente. El indicador de salud sintetiza CTR, CPC, frecuencia, CPL y volumen de resultados en una sola puntuación de 0 a 100.</p>
 
     <div class="hero">
-      ${heroCard(true,'💰 Inversión total',cur_(m.spend),`${deltaHtml(dSpend,false)} <span style="opacity:.85">vs período anterior</span>`)}
+      ${heroCard(true,'💰 Inversión total (sin IGV)',cur_(m.spend),`${deltaHtml(dSpend,false)} <span style="opacity:.85">vs período anterior</span><div style="margin-top:6px;opacity:.95">Con IGV (18%): <b>${cur_(conIGV(m.spend))}</b></div>`)}
       ${heroCard(false,'🎯 Resultados totales',fmt(m.totalResults),`<span style="color:var(--muted)">${fmt(m.leads)} leads · ${fmt(m.conversations)} conversaciones</span>`)}
-      ${heroCard(false,'🏷 Costo por resultado',m.totalResults>0?cur_(m.costPerResult):'–',cplSt?`<span class="pill ${cplSt}"><span class="dot" style="background:${STCOL[cplSt]}"></span>${STLBL[cplSt]}</span>`:`<span style="color:var(--muted)">CPL ${m.leads>0?cur_(m.cpl):'–'}</span>`)}
+      ${heroCard(false,'🏷 Costo por resultado (sin IGV)',m.totalResults>0?cur_(m.costPerResult):'–',(cplSt?`<span class="pill ${cplSt}"><span class="dot" style="background:${STCOL[cplSt]}"></span>${STLBL[cplSt]}</span>`:`<span style="color:var(--muted)">CPL ${m.leads>0?cur_(m.cpl):'–'}</span>`)+(m.totalResults>0?`<div style="margin-top:6px;color:var(--muted)">Con IGV: <b>${cur_(conIGV(m.costPerResult))}</b></div>`:''))}
       ${heroCard(false,'👥 Alcance',fmt(m.reach),`<span style="color:var(--muted)">${fmt(m.impressions)} impresiones</span>`)}
     </div>
 
@@ -1032,9 +1042,9 @@ function renderCampanas(D){
           <tr>
             <td class="namecell" title="${esc(r.name)}">${esc(r.name)}<div class="minibar" style="margin-top:5px;width:100%"><i style="width:${(r.spend/maxSpend*100).toFixed(0)}%;background:${PINK}"></i></div></td>
             <td><span class="badge ${r.conv?'a':'g'}">${r.conv?'Conversaciones':'Clientes pot.'}</span></td>
-            <td class="num">${cur_(r.spend)}</td><td class="num">${fmt(r.reach)}</td>
+            <td class="num">${cur_(r.spend)}<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${cur_(conIGV(r.spend))}</div></td><td class="num">${fmt(r.reach)}</td>
             <td class="num"><b>${r.formLeads>0?fmt(r.formLeads):'–'}</b></td><td class="num"><b>${r.conversations>0?fmt(r.conversations):'–'}</b></td>
-            <td class="num">${r.formLeads>0?cur_(r.cpl):'–'}</td>
+            <td class="num">${r.formLeads>0?cur_(r.cpl)+`<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${cur_(conIGV(r.cpl))}</div>`:'–'}</td>
             <td class="num"><span style="color:${STCOL[ctrStatus(r.ctr)]}">${pct(r.ctr)}</span></td>
             <td class="num"><span style="color:${STCOL[freqStatus(r.frequency)]}">${r.frequency.toFixed(2)}</span></td>
             <td><span class="actiontag ${r.action}">${r.actionLabel}</span></td>
@@ -1211,7 +1221,7 @@ function renderEmbudo(D){
 
   // ── Bloque visual de un embudo (período o acumulado) ──
   // Cada etapa muestra: % real vs. % saludable, en verde si cumple la meta y en rojo si no.
-  function funnelBlock(title,subDesc,f){
+  function funnelBlock(title,subDesc,f,esPeriodo){
     const prevFor={Contactado:f.total,Agenda:f.reach.Contactado,Meet:f.reach.Agenda,Separacion:f.reach.Meet};
     const stageColors=['#93a59b','#2f7dd1',LIME,AMBER,GREEN];
     const rows=[{key:null,label:'Leads Entrantes',count:f.total}].concat(KOMMO_STEPS.map(s=>({key:s,label:KOMMO_STEP_LABEL[s],count:f.reach[s]})));
@@ -1240,10 +1250,10 @@ function renderEmbudo(D){
       <div class="cc-ttl">${title}</div>
       <div class="cc-desc">${subDesc}</div>
       <div class="funnelviz">${barsHtml}</div>
-      <div class="conv-item" style="margin-top:2px">
-        <div class="conv-top"><span style="font-size:12.5px;font-weight:600">⏱ Contactados en &lt;10 min (sobre el total de leads)</span><span class="badge n">Sin medir aún</span></div>
-        <div style="font-size:10.5px;color:var(--hint);margin-top:4px">Kommo aún no expone la hora exacta del primer contacto (solo etiquetas de cambio de etapa), así que este indicador no se puede calcular todavía — la meta es <b>≥75%</b> de los leads totales atendidos en &lt;10 min. Como referencia, <b>${f.atendidos}</b> de <b>${f.total}</b> leads (${atendPct.toFixed(0)}%) tienen al menos un intento de contacto registrado.</div>
-      </div>
+      ${esPeriodo?`<div class="conv-item" style="margin-top:2px" id="embudoSla">${embudoSlaHtml()}</div>`:`<div class="conv-item" style="margin-top:2px">
+        <div class="conv-top"><span style="font-size:12.5px;font-weight:600">⏱ Contactados en 10 min o menos</span><span class="badge n">Por período</span></div>
+        <div style="font-size:10.5px;color:var(--hint);margin-top:4px">Este indicador se mide por período (hasta 3 meses), en el embudo de la izquierda y en la pestaña 👤 Leads. Como referencia, <b>${f.atendidos}</b> de <b>${f.total}</b> leads del histórico (${atendPct.toFixed(0)}%) tienen al menos un intento de contacto registrado.</div>
+      </div>`}
       ${f.perdidos>0?`<div style="margin-top:8px;font-size:12.5px;color:${RED}">❌ Perdidos: <b>${f.perdidos}</b> (${perdPct.toFixed(0)}% del total)</div>`:''}
     </div>`;
   }
@@ -1260,7 +1270,7 @@ function renderEmbudo(D){
       <div class="kgrid">
         ${kc('🏆 Lotes vendidos (mes)',fmt(mm.lotes_vendidos||0),null,null,null,true,'Meta: '+fmt(metaLotes)+' lotes · '+(avance||0).toFixed(0)+'% de avance')}
         ${kc('📥 Leads hoy',fmt(pd.leads_hoy||0),null,null,null,true,'')}
-        ${kc('💰 Tope de CAC mensual',pd.cac_limite_mensual?cur_(pd.cac_limite_mensual):'–',null,null,null,false,'Límite de referencia · CAC real: sin medir aún')}
+        ${kc('💰 Tope de CAC mensual',pd.cac_limite_mensual?Number(pd.cac_limite_mensual).toLocaleString('es-PE'):'–',null,null,null,false,'Moneda por confirmar con quien lo configuró · CAC real: sin medir aún')}
         ${kc('⏱ Objetivo de contacto',(pd.sla_minutos_objetivo||10)+' min',null,null,null,false,'Meta ≥75% de leads contactados dentro de este tiempo')}
       </div>
     </div>`;
@@ -1308,7 +1318,7 @@ function renderEmbudo(D){
   const acciones=[...accionesFor(fPeriod,'Período'),...accionesFor(fAll,'Acumulado')];
   const accionesHtml=`<div class="cc" style="margin-top:16px">
     <div class="cc-ttl">✅ Acciones inmediatas</div>
-    <div class="icard warn"><span class="ico">🔧</span><div>El indicador de "&lt;10 min de contacto" aún no se mide: pide que Kommo registre la hora del primer contacto (o del cambio a "Contactado") para poder activar esta alerta automáticamente.</div></div>
+    <div id="embudoSlaAccion">${embudoSlaAccionHtml()}</div>
     ${acciones.length?acciones.map(a=>`<div class="icard ${a.crit?'bad':'warn'}"><span class="ico">${a.crit?'🚨':'⚠'}</span><div>${a.text}</div></div>`).join(''):'<div class="icard good"><span class="ico">✓</span><div>Todas las etapas con datos suficientes cumplen su meta de conversión. Sin acciones urgentes.</div></div>'}
   </div>`;
 
@@ -1316,18 +1326,18 @@ function renderEmbudo(D){
   const campaignTableHtml=`<div class="tcard" style="margin-top:16px">
     <div class="tcard-h">🏆 Campañas y anuncios ganadores · histórico completo</div>
     <div class="tscroll"><table>
-      <thead><tr><th>Campaña (formulario)</th><th>Anuncio (ID Meta)</th><th>Agenda</th><th>Meet</th><th>Separación</th><th>Venta</th><th>Perdidos</th><th>Total</th><th>% Ganador</th></tr></thead>
+      <thead><tr><th>Campaña (formulario)</th><th>Formulario (código Meta)</th><th>Agenda</th><th>Meet</th><th>Separación</th><th>Venta</th><th>Perdidos</th><th>Total</th><th>% Ganador</th></tr></thead>
       <tbody>${campAll.length?campAll.slice(0,12).map((g,i)=>`<tr><td class="namecell" title="${esc(g.camp)}">${i===0&&g.ganadores>0?'🏆 ':''}<b>${esc(g.camp)}</b></td><td class="num" style="font-size:11px;color:var(--muted)">${esc(g.ad)}</td><td class="num">${g.agenda}</td><td class="num">${g.meet}</td><td class="num">${g.separacion}</td><td class="num">${g.venta}</td><td class="num">${g.perdido}</td><td class="num"><b>${g.total}</b></td><td class="num"><span style="color:${g.efect>=15?GREEN:AMBER};font-weight:700">${g.efect.toFixed(0)}%</span></td></tr>`).join(''):'<tr><td colspan="9" class="empty">Sin datos de campaña en Kommo.</td></tr>'}</tbody>
     </table></div>
-    <div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.55"><b>% Ganador</b> = leads que llegaron a Meet, Separación o Venta ÷ total de leads de esa campaña. Kommo guarda el <b>formulario/campaña</b> y su ID de anuncio de Meta por etiqueta; para comparar el creativo (flyer/video) exacto, revisa la pestaña <b>🖼 Creativos</b>.</div>
+    <div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.55"><b>% Ganador</b> = leads que llegaron a Meet, Separación o Venta ÷ total de leads de esa campaña. Kommo guarda por etiqueta el <b>formulario/campaña</b> y el código del <b>formulario de Meta</b> (fb…) por el que entró el lead; ese código no es el anuncio. Para comparar el creativo (flyer/video) exacto, revisa la pestaña <b>🖼 Creativos</b>.</div>
   </div>`;
 
   sec.innerHTML=`
     <div class="sechead"><h2>🔻 Embudo Comercial</h2><span class="cnt">${fAll.total} leads totales · Kommo en vivo</span></div>
     <p class="subtitle">Cada etapa cuenta los leads que <b>ya llegaron a esa etapa o más adelante</b> (no solo los que siguen parados ahí). Debajo de cada etapa: % real vs. % saludable recomendado — verde si cumple la meta, rojo si está por debajo. Actualizado: ${esc(upd)}.</p>
     <div class="crow">
-      ${funnelBlock('📅 Embudo del período · '+esc(rangeLabel),fmt(periodRows.length)+' leads ingresaron en el rango de fechas elegido arriba.',fPeriod)}
-      ${funnelBlock('📈 Embudo acumulado · histórico completo',fmt(allRows.length)+' leads desde que arrancó el seguimiento (no cambia con el filtro de fechas).',fAll)}
+      ${funnelBlock('📅 Embudo del período · '+esc(rangeLabel),fmt(periodRows.length)+' leads ingresaron en el rango de fechas elegido arriba.',fPeriod,true)}
+      ${funnelBlock('📈 Embudo acumulado · histórico completo',fmt(allRows.length)+' leads desde que arrancó el seguimiento (no cambia con el filtro de fechas).',fAll,false)}
     </div>
     ${datosClaveHtml}
     ${observacionesHtml}
@@ -1457,7 +1467,7 @@ async function leadsCargar(forzar){
   const fresco=LEADS_CACHE.key===r.key&&LEADS_CACHE.data&&(Date.now()-LEADS_CACHE.ts)<LEADS_TTL_MS;
   if(fresco&&!forzar){leadsPintar();return;}
   if(LEADS_LOADING)return;
-  LEADS_LOADING=true;LEADS_ERR='';leadsPintar();
+  LEADS_LOADING=true;LEADS_ERR='';leadsPintar();embudoSlaActualizar();
   try{
     const resp=await fetch(LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta,{cache:'no-store'});
     if(resp.status===401)throw new Error('CLAVE');
@@ -1467,7 +1477,7 @@ async function leadsCargar(forzar){
     LEADS_CACHE={key:r.key,ts:Date.now(),data:data};LEADS_VER_TODO=false;
   }catch(e){LEADS_ERR=(e&&e.message)||'error desconocido';}
   finally{
-    LEADS_LOADING=false;leadsPintar();
+    LEADS_LOADING=false;leadsPintar();embudoSlaActualizar();
     // Si mientras cargaba se cambió el rango de fechas, trae el rango nuevo.
     const r2=leadsRango();
     if(!LEADS_ERR&&leadsTabActiva()&&r2&&r2.key!==LEADS_CACHE.key&&r2.dias<=LEADS_MAX_DIAS)leadsCargar(false);
@@ -1619,6 +1629,82 @@ function leadsExportar(){
   document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
   toast('✓ Exportados '+rows.length+' leads');
+}
+
+// ═══════════════ v3.2 · MONEDA EN SOLES E IGV ═══════════════
+// Meta cobra en dólares. Al cargar, se pide el dólar oficial del día al servidor de Gerencia
+// (ruta /tipo-cambio: SUNAT, con respaldo del BCRP) y se convierten a soles TODOS los montos que
+// vienen de Meta, una sola vez y antes de cualquier cálculo. Así las metas de Gerencia (en soles
+// y sin IGV) se comparan contra cifras en la misma moneda. Si el tipo de cambio no llega, NO se
+// inventa un valor: se muestran dólares y los semáforos de costo quedan "sin comparar".
+const TC_URL="https://pachamama-backend-v0v0.onrender.com/tipo-cambio";
+const IGV_TASA=0.18; // IGV: se paga y no se recupera (decisión de Gerencia)
+const BENCH_CPL_SOLES=BENCH.cpl; // metas de costo por lead: en soles y SIN IGV
+function conIGV(n){return(parseFloat(n)||0)*(1+IGV_TASA);}
+
+async function tcPrepararConversion(moneda){
+  if(moneda!=='USD')return{k:null,moneda:moneda||'PEN',tc:null,error:null};
+  try{
+    const ctrl=new AbortController();const t=setTimeout(function(){ctrl.abort();},10000);
+    const r=await fetch(TC_URL,{cache:'no-store',signal:ctrl.signal});clearTimeout(t);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    const v=Number(d&&d.venta);
+    if(!(v>2&&v<10))throw new Error('valor fuera de rango');
+    return{k:v,moneda:'PEN',tc:d,error:null};
+  }catch(e){
+    return{k:null,moneda:'USD',tc:null,error:(e&&e.name==='AbortError')?'tiempo de espera agotado':((e&&e.message)||'error')};
+  }
+}
+function tcConvertirNum(v,k){if(v==null||v==='')return v;const n=parseFloat(v);return isNaN(n)?v:String(n*k);}
+// Campos de dinero que pide el dashboard a Meta: spend, cpc, cpm, cost_per_action_type, cost_per_result.
+function tcConvertirFila(r,k){
+  if(!r||typeof r!=='object')return r;
+  const o=Object.assign({},r);
+  ['spend','cpc','cpm'].forEach(function(f){if(f in o)o[f]=tcConvertirNum(o[f],k);});
+  if(Array.isArray(o.cost_per_action_type))o.cost_per_action_type=o.cost_per_action_type.map(function(c){return Object.assign({},c,{value:tcConvertirNum(c.value,k)});});
+  if(Array.isArray(o.cost_per_result))o.cost_per_result=o.cost_per_result.map(function(it){return Object.assign({},it,{values:(it.values||[]).map(function(x){return Object.assign({},x,{value:tcConvertirNum(x.value,k)});})});});
+  else if(o.cost_per_result!=null&&o.cost_per_result!=='')o.cost_per_result=tcConvertirNum(o.cost_per_result,k);
+  return o;
+}
+function tcConvertirResp(resp,k){if(!resp||!Array.isArray(resp.data))return resp;return Object.assign({},resp,{data:resp.data.map(function(r){return tcConvertirFila(r,k);})});}
+function tcAvisoHtml(D){
+  if(!D||D.monedaOrigen!=='USD')return'';
+  if(D.tc){
+    const fuente=D.tc.fuente==='BCRP'?'del BCRP (Banco Central)':'de SUNAT';
+    return'<div class="icard '+(D.tc.desactualizado?'warn':'good')+'" style="margin-bottom:14px"><span class="ico">💱</span><div>Montos en <b>soles</b>. Meta cobra en dólares y se convirtieron al dólar oficial '+fuente+' del '+esc(D.tc.fecha||'')+': <b>S/ '+Number(D.tc.venta).toFixed(3)+'</b> por US$. Es referencial y se usa el mismo valor para todo el período. Los montos son <b>sin IGV</b>; donde dice "con IGV" se suma el 18%.'+(D.tc.desactualizado?' <b>Aviso:</b> hoy no se pudo actualizar el tipo de cambio; se usa el último valor conocido.':'')+'</div></div>';
+  }
+  return'<div class="icard warn" style="margin-bottom:14px"><span class="ico">💱</span><div>No se pudo obtener el dólar oficial ('+esc(D.tcError||'sin respuesta')+'). Por eso los montos se muestran <b>en dólares</b> y los semáforos de costo por lead quedan <b>sin comparar</b> contra la meta en soles, para no dar un resultado equivocado. Vuelve a cargar en unos minutos.</div></div>';
+}
+
+// ═══════════════ v3.2 · CONTACTADOS A TIEMPO EN EL EMBUDO ═══════════════
+// Usa los mismos datos de la pestaña Leads (servidor de Gerencia, solo lectura). No consulta el
+// CRM por su cuenta: si los datos del período no están cargados, ofrece un botón para calcularlo.
+function embudoSlaHtml(){
+  const r=leadsRango(),d=leadsDatos(),sla=leadsSla();
+  const tit='<span style="font-size:12.5px;font-weight:600">⏱ Contactados en '+sla+' min o menos (sobre el total de leads)</span>';
+  if(!r)return'<div class="conv-top">'+tit+'<span class="badge n">Sin rango</span></div>';
+  if(r.dias>LEADS_MAX_DIAS)return'<div class="conv-top">'+tit+'<span class="badge n">Rango muy largo</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">Se mide para rangos de hasta 3 meses. Elige un rango más corto arriba.</div>';
+  if(LEADS_LOADING)return'<div class="conv-top">'+tit+'<span class="badge n">Calculando…</span></div>';
+  if(!d){
+    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia. ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '):'';
+    return'<div class="conv-top">'+tit+'<span class="badge n">Sin calcular</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">'+err+'Se calcula con los datos del CRM de este período (meta ≥75%). <button class="pb" style="height:26px;padding:0 10px;font-size:11.5px;margin-left:6px" onclick="leadsCargar(false)">Calcular ahora</button></div>';
+  }
+  const filas=d.filas||[],n=filas.length,ver=filas.filter(function(f){return f.semaforo==='verde';}).length,pct=n?ver/n*100:0;
+  return'<div class="conv-top">'+tit+'<span class="badge '+(n?(pct>=75?'g':'r'):'n')+'">'+(n?pct.toFixed(0)+'% <span style="opacity:.7">/ 75% meta</span>':'Sin leads')+'</span></div>'
+    +'<div style="font-size:10.5px;color:var(--hint);margin-top:4px"><b>'+leadsN(ver)+'</b> de <b>'+leadsN(n)+'</b> leads del período se contactaron a tiempo. Detalle lead por lead en la pestaña 👤 Leads.</div>';
+}
+function embudoSlaAccionHtml(){
+  const d=leadsDatos();if(!d)return'';
+  const filas=d.filas||[],n=filas.length;if(!n)return'';
+  const ver=filas.filter(function(f){return f.semaforo==='verde';}).length,pct=ver/n*100;
+  if(pct>=75)return'';
+  const crit=pct<70;
+  return'<div class="icard '+(crit?'bad':'warn')+'"><span class="ico">'+(crit?'🚨':'⏱')+'</span><div><b>Período · Contacto en '+leadsSla()+' min</b> está en '+pct.toFixed(0)+'% (meta 75%). '+leadsN(n-ver)+' leads no se contactaron a tiempo: revísalos en la pestaña 👤 Leads, filtro "Atención".</div></div>';
+}
+function embudoSlaActualizar(){
+  const a=document.getElementById('embudoSla');if(a)a.innerHTML=embudoSlaHtml();
+  const b=document.getElementById('embudoSlaAccion');if(b)b.innerHTML=embudoSlaAccionHtml();
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
