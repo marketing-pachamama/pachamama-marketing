@@ -392,6 +392,7 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="navtab" data-s="creativos" onclick="showSection(this,'creativos')">🖼 Creativos</button>
       <button class="navtab" data-s="audiencias" onclick="showSection(this,'audiencias')">👥 Audiencias</button>
       <button class="navtab" data-s="embudo" onclick="showSection(this,'embudo')">🔻 Embudo</button>
+      <button class="navtab" data-s="dinero" onclick="showSection(this,'dinero')">💰 Lead → dinero</button>
       <button class="navtab" data-s="insights" onclick="showSection(this,'insights')">💡 Insights</button>
       <button class="navtab" data-s="recomendaciones" onclick="showSection(this,'recomendaciones')">✅ Plan de acción</button>
       <button class="navtab" data-s="leads" onclick="showSection(this,'leads');leadsOnOpen()">👤 Leads</button>
@@ -399,7 +400,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.2</b> (pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.3</b> (pestaña Lead → dinero · pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -829,6 +830,7 @@ function renderAll(D){
     <div class="section" id="sec-creativos"></div>
     <div class="section" id="sec-audiencias"></div>
     <div class="section" id="sec-embudo"></div>
+    <div class="section" id="sec-dinero"></div>
     <div class="section" id="sec-insights"></div>
     <div class="section" id="sec-recomendaciones"></div>
     <div class="section" id="sec-leads"></div>`;
@@ -841,6 +843,7 @@ function renderAll(D){
   renderCreativos(D);
   renderAudiencias(D);
   renderEmbudo(D);
+  try{renderDinero(D);}catch(e){const s=document.getElementById('sec-dinero');if(s)s.innerHTML='<div class="erbox">⚠ No se pudo dibujar la pestaña Lead → dinero: '+esc(e.message)+'</div>';}
   const ins=computeInsights(m,mPrev,D);
   renderInsights(ins,D);
   renderRecomendaciones(ins,D,m);
@@ -1158,7 +1161,7 @@ function renderAudiencias(D){
 function clasificarEtapaKommo(raw){
   const e=(raw||'').toLowerCase();
   if(e.indexOf('perdid')>=0)return'Perdido';
-  if(e.indexOf('venta')>=0)return'Venta';
+  if(e.indexOf('venta')>=0||e.indexOf('ganad')>=0)return'Venta'; // en Kommo la etapa de venta se llama "Leads ganados"
   if(e.indexOf('separac')>=0||e.indexOf('arras')>=0||e.indexOf('depósito')>=0||e.indexOf('deposito')>=0)return'Separacion';
   if(e.indexOf('meet')>=0||e.indexOf('presentac')>=0)return'Meet';
   if(e.indexOf('agenda')>=0)return'Agenda';
@@ -1461,6 +1464,31 @@ function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.
 function leadsOnOpen(){leadsCargar(false);}
 function renderLeads(D){leadsPintar();if(leadsTabActiva())leadsCargar(false);}
 
+// Un intento de pedir los leads. Devuelve los datos o lanza un Error con el motivo real que da el
+// servidor (por ejemplo, un límite de consultas de Kommo), marcado como reintentable si fue un fallo del servidor.
+async function leadsPedir(url){
+  let resp;
+  try{resp=await fetch(url,{cache:'no-store'});}
+  catch(e){const err=new Error('sin conexión con el servidor de Gerencia');err.reintentable=true;throw err;}
+  if(resp.status===401)throw new Error('CLAVE');
+  if(!resp.ok){
+    let det='';try{const j=await resp.json();if(j&&j.error)det=String(j.error);}catch(e){}
+    const err=new Error('HTTP '+resp.status+(det?' · '+det.slice(0,240):''));
+    err.reintentable=resp.status>=500;
+    throw err;
+  }
+  const data=await resp.json();
+  if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+  return data;
+}
+// Explica en simple qué hacer según el motivo del fallo.
+function leadsPista(msg){
+  const m=String(msg||'');
+  if(/429/.test(m))return 'El CRM (Kommo) limita cuántas consultas se le pueden hacer por segundo. Espera 1 o 2 minutos y pulsa Reintentar.';
+  if(/403/.test(m))return 'El CRM (Kommo) bloqueó por un rato las consultas del servidor porque llegaron demasiadas seguidas. Espera unos minutos; si sigue, avisa a quien administra el Sala de Control.';
+  if(/HTTP 5\d\d|sin conexión/.test(m))return 'Es una falla momentánea del servidor de Gerencia. Espera un minuto y pulsa Reintentar; si sigue, avisa a quien lo administra.';
+  return '';
+}
 async function leadsCargar(forzar){
   const r=leadsRango();
   if(!r||r.dias>LEADS_MAX_DIAS){leadsPintar();return;}
@@ -1469,11 +1497,17 @@ async function leadsCargar(forzar){
   if(LEADS_LOADING)return;
   LEADS_LOADING=true;LEADS_ERR='';leadsPintar();embudoSlaActualizar();
   try{
-    const resp=await fetch(LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta,{cache:'no-store'});
-    if(resp.status===401)throw new Error('CLAVE');
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
-    if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+    // Un tropiezo del servidor (error 5xx o corte de conexión) se reintenta UNA vez tras 4 segundos.
+    // La falta de clave (401) no se reintenta. Si sigue fallando, se muestra el motivo real.
+    const url=LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta;
+    let data=null,intento=0;
+    for(;;){
+      try{data=await leadsPedir(url);break;}
+      catch(e){
+        if(e&&e.reintentable&&intento<1){intento++;await new Promise(function(ok){setTimeout(ok,4000);});continue;}
+        throw e;
+      }
+    }
     LEADS_CACHE={key:r.key,ts:Date.now(),data:data};LEADS_VER_TODO=false;
   }catch(e){LEADS_ERR=(e&&e.message)||'error desconocido';}
   finally{
@@ -1542,7 +1576,7 @@ function leadsPintar(){
   if(r.dias>LEADS_MAX_DIAS){sec.innerHTML=h+'<div class="erbox">El rango elegido tiene '+leadsN(r.dias)+' días. Para no sobrecargar el CRM, esta pestaña trabaja con hasta 3 meses: elige un rango más corto arriba.</div>';return;}
   if(LEADS_LOADING){sec.innerHTML=h+'<div class="loading"><div class="spinner"></div>Cargando leads desde el CRM… puede tardar unos segundos.</div>';return;}
   if(LEADS_ERR==='CLAVE'){sec.innerHTML=h+'<div class="erbox">⚠ Falta la clave de Gerencia o no es correcta. Cierra esta pestaña del navegador, ábrela de nuevo e ingresa la clave cuando la pida. El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
-  if(LEADS_ERR){sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
+  if(LEADS_ERR){const pista=leadsPista(LEADS_ERR);sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')+'El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
   if(!d){sec.innerHTML=h+'<div class="empty">Los leads se cargan al abrir esta pestaña.<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(false)">Cargar leads del período</button></div></div>';return;}
 
   const filas=d.filas||[];
@@ -1705,6 +1739,238 @@ function embudoSlaAccionHtml(){
 function embudoSlaActualizar(){
   const a=document.getElementById('embudoSla');if(a)a.innerHTML=embudoSlaHtml();
   const b=document.getElementById('embudoSlaAccion');if(b)b.innerHTML=embudoSlaAccionHtml();
+  try{dinSlaActualizar();}catch(e){}
+}
+
+// ═══════════════ v3.3 · DEL LEAD AL DINERO (fase 2) ═══════════════
+// Pestaña propia (💰). Solo LEE. Usa lo que el dashboard ya cargó (Meta del período y el puente de
+// Kommo) y hace 3 consultas propias a Meta por el mismo puente de Cloudflare: inversión por campaña
+// desde el inicio, gasto del mes en la moneda de la cuenta y qué formulario usa cada anuncio.
+// Solo cuenta leads que entraron por un FORMULARIO de Meta (etiquetas fb<número> o Form_… en Kommo):
+// los importados (Evolta, TikTok) y los que llegaron por mensaje no tienen campaña y no se cuentan.
+// Para quitarla: borrar este bloque, su botón en la barra de pestañas y sus 2 líneas en renderAll.
+const DIN_PRESUPUESTO_USD=3000;    // presupuesto mensual de Meta, sin IGV (decisión de Gerencia)
+const DIN_VALOR_LOTE=77990;        // precio del lote en soles (decisión de Gerencia)
+const DIN_HIST_DESDE='2026-06-01'; // inicio de las campañas con formulario (primeros leads de Meta en el CRM)
+const DIN_PASOS=['Contactado','Agenda','Meet','Separacion','Venta'];
+const DIN_ETIQUETA={Lead:'Leads que llegaron al CRM',Contactado:'Contactados',Agenda:'Agendas',Meet:'Meets',Separacion:'Separaciones',Venta:'Ventas (clientes)'};
+const DIN_SIN_CAMPANA='Sin campaña confirmada';
+let DIN_EXTRA={key:'',ts:0,data:null,err:'',cargando:false};
+let DIN_VISTA_CAMP='historico';
+
+function dinHoyLima(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return iso(new Date());}}
+function dinTagFb(tags){for(const t of tags||[]){const m=/^fb(\d+)$/i.exec(String(t).trim());if(m)return m[1];}return null;}
+// Etiqueta Form_… normalizada (mayúsculas y sin espacios: "FORM_31 JUL_X" y "FORM_31JUL_X" son la misma).
+function dinTagForm(tags){for(const t of tags||[]){const s=String(t).trim();if(/^form/i.test(s)&&!/^formulario web/i.test(s))return s.toUpperCase().replace(/\s+/g,'');}return null;}
+// Si un lead trae Form_… pero no fb<número>, se usa el formulario que acompaña a esa etiqueta en al
+// menos el 90% de los leads que traen ambas. Si no hay un par claro, queda sin campaña confirmada.
+function dinParesFormFb(rows){
+  const cnt={};
+  rows.forEach(function(r){const fb=dinTagFb(r.tags),f=dinTagForm(r.tags);if(fb&&f){cnt[f]=cnt[f]||{};cnt[f][fb]=(cnt[f][fb]||0)+1;}});
+  const out={};
+  Object.keys(cnt).forEach(function(f){let best=null,n=0,tot=0;Object.keys(cnt[f]).forEach(function(fb){tot+=cnt[f][fb];if(cnt[f][fb]>n){n=cnt[f][fb];best=fb;}});if(tot&&n/tot>=0.9)out[f]=best;});
+  return out;
+}
+// Leads de formulario de Meta, cada uno con su formulario y su campaña.
+function dinFilasMeta(rows,formularios){
+  const pares=dinParesFormFb(rows);
+  const out=[];
+  rows.forEach(function(r){
+    const fb=dinTagFb(r.tags),f=dinTagForm(r.tags);
+    if(!fb&&!f)return;
+    const form=fb||(f&&pares[f])||null;
+    const c=form&&formularios&&formularios[form];
+    out.push({fecha:(r.fecha||'').slice(0,10),etapaKommo:r.etapaKommo,form:form,campana:(c&&c.name)||DIN_SIN_CAMPANA});
+  });
+  return out;
+}
+// Cuántos leads llegaron a cada etapa o más adelante (igual que el Embudo). Los perdidos cuentan como lead.
+function dinEmbudo(filas){
+  const c={Lead:filas.length,Contactado:0,Agenda:0,Meet:0,Separacion:0,Venta:0,Perdido:0};
+  filas.forEach(function(r){
+    const cls=clasificarEtapaKommo(r.etapaKommo);
+    if(cls==='Perdido'){c.Perdido++;return;}
+    const k=kommoStageRank(cls);
+    DIN_PASOS.forEach(function(s){if(k>=kommoStageRank(s))c[s]++;});
+  });
+  return c;
+}
+function dinEnRango(filas,desde,hasta){return filas.filter(function(r){return r.fecha&&r.fecha>=desde&&r.fecha<=hasta;});}
+// Factor para pasar montos de la moneda de la cuenta a la moneda en que se muestra el tablero.
+function dinFactor(D){return(D&&D.monedaOrigen==='USD'&&D.currency==='PEN'&&D.tc)?Number(D.tc.venta):1;}
+function dinUsd(n){return'US$ '+(parseFloat(n)||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function dinCosto(inv,n,D){return n>0?cur(inv/n,D.currency):'<span style="color:var(--hint)">—</span>';}
+
+function dinBuscarForm(o,cb){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){const v=o[k];if(k==='lead_gen_form_id'&&v)cb(String(v));else if(v&&typeof v==='object')dinBuscarForm(v,cb);});}
+async function dinAdsFormularios(acct){
+  const map={};let after='',pag=0;
+  do{
+    const p={fields:'campaign{id,name},creative{object_story_spec,asset_feed_spec}',limit:200};if(after)p.after=after;
+    const d=await api(acct+'/ads',p);
+    (d.data||[]).forEach(function(a){const c=a.campaign||{};dinBuscarForm(a.creative,function(id){if(!map[id])map[id]={id:c.id||'',name:c.name||''};});});
+    after=(d.paging&&d.paging.next&&d.paging.cursors&&d.paging.cursors.after)||'';pag++;
+  }while(after&&pag<10);
+  return map;
+}
+async function dinCargarExtra(forzar){
+  const sel=document.getElementById('acctDash');const acct=sel&&sel.value;if(!acct||!LAST_DATA)return;
+  const hoy=dinHoyLima(),key=acct+'|'+hoy;
+  if(!forzar&&DIN_EXTRA.key===key&&DIN_EXTRA.data&&Date.now()-DIN_EXTRA.ts<10*60*1000)return;
+  if(DIN_EXTRA.cargando)return;
+  DIN_EXTRA=Object.assign({},DIN_EXTRA,{cargando:true,err:''});dinPintar();
+  try{
+    const mesIni=hoy.slice(0,8)+'01';
+    const res=await Promise.all([
+      api(acct+'/insights',{fields:'campaign_id,campaign_name,spend',time_range:{since:DIN_HIST_DESDE,until:hoy},level:'campaign',limit:200}),
+      api(acct+'/insights',{fields:'spend',time_range:{since:mesIni,until:hoy},level:'account'}),
+      dinAdsFormularios(acct)
+    ]);
+    DIN_EXTRA={key:key,ts:Date.now(),cargando:false,err:'',data:{hist:res[0].data||[],mesSpend:parseFloat(((res[1].data||[])[0]||{}).spend||0),mesIni:mesIni,hoy:hoy,formularios:res[2]}};
+  }catch(e){
+    // Los datos anteriores solo se conservan si son de la misma cuenta y del mismo día.
+    DIN_EXTRA=Object.assign({},DIN_EXTRA,{cargando:false,err:(e&&e.message)||'error',data:DIN_EXTRA.key===key?DIN_EXTRA.data:null,key:DIN_EXTRA.key===key?key:''});
+  }
+  dinPintar();
+}
+
+// ── Bloques ──
+function dinPresupuestoHtml(D){
+  const X=DIN_EXTRA.data;
+  const tit='<div class="cc-ttl">📅 Inversión contra el presupuesto del mes</div><div class="cc-desc">Presupuesto de Gerencia: <b>US$ '+DIN_PRESUPUESTO_USD.toLocaleString('es-PE')+' al mes, sin IGV</b>. Siempre muestra el mes en curso, sin importar el filtro de fechas.</div>';
+  if(!X)return'<div class="cc">'+tit+'<div class="empty">'+(DIN_EXTRA.err?'No se pudo leer el gasto del mes ('+esc(DIN_EXTRA.err)+').':'Cargando el gasto del mes…')+'</div></div>';
+  if(D.monedaOrigen!=='USD')return'<div class="cc">'+tit+'<div class="empty">Esta cuenta de Meta está en '+esc(D.monedaOrigen||'otra moneda')+' y el presupuesto está en dólares: no se compara para no dar un resultado equivocado.</div></div>';
+  const g=X.mesSpend,dia=parseInt(X.hoy.slice(8,10),10),y=parseInt(X.hoy.slice(0,4),10),mo=parseInt(X.hoy.slice(5,7),10);
+  const dim=new Date(y,mo,0).getDate(),ritmo=g/Math.max(1,dia),proy=ritmo*dim,pctG=g/DIN_PRESUPUESTO_USD*100,pctP=proy/DIN_PRESUPUESTO_USD*100;
+  const quedan=dim-dia+1,resta=DIN_PRESUPUESTO_USD-g,ideal=resta>0?resta/quedan:0;
+  const st=pctP>105?'r':pctP<85?'a':'g',stLbl={r:'Se pasará',a:'Por debajo',g:'En ritmo'}[st];
+  // Montos principales en soles (dólar oficial del día). El presupuesto se fija en dólares, así que el
+  // dólar queda como referencia debajo. Sin tipo de cambio, todo se muestra en dólares.
+  const tc=dinFactor(D),enSoles=tc!==1;
+  const mon=function(n){return enSoles?cur(n*tc,'PEN'):dinUsd(n);};
+  const ref=function(n){return enSoles?' ('+dinUsd(n)+')':'';};
+  const w=Math.min(100,pctG);
+  return'<div class="cc">'+tit
+    +(enSoles?'<div style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px">Presupuesto en soles: <b>'+cur(DIN_PRESUPUESTO_USD*tc,'PEN')+'</b> al dólar oficial de hoy (S/ '+tc.toFixed(3)+'). Referencial: Meta cobra en dólares.</div>':'')
+    +'<div class="kgrid">'
+    +kc('💵 Gastado este mes',mon(g),null,null,null,false,'Del 1 al '+dia+ref(g)+' · con IGV '+mon(conIGV(g)))
+    +kc('📊 Del presupuesto',pctG.toFixed(0)+'%',null,null,null,false,'Van '+dia+' de '+dim+' días ('+(dia/dim*100).toFixed(0)+'% del mes)')
+    +kc('⚡ Ritmo diario',mon(ritmo),null,null,null,false,'Promedio del mes'+ref(ritmo))
+    +kc('🔮 Proyección a fin de mes',mon(proy),st,stLbl,null,false,pctP.toFixed(0)+'% del presupuesto'+ref(proy)+' · con IGV '+mon(conIGV(proy)))
+    +kc('🎯 Para cerrar en el presupuesto',resta>0?mon(ideal):'Tope alcanzado',resta>0?null:'r',resta>0?null:'Tope alcanzado',null,false,resta>0?'Por día'+ref(ideal)+', durante los '+quedan+' días que quedan (incluye hoy)':'Ya se gastó '+mon(-resta)+ref(-resta)+' por encima')
+    +'</div>'
+    +'<div class="fbar-track" style="margin-top:4px"><div class="fbar-fill" style="width:'+Math.max(2,w)+'%;background:'+(pctG>100?RED:pctG>(dia/dim*100)*1.05?AMBER:GREEN)+'">'+pctG.toFixed(0)+'%</div></div>'
+    +'<div style="font-size:11px;color:var(--hint);margin-top:6px;line-height:1.55">El gasto de hoy todavía está en curso. "En ritmo" = la proyección queda entre 85% y 105% del presupuesto.</div>'
+    +'</div>';
+}
+function dinCascadaHtml(D,filasPer,filasHist,invPer,invHist,totalPer){
+  const eP=dinEmbudo(filasPer),eH=filasHist?dinEmbudo(filasHist):null;
+  const filas=['Lead'].concat(DIN_PASOS).map(function(s){
+    return'<tr><td><b>'+DIN_ETIQUETA[s]+'</b></td>'
+      +'<td class="num">'+leadsN(eP[s])+'</td><td class="num"><b>'+dinCosto(invPer,eP[s],D)+'</b></td>'
+      +'<td class="num">'+(eH?leadsN(eH[s]):'…')+'</td><td class="num"><b>'+(eH?dinCosto(invHist,eH[s],D):'…')+'</b></td></tr>';
+  }).join('');
+  const rango=D.since===D.until?D.since:D.since+' → '+D.until;
+  return'<div class="tcard"><div class="tcard-h">🪜 Cascada de costo por etapa · con IGV</div><div class="tscroll"><table>'
+    +'<thead><tr><th>Etapa</th><th>Período<br><span style="font-weight:500">'+esc(rango)+'</span></th><th>Costo de cada uno</th><th>Desde el '+esc(DIN_HIST_DESDE.split('-').reverse().join('/'))+'</th><th>Costo de cada uno</th></tr></thead><tbody>'
+    +'<tr><td><b>Inversión en Meta (con IGV)</b></td><td class="num" colspan="2"><b>'+cur(invPer,D.currency)+'</b></td><td class="num" colspan="2"><b>'+(invHist==null?'…':cur(invHist,D.currency))+'</b></td></tr>'
+    +filas+'</tbody></table></div>'
+    +'<div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">Toda la inversión de Meta del período (con 18% de IGV) dividida entre los leads que llegaron a cada etapa o más adelante. '
+    +'Solo cuenta leads que entraron por un <b>formulario de Meta</b>: '+leadsN(eP.Lead)+' de '+leadsN(totalPer)+' leads que entraron al CRM en el período. Los importados (Evolta, TikTok) y los que llegaron por mensaje no tienen campaña y no se cuentan. '
+    +'<b>Ojo:</b> los leads recientes todavía pueden avanzar, así que en períodos cortos el costo por venta se ve más alto de lo que terminará siendo.</div></div>';
+}
+function dinRetornoHtml(D,filasPer,filasHist,invPer,invHist){
+  function tarjeta(titulo,filas,inv){
+    if(!filas||inv==null)return kc(titulo,'…',null,null,null,true,'Cargando…');
+    const v=dinEmbudo(filas).Venta,valor=v*DIN_VALOR_LOTE,equil=inv/DIN_VALOR_LOTE;
+    if(!(inv>0))return kc(titulo,'–',null,null,null,true,'Sin inversión en el período');
+    if(!v)return kc(titulo,'–',null,null,null,true,'Aún no hay ventas de estos leads · para cubrir '+cur(inv,D.currency)+' con IGV hace falta '+(equil<1?'menos de 1 lote':equil.toFixed(1)+' lotes'));
+    const r=valor/inv;
+    return kc(titulo,cur(r,D.currency),r>=1?'g':'r',r>=1?'Cubre la inversión':'No la cubre',null,true,'en ventas por cada S/ 1 invertido · '+leadsN(v)+' venta(s) × '+cur(DIN_VALOR_LOTE,'PEN')+' = '+cur(valor,'PEN')+' / inversión con IGV '+cur(inv,D.currency));
+  }
+  const nota=D.currency!=='PEN'?'<div class="icard warn"><span class="ico">💱</span><div>Sin el dólar oficial no se puede comparar el precio del lote (en soles) con la inversión (en dólares). Vuelve a cargar en unos minutos.</div></div>':'';
+  return'<div class="cc"><div class="cc-ttl">💹 Retorno por lote vendido</div><div class="cc-desc">Ventas × S/ '+DIN_VALOR_LOTE.toLocaleString('es-PE')+' (precio total del lote) ÷ inversión con IGV. Venta = el lead llegó a la etapa "Leads ganados" en Kommo.</div>'
+    +(nota||'<div class="kgrid">'+tarjeta('📅 Período elegido',filasPer,invPer)+tarjeta('📈 Desde el '+DIN_HIST_DESDE.split('-').reverse().join('/'),filasHist,invHist)+'</div>')
+    +'</div>';
+}
+function dinCampanasHtml(D,filasPer,filasHist,f){
+  const vista=DIN_VISTA_CAMP==='periodo'?'periodo':'historico';
+  const btn=function(v,t){return'<button class="pb'+(vista===v?' on':'')+'" style="height:28px;padding:0 12px;font-size:12px" onclick="DIN_VISTA_CAMP=\''+v+'\';dinPintar()">'+t+'</button>';};
+  const head='<div class="tcard-h"><span>🏷 Costo por cliente, por campaña · con IGV</span><span style="display:flex;gap:6px">'+btn('periodo','Período elegido')+btn('historico','Desde el '+DIN_HIST_DESDE.split('-').reverse().join('/'))+'</span></div>';
+  const X=DIN_EXTRA.data;
+  if(!X)return'<div class="tcard">'+head+'<div class="empty">'+(DIN_EXTRA.err?'No se pudo leer Meta ('+esc(DIN_EXTRA.err)+').':'Cargando campañas y formularios…')+'</div></div>';
+  const filas=vista==='periodo'?filasPer:filasHist;
+  const gasto=vista==='periodo'?(D.campaigns.data||[]).map(function(r){return{n:r.campaign_name||'—',s:parseFloat(r.spend||0)};}):(X.hist||[]).map(function(r){return{n:r.campaign_name||'—',s:parseFloat(r.spend||0)*f};});
+  const m={};
+  gasto.forEach(function(g){if(!m[g.n])m[g.n]={n:g.n,s:0,e:null,fs:[]};m[g.n].s+=g.s;});
+  filas.forEach(function(r){if(!m[r.campana])m[r.campana]={n:r.campana,s:0,e:null,fs:[]};m[r.campana].fs.push(r);});
+  const lista=Object.values(m).map(function(x){x.e=dinEmbudo(x.fs);x.inv=conIGV(x.s);return x;})
+    .filter(function(x){return x.s>0||x.fs.length;})
+    .sort(function(a,b){if(a.n===DIN_SIN_CAMPANA)return 1;if(b.n===DIN_SIN_CAMPANA)return -1;return b.e.Venta-a.e.Venta||b.inv-a.inv;});
+  const cuerpo=lista.length?lista.map(function(x){
+    const sinCamp=x.n===DIN_SIN_CAMPANA;
+    return'<tr><td class="namecell" title="'+esc(x.n)+'">'+(x.e.Venta>0?'🏆 ':'')+'<b>'+esc(x.n)+'</b></td>'
+      +'<td class="num">'+(sinCamp?'—':cur(x.inv,D.currency))+'</td><td class="num">'+leadsN(x.e.Lead)+'</td><td class="num">'+leadsN(x.e.Meet)+'</td><td class="num">'+leadsN(x.e.Separacion)+'</td><td class="num"><b>'+leadsN(x.e.Venta)+'</b></td>'
+      +'<td class="num">'+(sinCamp?'—':dinCosto(x.inv,x.e.Lead,D))+'</td><td class="num">'+(sinCamp?'—':dinCosto(x.inv,x.e.Meet,D))+'</td><td class="num"><b>'+(sinCamp?'—':dinCosto(x.inv,x.e.Venta,D))+'</b></td></tr>';
+  }).join(''):'<tr><td colspan="9" class="empty">Sin inversión ni leads de formulario en este período.</td></tr>';
+  const sinForm=Object.keys(X.formularios||{}).length;
+  return'<div class="tcard">'+head+'<div class="tscroll"><table><thead><tr><th>Campaña</th><th>Inversión con IGV</th><th>Leads CRM</th><th>Meet</th><th>Separación</th><th>Ventas</th><th>Costo por lead</th><th>Costo por meet</th><th>Costo por cliente</th></tr></thead><tbody>'+cuerpo+'</tbody></table></div>'
+    +'<div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">La campaña de cada lead sale del <b>formulario de Meta</b> por el que entró (etiqueta fb… en Kommo), cruzado con el formulario que usa cada anuncio en Meta ('+leadsN(sinForm)+' formulario(s) encontrados). '
+    +'"'+DIN_SIN_CAMPANA+'" = leads cuyo formulario ya no está en ningún anuncio (anuncio borrado) o que solo traen una etiqueta Form_ sin formulario. Cliente = etapa Venta.</div></div>';
+}
+function dinNoContestarHtml(D,invPer,leadsPer){
+  const r=leadsRango(),d=leadsDatos();
+  const tit='<div class="cc-ttl">⏰ Cuánto cuesta no contestar a tiempo</div><div class="cc-desc">Leads de formulario que no se contactaron en '+leadsSla()+' min o menos, valorizados con lo que costó cada lead en el período (con IGV). Usa los datos de la pestaña 👤 Leads.</div>';
+  if(!r)return tit+'<div class="empty">Elige un rango de fechas arriba.</div>';
+  if(r.dias>LEADS_MAX_DIAS)return tit+'<div class="empty">Se calcula para rangos de hasta 3 meses. Elige un rango más corto arriba.</div>';
+  if(LEADS_LOADING)return tit+'<div class="loading"><div class="spinner"></div>Calculando con los datos del CRM…</div>';
+  if(!d){
+    const pista=LEADS_ERR&&LEADS_ERR!=='CLAVE'?leadsPista(LEADS_ERR):'';
+    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia. ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')):'';
+    return tit+'<div class="empty">'+err+'<div style="margin-top:10px"><button class="pb" onclick="leadsCargar(false)">Calcular ahora</button></div></div>';
+  }
+  const todas=d.filas||[],form=todas.filter(function(x){return x.campania&&x.campania!=='Directo / mensaje';});
+  const tarde=form.filter(function(x){return x.semaforo!=='verde';}),sin=tarde.filter(function(x){return x.tiempo_min==null;}).length;
+  const otras=todas.length-form.length,otrasTarde=todas.filter(function(x){return!(x.campania&&x.campania!=='Directo / mensaje')&&x.semaforo!=='verde';}).length;
+  if(!(leadsPer>0)||!(invPer>0))return tit+'<div class="empty">No hay leads de formulario o inversión en el período para calcular cuánto costó cada lead.</div>';
+  const cpl=invPer/leadsPer,valor=tarde.length*cpl,sem=r.dias/7;
+  return tit+'<div class="kgrid">'
+    +kc('⌛ Fuera de tiempo',leadsN(tarde.length),tarde.length?'r':'g',tarde.length?'Revisar':'Todos a tiempo',null,false,'de '+leadsN(form.length)+' leads de formulario · '+leadsN(sin)+' sin atender')
+    +kc('💸 Inversión en esos leads',cur(valor,D.currency),null,null,null,false,leadsN(tarde.length)+' × '+cur(cpl,D.currency)+' por lead (con IGV)')
+    +(r.dias>=7?kc('📆 Por semana',cur(valor/sem,D.currency),null,null,null,false,'Promedio de '+sem.toFixed(1).replace('.',',')+' semanas'):'')
+    +'</div><div style="font-size:11px;color:var(--hint);line-height:1.55">No es plata perdida segura: es lo que costó traer leads que se atendieron tarde o nunca, donde es más probable perderlos. '
+    +(otras?leadsN(otras)+' leads más del período entraron por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se valorizan porque no tienen campaña.':'')+'</div>';
+}
+
+function renderDinero(D){dinPintar();dinCargarExtra(false);}
+function dinPintar(){
+  const sec=document.getElementById('sec-dinero');const D=LAST_DATA;if(!sec||!D)return;
+  let h='<div class="sechead"><h2>💰 Del lead al dinero</h2><span class="cnt">'+esc(D.since===D.until?D.since:D.since+' → '+D.until)+'</span></div>'
+    +'<p class="subtitle">Sigue la plata desde el anuncio hasta el lote vendido: cuánto cuesta cada etapa, qué campaña trae clientes, cómo va el presupuesto y cuánto vuelve en ventas. Montos en '+(D.currency==='PEN'?'soles (referenciales)':esc(D.currency))+' y <b>con IGV</b> salvo donde se indica.</p>';
+  const ok=KOMMO_DATA&&KOMMO_DATA.ok===true;
+  const f=dinFactor(D),X=DIN_EXTRA.data;
+  const invPer=conIGV(parseFloat(((D.acctIns.data||[])[0]||{}).spend||0));
+  const invHist=X?conIGV((X.hist||[]).reduce(function(s,r){return s+parseFloat(r.spend||0);},0)*f):null;
+  h+='<div style="margin-bottom:16px">'+dinPresupuestoHtml(D)+'</div>';
+  if(!ok){
+    h+='<div class="erbox">⚠ No se pudo leer el CRM (Kommo): '+esc(D.kommoError||(KOMMO_DATA&&KOMMO_DATA.error)||'sin datos')+'. Sin el CRM no se pueden calcular las etapas ni las ventas.</div>';
+    sec.innerHTML=h;return;
+  }
+  const todas=KOMMO_DATA.rows||[];
+  const meta=dinFilasMeta(todas,X?X.formularios:null);
+  const filasPer=dinEnRango(meta,D.since,D.until);
+  const filasHist=X?dinEnRango(meta,DIN_HIST_DESDE,'9999-12-31'):null;
+  const totalPer=todas.filter(function(r){const x=(r.fecha||'').slice(0,10);return x&&x>=D.since&&x<=D.until;}).length;
+  h+='<div style="margin-bottom:16px">'+dinCascadaHtml(D,filasPer,filasHist,invPer,invHist,totalPer)+'</div>';
+  h+='<div style="margin-bottom:16px">'+dinRetornoHtml(D,filasPer,filasHist,invPer,invHist)+'</div>';
+  h+='<div style="margin-bottom:16px">'+dinCampanasHtml(D,filasPer,filasHist||[],f)+'</div>';
+  h+='<div class="cc" id="dineroSla" data-inv="'+invPer+'" data-leads="'+filasPer.length+'">'+dinNoContestarHtml(D,invPer,filasPer.length)+'</div>';
+  if(DIN_EXTRA.err)h+='<div class="icard warn" style="margin-top:12px"><span class="ico">⚠</span><div>No se pudieron '+(X?'actualizar':'leer')+' los datos de Meta de esta pestaña ('+esc(DIN_EXTRA.err)+').'+(X?' Se muestran los últimos de hoy.':'')+' <button class="pb" style="height:28px;padding:0 12px;font-size:12px;margin-left:6px" onclick="dinCargarExtra(true)">↻ Reintentar datos de Meta</button></div></div>';
+  sec.innerHTML=h;
+}
+// La pestaña Leads avisa aquí cuando terminan de cargar sus datos (ver embudoSlaActualizar).
+function dinSlaActualizar(){
+  const c=document.getElementById('dineroSla');if(!c||!LAST_DATA)return;
+  c.innerHTML=dinNoContestarHtml(LAST_DATA,Number(c.getAttribute('data-inv'))||0,Number(c.getAttribute('data-leads'))||0);
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
