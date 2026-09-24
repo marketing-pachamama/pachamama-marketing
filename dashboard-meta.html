@@ -138,6 +138,10 @@ input:focus,select:focus{border-color:var(--pink);background:var(--surface);box-
 .kc.st-r::after{background:var(--red);opacity:1}
 .kc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .kc-val{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;line-height:1.05;margin-bottom:8px;letter-spacing:-.01em}
+/* v3.4 · equivalente en soles, en letras pequeñas junto a cada monto en dólares */
+.sol{display:inline-block;margin-left:5px;font-family:inherit;font-size:10.5px;font-weight:500;letter-spacing:0;opacity:.62;white-space:nowrap}
+.hc-val .sol,.kc-val .sol{display:block;margin:4px 0 0;font-size:11.5px}
+td .sol{display:block;margin:2px 0 0}
 .kc-meta{display:flex;align-items:center;gap:7px;font-size:11px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
 .pill.g{background:var(--g-bg);color:var(--g-tx)}
@@ -400,7 +404,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.3</b> (pestaña Lead → dinero · pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.4</b> (montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -510,8 +514,13 @@ const KOMMO_TARGETS = {
 const iso=d=>d.toISOString().split('T')[0];
 const sub=n=>{const d=new Date();d.setDate(d.getDate()-n);return d;};
 function fmt(n,dec=0){n=parseFloat(n)||0;if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1)+'K';return n.toLocaleString('es-PE',{maximumFractionDigits:dec});}
-function cur(n,c='PEN'){return new Intl.NumberFormat('es-PE',{style:'currency',currency:c,maximumFractionDigits:2}).format(parseFloat(n)||0);}
-function curK(n,c='PEN'){n=parseFloat(n)||0;const sym=c==='USD'?'$':'S/';if(Math.abs(n)>=1e3)return sym+(n/1e3).toFixed(1)+'K';return sym+n.toFixed(0);}
+function cur(n,c='PEN'){if(c==='USD')return'US$ '+(parseFloat(n)||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});return new Intl.NumberFormat('es-PE',{style:'currency',currency:c,maximumFractionDigits:2}).format(parseFloat(n)||0);}
+// v3.4 · Todo en dólares (decisión de la jefa). TC_PEN = dólar oficial del día; si llegó, cada monto
+// en dólares lleva al lado su equivalente en soles en letras pequeñas (solo informativo).
+let TC_PEN=null;
+function sol(n){return TC_PEN?'<span class="sol">S/ '+((parseFloat(n)||0)*TC_PEN).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>':'';}
+function curS(n,c){return cur(n,c)+(c==='USD'?sol(n):'');}
+function curK(n,c='PEN'){n=parseFloat(n)||0;const sym=c==='USD'?'US$':'S/';if(Math.abs(n)>=1e3)return sym+(n/1e3).toFixed(1)+'K';return sym+(Math.abs(n)<10&&n!==Math.round(n)?n.toFixed(2):n.toFixed(0));}
 function pct(n,dec=2){return(parseFloat(n)||0).toFixed(dec)+'%';}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
@@ -544,7 +553,7 @@ function ctrLabel(v){if(v<BENCH.ctr.bad)return'Bajo';if(v<BENCH.ctr.ok)return'Re
 function cpcStatus(v){if(v>BENCH.cpc.ok)return'r';if(v>BENCH.cpc.good)return'a';return'g';}
 function freqStatus(v){if(v>BENCH.freq.watch)return'r';if(v>BENCH.freq.ok)return'a';return'g';}
 function freqLabel(v){if(v<BENCH.freq.low)return'Baja exposición';if(v<=BENCH.freq.ok)return'Saludable';if(v<=BENCH.freq.watch)return'Vigilar';return'Fatiga';}
-function cplStatus(v,prod){if(LAST_DATA&&LAST_DATA.currency&&LAST_DATA.currency!=='PEN')return'n';const b=BENCH.cpl[prod];if(!b)return'a';if(v<=b.max)return'g';if(v<=b.max*1.2)return'a';return'r';}
+function cplStatus(v,prod){if(LAST_DATA&&LAST_DATA.currency==='USD'&&!TC_PEN)return'n';/* sin dólar del día no se puede comparar con la meta, que está en soles */const b=BENCH.cpl[prod];if(!b)return'a';if(v<=b.max)return'g';if(v<=b.max*1.2)return'a';return'r';}
 const STCOL={g:LIME,a:AMBER,r:RED,n:'#93a59b'};
 const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico',n:'Sin comparar'};
 
@@ -681,15 +690,14 @@ async function loadData(){
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
     let kommoError=null;try{await fetchKommoFunnel();}catch(e){kommoError=e.message;}
     let pachamamaError=null;try{await fetchPachamamaBackend();}catch(e){pachamamaError=e.message;}
-    // v3.2 · Montos en soles: Meta cobra en dólares. Se convierte UNA sola vez aquí, antes de
-    // cualquier cálculo, así todo lo demás (tarjetas, gráficos, semáforos) queda en soles.
+    // v3.4 · Todo en dólares, como cobra Meta (decisión de la jefa, 24/09): los montos NO se convierten.
+    // El dólar oficial del día se usa solo para (1) mostrar el equivalente en soles en letras pequeñas y
+    // (2) pasar a dólares las metas de Gerencia, que están en soles, para que los semáforos comparen bien.
     const fx=await tcPrepararConversion(currency);
-    const cv=fx.k?(x=>tcConvertirResp(x,fx.k)):(x=>x);
-    BENCH.cpl=(fx.moneda==='PEN')?BENCH_CPL_SOLES:{palta:null,pitahaya:null,other:null};
-    LAST_DATA={acctIns:cv(acctIns),acctInsPrev:cv(acctInsPrev),campaigns:cv(campaigns),
-      adsWithIns:fx.k?adsWithIns.map(a=>({...a,_ins:tcConvertirFila(a._ins,fx.k)})):adsWithIns,
-      ageGender:cv(ageGender),region:cv(region),platform:cv(platform),daily:cv(daily),
-      currency:fx.moneda,monedaOrigen:currency,tc:fx.tc,tcError:fx.error,
+    TC_PEN=fx.k||null;
+    tcAjustarMetas(currency);
+    LAST_DATA={acctIns,acctInsPrev,campaigns,adsWithIns,ageGender,region,platform,daily,
+      currency:currency,monedaOrigen:currency,tc:fx.tc,tcError:fx.error,
       since,until,product,funnelError,kommoError,pachamamaError};
     renderAll(LAST_DATA);
   }catch(e){
@@ -798,8 +806,10 @@ function computeScore(m){
   // CTR (0-100): bad<1 →0-40, 1-2→40-65, 2-3→65-85, >3→85-100
   let ctrS = m.ctr>=3?Math.min(100,85+(m.ctr-3)*5):m.ctr>=2?65+(m.ctr-2)*20:m.ctr>=1?40+(m.ctr-1)*25:m.ctr*40;
   parts.push({k:'CTR (interés)',v:Math.round(ctrS)});
-  // CPC: <0.8→90-100, 0.8-1.5→60-90, >1.5→down
-  let cpcS = m.cpc<=0?60:m.cpc<=0.8?100-(m.cpc/0.8)*10:m.cpc<=1.5?90-((m.cpc-0.8)/0.7)*40:Math.max(10,50-(m.cpc-1.5)*20);
+  // CPC: bajo "good"→90-100, entre "good" y "ok"→60-90, sobre "ok"→baja (umbrales en la moneda mostrada;
+  // en soles son 0.80 y 1.50, y la puntuación da lo mismo en dólares o en soles)
+  const cg=BENCH.cpc.good,co=BENCH.cpc.ok;
+  let cpcS = m.cpc<=0?60:m.cpc<=cg?100-(m.cpc/cg)*10:m.cpc<=co?90-((m.cpc-cg)/(co-cg))*40:Math.max(10,50-((m.cpc-co)/co)*30);
   parts.push({k:'CPC (eficiencia)',v:Math.round(cpcS)});
   // Frequency: 2-4 ideal
   let frS = m.frequency<=0?70:m.frequency<2?70+m.frequency*10:m.frequency<=4?100:m.frequency<=6?100-((m.frequency-4)/2)*40:Math.max(10,60-(m.frequency-6)*15);
@@ -872,11 +882,11 @@ function kc(label,val,st,stLabel,delta,goodWhenUp,goal){
     ${goal?`<div class="kc-goal">${goal}</div>`:''}</div>`;
 }
 function renderResumen(m,mPrev,D){
-  const sec=document.getElementById('sec-resumen');const cur_=n=>cur(n,D.currency);
+  const sec=document.getElementById('sec-resumen');const cur_=n=>curS(n,D.currency);
   const dSpend=deltaPct(m.spend,mPrev.spend),dClicks=deltaPct(m.clicks,mPrev.clicks),dCtr=deltaPct(m.ctr,mPrev.ctr),dCpc=deltaPct(m.cpc,mPrev.cpc);
   const mPrevLeads=buildMetrics((D.acctInsPrev.data||[])[0]); // leads not split prev; approximate
   const score=computeScore(m);
-  const benchCpl=BENCH.cpl[D.product];const cplGoal=benchCpl?`Meta: ${cur_(benchCpl.min)} – ${cur_(benchCpl.max)}`:'Sin meta definida';
+  const benchCpl=BENCH.cpl[D.product];const cplGoal=benchCpl?`Meta: ${metaTxt(benchCpl,BENCH_CPL_SOLES[D.product],D.currency)}`:'Sin meta definida';
   const cplSt=m.leads>0?cplStatus(m.cpl,D.product):null;
   const days=Math.max(1,Math.round((new Date(D.until)-new Date(D.since))/86400000)+1);
   // Pacing: projected month-end spend & leads if 'this_month'
@@ -928,7 +938,7 @@ function renderResumen(m,mPrev,D){
       ${kc('🏷 CPL',m.leads>0?cur_(m.cpl):'–',cplSt,null,null,false,cplGoal)}
       ${kc('💸 Costo / conversación',m.conversations>0?cur_(m.cpc_conv):'–',null,null,null,false,'Campañas de mensajes')}
       ${kc('🖱 Clics',fmt(m.clicks),null,null,dClicks,true)}
-      ${kc('💵 CPC',cur_(m.cpc),cpcStatus(m.cpc),({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(m.cpc)],dCpc,false,'Saludable: < S/0.80')}
+      ${kc('💵 CPC',cur_(m.cpc),cpcStatus(m.cpc),({g:'Bueno',a:'Regular',r:'Alto'})[cpcStatus(m.cpc)],dCpc,false,'Saludable: &lt; '+cur(BENCH.cpc.good,D.currency)+(D.currency==='USD'&&TC_PEN?' <span class="sol">(S/ '+BENCH_CPC_SOLES.good.toFixed(2)+')</span>':''))}
       ${kc('📊 CTR',pct(m.ctr),ctrStatus(m.ctr),ctrLabel(m.ctr),dCtr,true,'Excelente: > 3%')}
       ${kc('📡 CPM',cur_(m.cpm),null,null,null,false,'Costo por mil impresiones')}
     </div>
@@ -946,7 +956,7 @@ function renderResumen(m,mPrev,D){
 
   drawScoreRing(score.total);
   drawGauge('gCtr',m.ctr,4,[BENCH.ctr.bad,BENCH.ctr.ok],STCOL[ctrStatus(m.ctr)],false);
-  drawGauge('gCpc',m.cpc,2.5,[BENCH.cpc.good,BENCH.cpc.ok],STCOL[cpcStatus(m.cpc)],true);
+  drawGauge('gCpc',m.cpc,2.5*BENCH.cpc.ok/1.5,[BENCH.cpc.good,BENCH.cpc.ok],STCOL[cpcStatus(m.cpc)],true);
   drawGauge('gFreq',m.frequency,8,[BENCH.freq.ok,BENCH.freq.watch],STCOL[freqStatus(m.frequency)],true,4);
   drawResumenCharts(D,m);
 }
@@ -1017,7 +1027,7 @@ function campRowsData(D){
   });
 }
 function renderCampanas(D){
-  const sec=document.getElementById('sec-campanas');const cur_=n=>cur(n,D.currency);
+  const sec=document.getElementById('sec-campanas');const cur_=n=>curS(n,D.currency),curU=n=>cur(n,D.currency);
   let rows=campRowsData(D);
   const totalSpend=rows.reduce((a,r)=>a+r.spend,0)||1;
   rows.sort((a,b)=>{const av=a[campSortKey],bv=b[campSortKey];return(av>bv?1:av<bv?-1:0)*campSortDir;});
@@ -1045,9 +1055,9 @@ function renderCampanas(D){
           <tr>
             <td class="namecell" title="${esc(r.name)}">${esc(r.name)}<div class="minibar" style="margin-top:5px;width:100%"><i style="width:${(r.spend/maxSpend*100).toFixed(0)}%;background:${PINK}"></i></div></td>
             <td><span class="badge ${r.conv?'a':'g'}">${r.conv?'Conversaciones':'Clientes pot.'}</span></td>
-            <td class="num">${cur_(r.spend)}<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${cur_(conIGV(r.spend))}</div></td><td class="num">${fmt(r.reach)}</td>
+            <td class="num">${cur_(r.spend)}<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${curU(conIGV(r.spend))}</div></td><td class="num">${fmt(r.reach)}</td>
             <td class="num"><b>${r.formLeads>0?fmt(r.formLeads):'–'}</b></td><td class="num"><b>${r.conversations>0?fmt(r.conversations):'–'}</b></td>
-            <td class="num">${r.formLeads>0?cur_(r.cpl)+`<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${cur_(conIGV(r.cpl))}</div>`:'–'}</td>
+            <td class="num">${r.formLeads>0?cur_(r.cpl)+`<div style="font-size:10.5px;color:var(--muted);font-weight:500">con IGV ${curU(conIGV(r.cpl))}</div>`:'–'}</td>
             <td class="num"><span style="color:${STCOL[ctrStatus(r.ctr)]}">${pct(r.ctr)}</span></td>
             <td class="num"><span style="color:${STCOL[freqStatus(r.frequency)]}">${r.frequency.toFixed(2)}</span></td>
             <td><span class="actiontag ${r.action}">${r.actionLabel}</span></td>
@@ -1103,7 +1113,7 @@ function renderCreativos(D){
 
 // ═══════════════ 4 · AUDIENCIAS ═══════════════
 function renderAudiencias(D){
-  const sec=document.getElementById('sec-audiencias');const cur_=n=>cur(n,D.currency);
+  const sec=document.getElementById('sec-audiencias');const cur_=n=>curS(n,D.currency);
   function proc(data,keyFn){const map={};(data||[]).forEach(r=>{const k=keyFn(r);if(!map[k])map[k]={spend:0,clicks:0,leads:0};map[k].spend+=parseFloat(r.spend||0);map[k].clicks+=parseInt(r.clicks||0);map[k].leads+=rowTotal(r);});
     return Object.entries(map).map(([k,v])=>({label:k,...v,cpl:v.leads>0?v.spend/v.leads:0,cpc:v.clicks>0?v.spend/v.clicks:0})).sort((a,b)=>b.spend-a.spend);}
   const genderMap={male:'Hombre',female:'Mujer',unknown:'Otro'};
@@ -1358,7 +1368,7 @@ function computeInsights(m,mPrev,D){
   else if(m.ctr>=BENCH.ctr.good)insights.push({text:`CTR de <b>${pct(m.ctr)}</b> en rango excelente (> 3%): creativos muy relevantes para la audiencia.`});
   if(m.frequency>BENCH.freq.watch)alerts.push({text:`Frecuencia promedio <b>${m.frequency.toFixed(1)}</b> (> 6): fatiga publicitaria. Ampliar audiencia o renovar creativos.`});
   else if(m.frequency>BENCH.freq.ok)insights.push({type:'warn',text:`Frecuencia (${m.frequency.toFixed(1)}) en zona de vigilancia (4–6). Monitorear de cerca.`});
-  if(m.cpc>BENCH.cpc.ok)alerts.push({text:`CPC promedio <b>${cur_(m.cpc)}</b>, por encima del umbral saludable (S/1.50): encarece la adquisición de tráfico.`});
+  if(m.cpc>BENCH.cpc.ok)alerts.push({text:`CPC promedio <b>${cur_(m.cpc)}</b>, por encima del umbral saludable (${cur_(BENCH.cpc.ok)}${D.currency==='USD'&&TC_PEN?' = S/ '+BENCH_CPC_SOLES.ok.toFixed(2):''}): encarece la adquisición de tráfico.`});
   if(benchCpl&&m.leads>0){if(m.cpl>benchCpl.max*1.2)alerts.push({text:`CPL actual (${cur_(m.cpl)}) supera la meta de ${D.product==='palta'?'Palta':'Pitahaya'} (${cur_(benchCpl.min)}–${cur_(benchCpl.max)}) en más de 20%.`});
     else if(m.cpl<=benchCpl.max)insights.push({text:`CPL (${cur_(m.cpl)}) dentro de la meta saludable para ${D.product==='palta'?'Palta':'Pitahaya'} (${cur_(benchCpl.min)}–${cur_(benchCpl.max)}).`});}
   const camps=campRowsData(D).filter(c=>c.spend>0);
@@ -1391,7 +1401,7 @@ function renderInsights(data,D){
 
 // ═══════════════ 7 · RECOMENDACIONES ═══════════════
 function renderRecomendaciones(data,D,m){
-  const sec=document.getElementById('sec-recomendaciones');const cur_=n=>cur(n,D.currency);
+  const sec=document.getElementById('sec-recomendaciones');const cur_=n=>curS(n,D.currency);
   const camps=campRowsData(D).filter(c=>c.spend>0);const b=BENCH.cpl[D.product];
   const toScale=camps.filter(c=>c.formLeads>0&&(!b||c.cpl<=b.max)&&c.ctr>=BENCH.ctr.ok&&c.frequency<=BENCH.freq.ok).sort((a,b)=>a.cpl-b.cpl).slice(0,5);
   const toPause=camps.filter(c=>(c.results===0&&c.spend>30)||c.frequency>BENCH.freq.watch||c.ctr<BENCH.ctr.bad).slice(0,5);
@@ -1665,16 +1675,33 @@ function leadsExportar(){
   toast('✓ Exportados '+rows.length+' leads');
 }
 
-// ═══════════════ v3.2 · MONEDA EN SOLES E IGV ═══════════════
-// Meta cobra en dólares. Al cargar, se pide el dólar oficial del día al servidor de Gerencia
-// (ruta /tipo-cambio: SUNAT, con respaldo del BCRP) y se convierten a soles TODOS los montos que
-// vienen de Meta, una sola vez y antes de cualquier cálculo. Así las metas de Gerencia (en soles
-// y sin IGV) se comparan contra cifras en la misma moneda. Si el tipo de cambio no llega, NO se
-// inventa un valor: se muestran dólares y los semáforos de costo quedan "sin comparar".
+// ═══════════════ v3.4 · DÓLARES CON SOLES DE REFERENCIA, E IGV ═══════════════
+// Meta cobra en dólares y la jefa decidió (24/09) ver todo en dólares. Al cargar se pide el dólar
+// oficial del día al servidor de Gerencia (ruta /tipo-cambio: SUNAT, con respaldo del BCRP) solo para
+// mostrar el equivalente en soles en letras pequeñas y para pasar a dólares las metas de Gerencia,
+// que están en soles y sin IGV. Si el tipo de cambio no llega, NO se inventa un valor: no se muestran
+// soles y el semáforo del costo por lead queda "sin comparar".
+// (Hasta la v3.3 los montos se convertían a soles; esas funciones tcConvertir… ya no se usan y se
+// conservan solo por si se vuelve a esa forma.)
 const TC_URL="https://pachamama-backend-v0v0.onrender.com/tipo-cambio";
 const IGV_TASA=0.18; // IGV: se paga y no se recupera (decisión de Gerencia)
 const BENCH_CPL_SOLES=BENCH.cpl; // metas de costo por lead: en soles y SIN IGV
+const BENCH_CPC_SOLES={good:BENCH.cpc.good,ok:BENCH.cpc.ok}; // costo por clic saludable, en soles
 function conIGV(n){return(parseFloat(n)||0)*(1+IGV_TASA);}
+// Deja las metas en la moneda en que se muestran los montos.
+function tcAjustarMetas(moneda){
+  if(moneda!=='USD'){BENCH.cpl=BENCH_CPL_SOLES;BENCH.cpc={good:BENCH_CPC_SOLES.good,ok:BENCH_CPC_SOLES.ok};return;}
+  if(TC_PEN){
+    const k=1/TC_PEN,cv=function(b){return b?{min:b.min*k,max:b.max*k}:null;};
+    BENCH.cpl={palta:cv(BENCH_CPL_SOLES.palta),pitahaya:cv(BENCH_CPL_SOLES.pitahaya),other:null};
+    BENCH.cpc={good:BENCH_CPC_SOLES.good*k,ok:BENCH_CPC_SOLES.ok*k};
+  }else{
+    BENCH.cpl={palta:null,pitahaya:null,other:null};
+    BENCH.cpc={good:BENCH_CPC_SOLES.good,ok:BENCH_CPC_SOLES.ok}; // como en la v2.4, sin conversión
+  }
+}
+// Texto de una meta en soles con su equivalente en dólares, ej. "US$ 2.95 – US$ 3.84 (S/ 10 – 13)".
+function metaTxt(bUsd,bSol,c){return bUsd?cur(bUsd.min,c)+' – '+cur(bUsd.max,c)+(c==='USD'&&bSol?' <span class="sol">(S/ '+bSol.min+' – '+bSol.max+')</span>':''):'Sin meta definida';}
 
 async function tcPrepararConversion(moneda){
   if(moneda!=='USD')return{k:null,moneda:moneda||'PEN',tc:null,error:null};
@@ -1706,9 +1733,9 @@ function tcAvisoHtml(D){
   if(!D||D.monedaOrigen!=='USD')return'';
   if(D.tc){
     const fuente=D.tc.fuente==='BCRP'?'del BCRP (Banco Central)':'de SUNAT';
-    return'<div class="icard '+(D.tc.desactualizado?'warn':'good')+'" style="margin-bottom:14px"><span class="ico">💱</span><div>Montos en <b>soles</b>. Meta cobra en dólares y se convirtieron al dólar oficial '+fuente+' del '+esc(D.tc.fecha||'')+': <b>S/ '+Number(D.tc.venta).toFixed(3)+'</b> por US$. Es referencial y se usa el mismo valor para todo el período. Los montos son <b>sin IGV</b>; donde dice "con IGV" se suma el 18%.'+(D.tc.desactualizado?' <b>Aviso:</b> hoy no se pudo actualizar el tipo de cambio; se usa el último valor conocido.':'')+'</div></div>';
+    return'<div class="icard '+(D.tc.desactualizado?'warn':'good')+'" style="margin-bottom:14px"><span class="ico">💱</span><div>Montos en <b>dólares</b>, como cobra Meta. En letras pequeñas va el equivalente en soles, al dólar oficial '+fuente+' del '+esc(D.tc.fecha||'')+': <b>S/ '+Number(D.tc.venta).toFixed(3)+'</b> por US$ (referencial, mismo valor para todo el período). Las metas de Gerencia, que están en soles, se pasaron a dólares con ese valor. Los montos son <b>sin IGV</b>; donde dice "con IGV" se suma el 18%.'+(D.tc.desactualizado?' <b>Aviso:</b> hoy no se pudo actualizar el tipo de cambio; se usa el último valor conocido.':'')+'</div></div>';
   }
-  return'<div class="icard warn" style="margin-bottom:14px"><span class="ico">💱</span><div>No se pudo obtener el dólar oficial ('+esc(D.tcError||'sin respuesta')+'). Por eso los montos se muestran <b>en dólares</b> y los semáforos de costo por lead quedan <b>sin comparar</b> contra la meta en soles, para no dar un resultado equivocado. Vuelve a cargar en unos minutos.</div></div>';
+  return'<div class="icard warn" style="margin-bottom:14px"><span class="ico">💱</span><div>Montos en <b>dólares</b>. No se pudo obtener el dólar oficial ('+esc(D.tcError||'sin respuesta')+'), así que no se muestra el equivalente en soles y el semáforo del costo por lead queda <b>sin comparar</b> contra la meta, que está en soles, para no dar un resultado equivocado. Vuelve a cargar en unos minutos.</div></div>';
 }
 
 // ═══════════════ v3.2 · CONTACTADOS A TIEMPO EN EL EMBUDO ═══════════════
@@ -1799,7 +1826,7 @@ function dinEnRango(filas,desde,hasta){return filas.filter(function(r){return r.
 // Factor para pasar montos de la moneda de la cuenta a la moneda en que se muestra el tablero.
 function dinFactor(D){return(D&&D.monedaOrigen==='USD'&&D.currency==='PEN'&&D.tc)?Number(D.tc.venta):1;}
 function dinUsd(n){return'US$ '+(parseFloat(n)||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function dinCosto(inv,n,D){return n>0?cur(inv/n,D.currency):'<span style="color:var(--hint)">—</span>';}
+function dinCosto(inv,n,D){return n>0?curS(inv/n,D.currency):'<span style="color:var(--hint)">—</span>';}
 
 function dinBuscarForm(o,cb){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){const v=o[k];if(k==='lead_gen_form_id'&&v)cb(String(v));else if(v&&typeof v==='object')dinBuscarForm(v,cb);});}
 async function dinAdsFormularios(acct){
@@ -1843,20 +1870,18 @@ function dinPresupuestoHtml(D){
   const dim=new Date(y,mo,0).getDate(),ritmo=g/Math.max(1,dia),proy=ritmo*dim,pctG=g/DIN_PRESUPUESTO_USD*100,pctP=proy/DIN_PRESUPUESTO_USD*100;
   const quedan=dim-dia+1,resta=DIN_PRESUPUESTO_USD-g,ideal=resta>0?resta/quedan:0;
   const st=pctP>105?'r':pctP<85?'a':'g',stLbl={r:'Se pasará',a:'Por debajo',g:'En ritmo'}[st];
-  // Montos principales en soles (dólar oficial del día). El presupuesto se fija en dólares, así que el
-  // dólar queda como referencia debajo. Sin tipo de cambio, todo se muestra en dólares.
-  const tc=dinFactor(D),enSoles=tc!==1;
-  const mon=function(n){return enSoles?cur(n*tc,'PEN'):dinUsd(n);};
-  const ref=function(n){return enSoles?' ('+dinUsd(n)+')':'';};
+  // v3.4 · Todo en dólares; el equivalente en soles va en letras pequeñas (si llegó el dólar del día).
+  const mon=function(n){return curS(n,'USD');};
+  const ref=function(){return'';};
   const w=Math.min(100,pctG);
   return'<div class="cc">'+tit
-    +(enSoles?'<div style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px">Presupuesto en soles: <b>'+cur(DIN_PRESUPUESTO_USD*tc,'PEN')+'</b> al dólar oficial de hoy (S/ '+tc.toFixed(3)+'). Referencial: Meta cobra en dólares.</div>':'')
+    +(TC_PEN?'<div style="font-size:11px;color:var(--muted);margin:-4px 0 10px">En soles: '+cur(DIN_PRESUPUESTO_USD*TC_PEN,'PEN')+' al dólar oficial de hoy (S/ '+TC_PEN.toFixed(3)+'), referencial.</div>':'')
     +'<div class="kgrid">'
     +kc('💵 Gastado este mes',mon(g),null,null,null,false,'Del 1 al '+dia+ref(g)+' · con IGV '+mon(conIGV(g)))
     +kc('📊 Del presupuesto',pctG.toFixed(0)+'%',null,null,null,false,'Van '+dia+' de '+dim+' días ('+(dia/dim*100).toFixed(0)+'% del mes)')
     +kc('⚡ Ritmo diario',mon(ritmo),null,null,null,false,'Promedio del mes'+ref(ritmo))
     +kc('🔮 Proyección a fin de mes',mon(proy),st,stLbl,null,false,pctP.toFixed(0)+'% del presupuesto'+ref(proy)+' · con IGV '+mon(conIGV(proy)))
-    +kc('🎯 Para cerrar en el presupuesto',resta>0?mon(ideal):'Tope alcanzado',resta>0?null:'r',resta>0?null:'Tope alcanzado',null,false,resta>0?'Por día'+ref(ideal)+', durante los '+quedan+' días que quedan (incluye hoy)':'Ya se gastó '+mon(-resta)+ref(-resta)+' por encima')
+    +kc('🎯 Para cerrar en US$ '+DIN_PRESUPUESTO_USD.toLocaleString('es-PE'),resta>0?mon(ideal):'Tope alcanzado',resta>0?null:'r',resta>0?null:'Tope alcanzado',null,false,resta>0?'Por día'+ref(ideal)+', durante los '+quedan+' días que quedan (incluye hoy)':'Ya se gastó '+mon(-resta)+ref(-resta)+' por encima')
     +'</div>'
     +'<div class="fbar-track" style="margin-top:4px"><div class="fbar-fill" style="width:'+Math.max(2,w)+'%;background:'+(pctG>100?RED:pctG>(dia/dim*100)*1.05?AMBER:GREEN)+'">'+pctG.toFixed(0)+'%</div></div>'
     +'<div style="font-size:11px;color:var(--hint);margin-top:6px;line-height:1.55">El gasto de hoy todavía está en curso. "En ritmo" = la proyección queda entre 85% y 105% del presupuesto.</div>'
@@ -1872,23 +1897,26 @@ function dinCascadaHtml(D,filasPer,filasHist,invPer,invHist,totalPer){
   const rango=D.since===D.until?D.since:D.since+' → '+D.until;
   return'<div class="tcard"><div class="tcard-h">🪜 Cascada de costo por etapa · con IGV</div><div class="tscroll"><table>'
     +'<thead><tr><th>Etapa</th><th>Período<br><span style="font-weight:500">'+esc(rango)+'</span></th><th>Costo de cada uno</th><th>Desde el '+esc(DIN_HIST_DESDE.split('-').reverse().join('/'))+'</th><th>Costo de cada uno</th></tr></thead><tbody>'
-    +'<tr><td><b>Inversión en Meta (con IGV)</b></td><td class="num" colspan="2"><b>'+cur(invPer,D.currency)+'</b></td><td class="num" colspan="2"><b>'+(invHist==null?'…':cur(invHist,D.currency))+'</b></td></tr>'
+    +'<tr><td><b>Inversión en Meta (con IGV)</b></td><td class="num" colspan="2"><b>'+curS(invPer,D.currency)+'</b></td><td class="num" colspan="2"><b>'+(invHist==null?'…':curS(invHist,D.currency))+'</b></td></tr>'
     +filas+'</tbody></table></div>'
     +'<div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">Toda la inversión de Meta del período (con 18% de IGV) dividida entre los leads que llegaron a cada etapa o más adelante. '
     +'Solo cuenta leads que entraron por un <b>formulario de Meta</b>: '+leadsN(eP.Lead)+' de '+leadsN(totalPer)+' leads que entraron al CRM en el período. Los importados (Evolta, TikTok) y los que llegaron por mensaje no tienen campaña y no se cuentan. '
     +'<b>Ojo:</b> los leads recientes todavía pueden avanzar, así que en períodos cortos el costo por venta se ve más alto de lo que terminará siendo.</div></div>';
 }
 function dinRetornoHtml(D,filasPer,filasHist,invPer,invHist){
+  // El precio del lote está en soles; la inversión, en la moneda de la cuenta (dólares). El lote se
+  // pasa a esa moneda con el dólar oficial del día. Sin dólar del día no se calcula.
+  const lote=D.currency==='PEN'?DIN_VALOR_LOTE:(TC_PEN?DIN_VALOR_LOTE/TC_PEN:null);
   function tarjeta(titulo,filas,inv){
     if(!filas||inv==null)return kc(titulo,'…',null,null,null,true,'Cargando…');
-    const v=dinEmbudo(filas).Venta,valor=v*DIN_VALOR_LOTE,equil=inv/DIN_VALOR_LOTE;
+    const v=dinEmbudo(filas).Venta,valor=v*lote,equil=inv/lote;
     if(!(inv>0))return kc(titulo,'–',null,null,null,true,'Sin inversión en el período');
     if(!v)return kc(titulo,'–',null,null,null,true,'Aún no hay ventas de estos leads · para cubrir '+cur(inv,D.currency)+' con IGV hace falta '+(equil<1?'menos de 1 lote':equil.toFixed(1)+' lotes'));
     const r=valor/inv;
-    return kc(titulo,cur(r,D.currency),r>=1?'g':'r',r>=1?'Cubre la inversión':'No la cubre',null,true,'en ventas por cada S/ 1 invertido · '+leadsN(v)+' venta(s) × '+cur(DIN_VALOR_LOTE,'PEN')+' = '+cur(valor,'PEN')+' / inversión con IGV '+cur(inv,D.currency));
+    return kc(titulo,cur(r,D.currency),r>=1?'g':'r',r>=1?'Cubre la inversión':'No la cubre',null,true,'en ventas por cada '+cur(1,D.currency).replace(/[.,]00$/,'')+' invertido · '+leadsN(v)+' venta(s) × '+cur(lote,D.currency)+' = '+curS(valor,D.currency)+' / inversión con IGV '+curS(inv,D.currency));
   }
-  const nota=D.currency!=='PEN'?'<div class="icard warn"><span class="ico">💱</span><div>Sin el dólar oficial no se puede comparar el precio del lote (en soles) con la inversión (en dólares). Vuelve a cargar en unos minutos.</div></div>':'';
-  return'<div class="cc"><div class="cc-ttl">💹 Retorno por lote vendido</div><div class="cc-desc">Ventas × S/ '+DIN_VALOR_LOTE.toLocaleString('es-PE')+' (precio total del lote) ÷ inversión con IGV. Venta = el lead llegó a la etapa "Leads ganados" en Kommo.</div>'
+  const nota=!lote?'<div class="icard warn"><span class="ico">💱</span><div>Sin el dólar oficial no se puede comparar el precio del lote (en soles) con la inversión (en dólares). Vuelve a cargar en unos minutos.</div></div>':'';
+  return'<div class="cc"><div class="cc-ttl">💹 Retorno por lote vendido</div><div class="cc-desc">Ventas × precio total del lote (S/ '+DIN_VALOR_LOTE.toLocaleString('es-PE')+(lote&&D.currency!=='PEN'?' = '+cur(lote,D.currency)+' al dólar de hoy':'')+') ÷ inversión con IGV. Venta = el lead llegó a la etapa "Leads ganados" en Kommo.</div>'
     +(nota||'<div class="kgrid">'+tarjeta('📅 Período elegido',filasPer,invPer)+tarjeta('📈 Desde el '+DIN_HIST_DESDE.split('-').reverse().join('/'),filasHist,invHist)+'</div>')
     +'</div>';
 }
@@ -1909,7 +1937,7 @@ function dinCampanasHtml(D,filasPer,filasHist,f){
   const cuerpo=lista.length?lista.map(function(x){
     const sinCamp=x.n===DIN_SIN_CAMPANA;
     return'<tr><td class="namecell" title="'+esc(x.n)+'">'+(x.e.Venta>0?'🏆 ':'')+'<b>'+esc(x.n)+'</b></td>'
-      +'<td class="num">'+(sinCamp?'—':cur(x.inv,D.currency))+'</td><td class="num">'+leadsN(x.e.Lead)+'</td><td class="num">'+leadsN(x.e.Meet)+'</td><td class="num">'+leadsN(x.e.Separacion)+'</td><td class="num"><b>'+leadsN(x.e.Venta)+'</b></td>'
+      +'<td class="num">'+(sinCamp?'—':curS(x.inv,D.currency))+'</td><td class="num">'+leadsN(x.e.Lead)+'</td><td class="num">'+leadsN(x.e.Meet)+'</td><td class="num">'+leadsN(x.e.Separacion)+'</td><td class="num"><b>'+leadsN(x.e.Venta)+'</b></td>'
       +'<td class="num">'+(sinCamp?'—':dinCosto(x.inv,x.e.Lead,D))+'</td><td class="num">'+(sinCamp?'—':dinCosto(x.inv,x.e.Meet,D))+'</td><td class="num"><b>'+(sinCamp?'—':dinCosto(x.inv,x.e.Venta,D))+'</b></td></tr>';
   }).join(''):'<tr><td colspan="9" class="empty">Sin inversión ni leads de formulario en este período.</td></tr>';
   const sinForm=Object.keys(X.formularios||{}).length;
@@ -1935,8 +1963,8 @@ function dinNoContestarHtml(D,invPer,leadsPer){
   const cpl=invPer/leadsPer,valor=tarde.length*cpl,sem=r.dias/7;
   return tit+'<div class="kgrid">'
     +kc('⌛ Fuera de tiempo',leadsN(tarde.length),tarde.length?'r':'g',tarde.length?'Revisar':'Todos a tiempo',null,false,'de '+leadsN(form.length)+' leads de formulario · '+leadsN(sin)+' sin atender')
-    +kc('💸 Inversión en esos leads',cur(valor,D.currency),null,null,null,false,leadsN(tarde.length)+' × '+cur(cpl,D.currency)+' por lead (con IGV)')
-    +(r.dias>=7?kc('📆 Por semana',cur(valor/sem,D.currency),null,null,null,false,'Promedio de '+sem.toFixed(1).replace('.',',')+' semanas'):'')
+    +kc('💸 Inversión en esos leads',curS(valor,D.currency),null,null,null,false,leadsN(tarde.length)+' × '+cur(cpl,D.currency)+' por lead (con IGV)')
+    +(r.dias>=7?kc('📆 Por semana',curS(valor/sem,D.currency),null,null,null,false,'Promedio de '+sem.toFixed(1).replace('.',',')+' semanas'):'')
     +'</div><div style="font-size:11px;color:var(--hint);line-height:1.55">No es plata perdida segura: es lo que costó traer leads que se atendieron tarde o nunca, donde es más probable perderlos. '
     +(otras?leadsN(otras)+' leads más del período entraron por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se valorizan porque no tienen campaña.':'')+'</div>';
 }
@@ -1945,7 +1973,7 @@ function renderDinero(D){dinPintar();dinCargarExtra(false);}
 function dinPintar(){
   const sec=document.getElementById('sec-dinero');const D=LAST_DATA;if(!sec||!D)return;
   let h='<div class="sechead"><h2>💰 Del lead al dinero</h2><span class="cnt">'+esc(D.since===D.until?D.since:D.since+' → '+D.until)+'</span></div>'
-    +'<p class="subtitle">Sigue la plata desde el anuncio hasta el lote vendido: cuánto cuesta cada etapa, qué campaña trae clientes, cómo va el presupuesto y cuánto vuelve en ventas. Montos en '+(D.currency==='PEN'?'soles (referenciales)':esc(D.currency))+' y <b>con IGV</b> salvo donde se indica.</p>';
+    +'<p class="subtitle">Sigue la plata desde el anuncio hasta el lote vendido: cuánto cuesta cada etapa, qué campaña trae clientes, cómo va el presupuesto y cuánto vuelve en ventas. Montos en '+(D.currency==='USD'?'dólares'+(TC_PEN?' (en letras pequeñas, soles referenciales)':''):(D.currency==='PEN'?'soles':esc(D.currency)))+' y <b>con IGV</b> salvo donde se indica.</p>';
   const ok=KOMMO_DATA&&KOMMO_DATA.ok===true;
   const f=dinFactor(D),X=DIN_EXTRA.data;
   const invPer=conIGV(parseFloat(((D.acctIns.data||[])[0]||{}).spend||0));
