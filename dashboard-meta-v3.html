@@ -399,7 +399,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.2 (prueba)</b> (pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.2.1 (prueba)</b> (pestaña Leads · montos en soles con dólar oficial · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -1461,6 +1461,31 @@ function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.
 function leadsOnOpen(){leadsCargar(false);}
 function renderLeads(D){leadsPintar();if(leadsTabActiva())leadsCargar(false);}
 
+// Un intento de pedir los leads. Devuelve los datos o lanza un Error con el motivo real que da el
+// servidor (por ejemplo, un límite de consultas de Kommo), marcado como reintentable si fue un fallo del servidor.
+async function leadsPedir(url){
+  let resp;
+  try{resp=await fetch(url,{cache:'no-store'});}
+  catch(e){const err=new Error('sin conexión con el servidor de Gerencia');err.reintentable=true;throw err;}
+  if(resp.status===401)throw new Error('CLAVE');
+  if(!resp.ok){
+    let det='';try{const j=await resp.json();if(j&&j.error)det=String(j.error);}catch(e){}
+    const err=new Error('HTTP '+resp.status+(det?' · '+det.slice(0,240):''));
+    err.reintentable=resp.status>=500;
+    throw err;
+  }
+  const data=await resp.json();
+  if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+  return data;
+}
+// Explica en simple qué hacer según el motivo del fallo.
+function leadsPista(msg){
+  const m=String(msg||'');
+  if(/429/.test(m))return 'El CRM (Kommo) limita cuántas consultas se le pueden hacer por segundo. Espera 1 o 2 minutos y pulsa Reintentar.';
+  if(/403/.test(m))return 'El CRM (Kommo) bloqueó por un rato las consultas del servidor porque llegaron demasiadas seguidas. Espera unos minutos; si sigue, avisa a quien administra el Sala de Control.';
+  if(/HTTP 5\d\d|sin conexión/.test(m))return 'Es una falla momentánea del servidor de Gerencia. Espera un minuto y pulsa Reintentar; si sigue, avisa a quien lo administra.';
+  return '';
+}
 async function leadsCargar(forzar){
   const r=leadsRango();
   if(!r||r.dias>LEADS_MAX_DIAS){leadsPintar();return;}
@@ -1469,11 +1494,17 @@ async function leadsCargar(forzar){
   if(LEADS_LOADING)return;
   LEADS_LOADING=true;LEADS_ERR='';leadsPintar();embudoSlaActualizar();
   try{
-    const resp=await fetch(LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta,{cache:'no-store'});
-    if(resp.status===401)throw new Error('CLAVE');
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
-    if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+    // Un tropiezo del servidor (error 5xx o corte de conexión) se reintenta UNA vez tras 4 segundos.
+    // La falta de clave (401) no se reintenta. Si sigue fallando, se muestra el motivo real.
+    const url=LEADS_URL+'?desde='+r.desde+'&hasta='+r.hasta;
+    let data=null,intento=0;
+    for(;;){
+      try{data=await leadsPedir(url);break;}
+      catch(e){
+        if(e&&e.reintentable&&intento<1){intento++;await new Promise(function(ok){setTimeout(ok,4000);});continue;}
+        throw e;
+      }
+    }
     LEADS_CACHE={key:r.key,ts:Date.now(),data:data};LEADS_VER_TODO=false;
   }catch(e){LEADS_ERR=(e&&e.message)||'error desconocido';}
   finally{
@@ -1542,7 +1573,7 @@ function leadsPintar(){
   if(r.dias>LEADS_MAX_DIAS){sec.innerHTML=h+'<div class="erbox">El rango elegido tiene '+leadsN(r.dias)+' días. Para no sobrecargar el CRM, esta pestaña trabaja con hasta 3 meses: elige un rango más corto arriba.</div>';return;}
   if(LEADS_LOADING){sec.innerHTML=h+'<div class="loading"><div class="spinner"></div>Cargando leads desde el CRM… puede tardar unos segundos.</div>';return;}
   if(LEADS_ERR==='CLAVE'){sec.innerHTML=h+'<div class="erbox">⚠ Falta la clave de Gerencia o no es correcta. Cierra esta pestaña del navegador, ábrela de nuevo e ingresa la clave cuando la pida. El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
-  if(LEADS_ERR){sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
+  if(LEADS_ERR){const pista=leadsPista(LEADS_ERR);sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')+'El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
   if(!d){sec.innerHTML=h+'<div class="empty">Los leads se cargan al abrir esta pestaña.<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(false)">Cargar leads del período</button></div></div>';return;}
 
   const filas=d.filas||[];
