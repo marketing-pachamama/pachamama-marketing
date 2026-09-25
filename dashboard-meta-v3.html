@@ -461,7 +461,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6.1 (prueba)</b> (alertas ·calidad de datos y creativos ·montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6.2 (prueba)</b> (alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -2087,8 +2087,8 @@ function dinSlaActualizar(){
 //  · Creativos: costo por lead de cada anuncio semana a semana (últimas 8 semanas).
 //  · Audiencias: desglose por ubicación (Feed, Reels, Stories…) y por dispositivo.
 // Hace 3 consultas propias a Meta por el mismo puente de Cloudflare. No consulta el servidor de Gerencia.
-// OJO: el puente de Kommo fecha cada lead en hora UTC (un lead de las 8 p. m. de Lima figura al día
-// siguiente); por eso la comparación Meta–CRM se juzga por el total del período y no día por día.
+// El semáforo Meta–CRM se juzga por el total del período. Desde el 25/09 el puente de Kommo fecha cada
+// lead en hora de Lima (antes usaba hora UTC y los leads de la noche caían al día siguiente).
 // Para quitarlo: borrar este bloque y su línea en renderAll.
 const CAL_SEMANAS=8;
 let CAL_EXTRA={key:'',data:null,err:'',cargando:false};
@@ -2165,12 +2165,12 @@ function calEmbudoHtml(D){
   const c=calCuadra(metaTot,crmTot),dif=crmTot-metaTot;
   const lectura=c.st==='n'?'Muy pocos leads en el período para comparar: elige un rango más largo.'
     :dif<0?'Al CRM llegaron <b>'+leadsN(-dif)+' leads menos</b> de los que contó Meta. '+(c.st==='g'?'Es una diferencia normal (horarios de corte, duplicados fusionados).':'Conviene revisar que la conexión de los formularios de Meta con Kommo no esté perdiendo leads.')
-    :dif>0?'El CRM tiene <b>'+leadsN(dif)+' leads más</b> que Meta. '+(c.st==='g'?'Es una diferencia normal.':'Puede haber leads duplicados, leads que Meta no atribuyó a un anuncio, o leads de días vecinos (el CRM fecha en hora UTC).')
+    :dif>0?'El CRM tiene <b>'+leadsN(dif)+' leads más</b> que Meta. '+(c.st==='g'?'Es una diferencia normal.':'Puede haber leads duplicados o leads que Meta no atribuyó a un anuncio.')
     :'Los números coinciden exactamente.';
   h+='<div class="crow"><div class="cc"><div class="cc-ttl">🔗 Leads de Meta contra leads en el CRM</div><div class="cc-desc">Meta cuenta cada formulario enviado; el CRM, cada lead que se creó con etiqueta de formulario.</div>'
     +'<div class="kgrid">'+kc('📣 Según Meta',leadsN(metaTot),null,null,null,true,'Formularios enviados')+kc('🗂 En el CRM',leadsN(crmTot),c.st,c.t,null,true,(dif>=0?'+':'−')+leadsN(Math.abs(dif))+' ('+(metaTot?(Math.abs(dif)/metaTot*100).toFixed(0):'0')+'%) · verde hasta 10%, ámbar hasta 25%')+'</div>'
     +'<div style="font-size:12.5px;line-height:1.6">'+lectura+'</div></div>'
-    +'<div class="cc"><div class="cc-ttl">📅 Por día</div><div class="cc-desc">Referencial: el CRM fecha en hora UTC, así que los leads que entran después de las 7 p. m. de Lima figuran al día siguiente. Las diferencias de un día se compensan con el siguiente; lo que importa es el total.</div><div class="chart-h"><canvas id="calChDia"></canvas></div></div></div>';
+    +'<div class="cc"><div class="cc-ttl">📅 Por día</div><div class="cc-desc">Leads de formulario por día, según Meta y según el CRM, en hora de Lima. Una diferencia de 1 o 2 leads en un día es normal.</div><div class="chart-h"><canvas id="calChDia"></canvas></div></div></div>';
   // Por campaña
   if(!X){h+='<div class="tcard"><div class="tcard-h">📋 Por campaña</div>'+(DIN_EXTRA.err?'<div class="empty">No se pudo leer qué formulario usa cada anuncio ('+esc(DIN_EXTRA.err)+').</div>':'<div class="loading"><div class="spinner"></div>Cargando campañas…</div>')+'</div>';}
   else{
