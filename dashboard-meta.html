@@ -476,7 +476,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.8</b> (anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.9</b> (CAC real en Datos clave · anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -1349,16 +1349,16 @@ function renderEmbudo(D){
     const avance=mm.avance_pct!=null?mm.avance_pct:(metaLotes?(mm.lotes_vendidos||0)/metaLotes*100:0);
     datosClaveHtml=`<div class="cc" style="margin-top:16px">
       <div class="cc-ttl">📌 Datos clave · no afectan el embudo</div>
-      <div class="cc-desc">Métricas del panel de Gerencia (backend Pachamama) — informativas, no alteran el conteo de leads de arriba.</div>
+      <div class="cc-desc">Métricas del panel de Gerencia (backend Pachamama) y el CAC real (Meta + CRM) — informativas, no alteran el conteo de leads de arriba.</div>
       <div class="kgrid">
         ${kc('🏆 Lotes vendidos (mes)',fmt(mm.lotes_vendidos||0),null,null,null,true,'Meta: '+fmt(metaLotes)+' lotes · '+(avance||0).toFixed(0)+'% de avance')}
         ${kc('📥 Leads hoy',fmt(pd.leads_hoy||0),null,null,null,true,'')}
-        ${kc('💰 Tope de CAC mensual',pd.cac_limite_mensual?Number(pd.cac_limite_mensual).toLocaleString('es-PE'):'–',null,null,null,false,'Moneda por confirmar con quien lo configuró · CAC real: sin medir aún')}
+        <div id="cacReal" style="display:contents">${cacRealHtml(D)}</div>${/* v3.9: reemplaza el "Tope de CAC mensual" fijo del servidor (150,000, sin uso) */''}
         ${kc('⏱ Objetivo de contacto',(pd.sla_minutos_objetivo||10)+' min',null,null,null,false,'Meta ≥75% de leads contactados dentro de este tiempo')}
       </div>
     </div>`;
   }else{
-    datosClaveHtml=`<div class="cc" style="margin-top:16px"><div class="cc-ttl">📌 Datos clave</div><div class="empty">${/401/.test(D.pachamamaError||'')?'Falta la clave de Gerencia para ver estos datos. '+claveBotonHtml():'No se pudo conectar al servidor de Gerencia.'+(D.pachamamaError?' '+esc(D.pachamamaError):'')}</div></div>`;
+    datosClaveHtml=`<div class="cc" style="margin-top:16px"><div class="cc-ttl">📌 Datos clave</div><div class="kgrid"><div id="cacReal" style="display:contents">${cacRealHtml(D)}</div></div><div class="empty">${/401/.test(D.pachamamaError||'')?'Falta la clave de Gerencia para ver estos datos. '+claveBotonHtml():'No se pudo conectar al servidor de Gerencia.'+(D.pachamamaError?' '+esc(D.pachamamaError):'')}</div></div>`;
   }
 
   // ── Observaciones generales (auto) ──
@@ -1939,6 +1939,7 @@ async function dinCargarExtra(forzar){
   }
   dinPintar();
   try{calPintar();}catch(e){} // la comparación por campaña del Embudo usa los mismos formularios
+  try{cacActualizar();}catch(e){} // v3.9: el CAC real de "Datos clave" usa la misma inversión desde el 01/06
 }
 
 // ── Bloques ──
@@ -2543,6 +2544,25 @@ function telAvisoHtml(){
   if(TEL.err==='CLAVE')return'Para buscar por teléfono falta la clave de Gerencia: '+claveBotonHtml();
   return'No se pudieron traer los teléfonos ('+esc(TEL.err||'sin respuesta')+').';
 }
+
+// ═══════════════ v3.9 · CAC REAL EN "DATOS CLAVE" (Embudo) ═══════════════
+// Reemplaza el "Tope de CAC mensual" (150,000 fijo del servidor, puesto un mes sin ventas y sin uso) por el
+// CAC real: inversión en Meta desde el 01/06, con IGV, ÷ ventas de leads que entraron por un formulario de
+// Meta. Es la misma cuenta que la cascada de 💰 (fila "Ventas", columna "Desde el 01/06"). La venta se cuenta
+// por la fecha de entrada del lead (el CRM no entrega la fecha de venta). Se actualiza cuando llega el gasto.
+function cacRealHtml(D){
+  const tit='💰 CAC real · costo por cliente';
+  const X=DIN_EXTRA.data,desde=DIN_HIST_DESDE.split('-').reverse().join('/');
+  if(!(KOMMO_DATA&&KOMMO_DATA.ok===true))return kc(tit,'–',null,null,null,false,'Sin los datos del CRM no se pueden contar las ventas');
+  if(!X)return kc(tit,'…',null,null,null,false,DIN_EXTRA.err?'No se pudo leer la inversión en Meta':'Calculando con la inversión de Meta…');
+  const inv=conIGV((X.hist||[]).reduce(function(s,r){return s+parseFloat(r.spend||0);},0)*dinFactor(D));
+  const ventas=dinEmbudo(dinEnRango(dinFilasMeta(KOMMO_DATA.rows||[],null),DIN_HIST_DESDE,'9999-12-31')).Venta;
+  if(!ventas)return kc(tit,'–',null,null,null,false,'Aún no hay ventas de leads de Meta desde el '+desde+' · inversión con IGV '+cur(inv,D.currency));
+  const cac=inv/ventas,lote=D.currency==='PEN'?DIN_VALOR_LOTE:(TC_PEN?DIN_VALOR_LOTE/TC_PEN:null);
+  return kc(tit,curS(cac,D.currency),null,null,null,false,'Inversión en Meta desde el '+desde+' con IGV ('+cur(inv,D.currency)+') ÷ '+leadsN(ventas)+' venta(s) de leads de Meta'
+    +(lote?' · '+(cac/lote*100).toFixed(1)+'% del precio de un lote':'')+' · por campaña y anuncio en 💰');
+}
+function cacActualizar(){const c=document.getElementById('cacReal');if(c&&LAST_DATA)c.innerHTML=cacRealHtml(LAST_DATA);}
 
 // ═══════════════ v3.8 · ANUNCIO DE CADA LEAD (fase 5, cierre) ═══════════════
 // Solo LEE. Meta entrega, por el puente de Cloudflare, la hora, el formulario y el anuncio de cada lead
