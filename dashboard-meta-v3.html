@@ -468,7 +468,7 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="navtab" data-s="creativos" onclick="showSection(this,'creativos')">🖼 Creativos</button>
       <button class="navtab" data-s="audiencias" onclick="showSection(this,'audiencias')">👥 Audiencias</button>
       <button class="navtab" data-s="embudo" onclick="showSection(this,'embudo')">🔻 Embudo</button>
-      <button class="navtab" data-s="dinero" onclick="showSection(this,'dinero')">💰 Lead → dinero</button>
+      <button class="navtab" data-s="dinero" onclick="showSection(this,'dinero');anuCargar(false)">💰 Lead → dinero</button>
       <button class="navtab" data-s="insights" onclick="showSection(this,'insights')">💡 Insights</button>
       <button class="navtab" data-s="recomendaciones" onclick="showSection(this,'recomendaciones')">✅ Plan de acción</button>
       <button class="navtab" data-s="leads" onclick="showSection(this,'leads');leadsOnOpen()">👤 Leads</button>
@@ -476,7 +476,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.7 (prueba)</b> (buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.8 (prueba)</b> (anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -1514,12 +1514,12 @@ function doShare(){
 // Lee /api/historial del backend de Gerencia: la MISMA ruta de solo lectura que usa el Sala de
 // Control. No escribe nada en Kommo. Se carga SOLO al abrir esta pestaña (no en cada carga del
 // dashboard) y guarda la respuesta 5 minutos por rango de fechas, para no sobrecargar el CRM.
-// Pendiente: filtro por anuncio y búsqueda por teléfono (el backend aún no entrega esos datos).
+// Búsqueda por teléfono: v3.7 (bloque BUSCADOR POR TELÉFONO). Anuncio de cada lead: v3.8 (bloque ANUNCIO DE CADA LEAD).
 const LEADS_URL="https://pachamama-backend-v0v0.onrender.com/api/historial";
 const LEADS_KOMMO="https://asistentegerenciaparadiseinmueblescom.kommo.com/leads/detail/";
 const LEADS_TTL_MS=5*60*1000, LEADS_MAX_DIAS=93, LEADS_PAGINA=300;
 let LEADS_CACHE={key:'',ts:0,data:null}, LEADS_LOADING=false, LEADS_ERR='', LEADS_VER_TODO=false;
-let LEADS_F={asesor:'',campania:'',etapa:'',atencion:'',reasig:false,q:''};
+let LEADS_F={asesor:'',campania:'',anuncio:'',etapa:'',atencion:'',reasig:false,q:''};
 
 function leadsN(v){return Number(v||0).toLocaleString('es-PE');}
 // 'YYYY-MM-DD' (día en Lima, UTC-5) -> segundos unix del inicio (o del final) de ese día.
@@ -1541,8 +1541,8 @@ function leadsTabActiva(){const b=document.querySelector('.navtab.on');return !!
 function leadsDatos(){const r=leadsRango();return(r&&LEADS_CACHE.data&&LEADS_CACHE.key===r.key)?LEADS_CACHE.data:null;}
 function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.sla_objetivo_min)||10;}
 
-function leadsOnOpen(){leadsCargar(false);}
-function renderLeads(D){leadsPintar();if(leadsTabActiva())leadsCargar(false);}
+function leadsOnOpen(){leadsCargar(false);anuCargar(false);/* v3.8 */}
+function renderLeads(D){leadsPintar();if(leadsTabActiva()){leadsCargar(false);anuCargar(false);/* v3.8 */}}
 
 // Un intento de pedir los leads. Devuelve los datos o lanza un Error con el motivo real que da el
 // servidor (por ejemplo, un límite de consultas de Kommo), marcado como reintentable si fue un fallo del servidor.
@@ -1604,6 +1604,7 @@ function leadsFiltrar(filas){
   return filas.filter(function(f){
     if(LEADS_F.asesor&&(f.asesor_final||'—')!==LEADS_F.asesor)return false;
     if(LEADS_F.campania&&(f.campania||'Directo / mensaje')!==LEADS_F.campania)return false;
+    if(LEADS_F.anuncio&&anuDeFila(f)!==LEADS_F.anuncio)return false; // v3.8
     if(LEADS_F.etapa&&(f.etapa_actual||'—')!==LEADS_F.etapa)return false;
     if(LEADS_F.atencion&&(f.semaforo||'sin')!==LEADS_F.atencion)return false;
     if(LEADS_F.reasig&&!f.reasignado)return false;
@@ -1667,12 +1668,15 @@ function leadsPintar(){
   if(LEADS_F.asesor&&asesores.indexOf(LEADS_F.asesor)===-1)LEADS_F.asesor='';
   if(LEADS_F.campania&&campanias.indexOf(LEADS_F.campania)===-1)LEADS_F.campania='';
   if(LEADS_F.etapa&&etapas.indexOf(LEADS_F.etapa)===-1)LEADS_F.etapa='';
+  const conAnu=anuListo(),anuncios=conAnu?leadsUnicos(filas,function(f){return anuDeFila(f)||'—';}):[]; // v3.8
+  if(LEADS_F.anuncio&&anuncios.indexOf(LEADS_F.anuncio)===-1)LEADS_F.anuncio='';
   const atn=[['verde','A tiempo'],['amarillo','Tarde'],['rojo','Muy tarde'],['sin','Sin atender']];
   const upd=d.actualizado?new Date(d.actualizado).toLocaleString('es-PE',{timeZone:'America/Lima'}):'';
 
   h+='<div class="filters">'
     +'<div class="fgroup"><div class="fgroup-lbl">Asesor</div><select class="fsel" onchange="leadsSet(\'asesor\',this.value)">'+leadsOpciones(asesores,LEADS_F.asesor,'Todos')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Campaña</div><select class="fsel" onchange="leadsSet(\'campania\',this.value)">'+leadsOpciones(campanias,LEADS_F.campania,'Todas')+'</select></div>'
+    +(conAnu?'<div class="fgroup"><div class="fgroup-lbl">Anuncio</div><select class="fsel" onchange="leadsSet(\'anuncio\',this.value)">'+leadsOpciones(anuncios,LEADS_F.anuncio,'Todos')+'</select></div>':'')
     +'<div class="fgroup"><div class="fgroup-lbl">Etapa</div><select class="fsel" onchange="leadsSet(\'etapa\',this.value)">'+leadsOpciones(etapas,LEADS_F.etapa,'Todas')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Atención</div><select class="fsel" onchange="leadsSet(\'atencion\',this.value)"><option value="">Todas</option>'+atn.map(function(a){return '<option value="'+a[0]+'"'+(LEADS_F.atencion===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre o teléfono" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
@@ -1680,7 +1684,7 @@ function leadsPintar(){
     +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pb" onclick="leadsCargar(true)">↻ Actualizar leads</button><button class="pb" onclick="leadsExportar()">⬇ Exportar a Excel</button></div></div>'
     +'</div>'
     +'<div id="leadsBody"></div>'
-    +'<div style="font-size:11px;color:var(--hint);margin-top:8px;line-height:1.6">Pendiente: filtrar por anuncio (necesita un permiso de Meta para leer los leads de los formularios).'+(upd?' · Actualizado: '+esc(upd):'')+'</div>';
+    +'<div style="font-size:11px;color:var(--hint);margin-top:8px;line-height:1.6">'+anuNotaLeads()+(upd?' · Actualizado: '+esc(upd):'')+'</div>';
   sec.innerHTML=h;
   leadsPintarCuerpo();
 }
@@ -1703,10 +1707,10 @@ function leadsPintarCuerpo(){
     +kc('🔁 Reasignados',leadsN(reas),null,null,null,false,'Pasaron por más de un asesor')
     +'</div>';
   const vis=LEADS_VER_TODO?rows:rows.slice(0,LEADS_PAGINA);
-  const conTel=TEL.estado==='ok'&&TEL.key===leadsRango().key,aviso=telAvisoHtml();
+  const conTel=TEL.estado==='ok'&&TEL.key===leadsRango().key,aviso=telAvisoHtml(),conAnu=anuListo(); // v3.8: conAnu
   if(aviso)h+='<div class="icard warn" style="margin-bottom:12px"><span class="ico">📞</span><div>'+aviso+'</div></div>';
   h+='<div class="tcard"><div class="tcard-h"><span>Detalle de leads</span><span style="font-size:12px;color:var(--muted);font-weight:600">'+leadsN(n)+' lead(s)</span></div><div class="tscroll"><table>'
-    +'<thead><tr><th>Entrada</th><th>Lead</th>'+(conTel?'<th>Teléfono</th>':'')+'<th>Campaña</th><th>Asesor</th><th>Etapa</th><th>1er contacto</th><th>Atención</th><th>Reasig.</th><th>Cita</th></tr></thead><tbody>';
+    +'<thead><tr><th>Entrada</th><th>Lead</th>'+(conTel?'<th>Teléfono</th>':'')+'<th>Campaña</th>'+(conAnu?'<th>Anuncio</th>':'')+'<th>Asesor</th><th>Etapa</th><th>1er contacto</th><th>Atención</th><th>Reasig.</th><th>Cita</th></tr></thead><tbody>';
   h+=vis.length?vis.map(function(f){
     const cita=leadsCitaTxt(f);
     return '<tr>'
@@ -1714,6 +1718,7 @@ function leadsPintarCuerpo(){
       +'<td class="namecell" title="'+esc(f.nombre)+'"><a href="'+LEADS_KOMMO+encodeURIComponent(f.id)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(f.nombre||('Lead '+f.id))+'</a></td>'
       +(conTel?'<td class="num">'+(telDe(f.id).length?esc(telDe(f.id).join(' / ')):'—')+'</td>':'')
       +'<td>'+esc(f.campania||'Directo / mensaje')+'</td>'
+      +(conAnu?'<td>'+esc(anuDeFila(f)||'—')+'</td>':'')
       +'<td>'+esc(f.asesor_final||'—')+'</td>'
       +'<td>'+esc(f.etapa_actual||'—')+'</td>'
       +'<td class="num">'+leadsMin(f.tiempo_min)+'</td>'
@@ -1721,7 +1726,7 @@ function leadsPintarCuerpo(){
       +'<td class="num">'+(f.reasignaciones?leadsN(f.reasignaciones):'—')+'</td>'
       +'<td>'+(cita?esc(cita):'—')+'</td>'
       +'</tr>';
-  }).join(''):'<tr><td colspan="'+(conTel?10:9)+'" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
+  }).join(''):'<tr><td colspan="'+(9+(conTel?1:0)+(conAnu?1:0))+'" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
   h+='</tbody></table></div>';
   if(!LEADS_VER_TODO&&rows.length>LEADS_PAGINA)h+='<div style="padding:12px 16px;text-align:center"><button class="pb" onclick="leadsVerTodo()">Ver los '+leadsN(rows.length-LEADS_PAGINA)+' restantes</button></div>';
   h+='</div>';
@@ -1734,10 +1739,10 @@ function leadsExportar(){
   const lab={verde:'A tiempo',amarillo:'Tarde',rojo:'Muy tarde'};
   // Protege contra fórmulas en Excel y escapa comillas.
   const celda=function(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
-  const conTel=TEL.estado==='ok'&&TEL.key===(leadsRango()||{}).key;
-  const cab=['Fecha de entrada','Lead','ID Kommo'].concat(conTel?['Teléfono']:[]).concat(['Campaña','Asesor','Etapa','Minutos hasta 1er contacto','Atención','Reasignaciones','Cita']);
+  const conTel=TEL.estado==='ok'&&TEL.key===(leadsRango()||{}).key,conAnu=anuListo(); // v3.8: conAnu
+  const cab=['Fecha de entrada','Lead','ID Kommo'].concat(conTel?['Teléfono']:[]).concat(['Campaña']).concat(conAnu?['Anuncio']:[]).concat(['Asesor','Etapa','Minutos hasta 1er contacto','Atención','Reasignaciones','Cita']);
   const lineas=[cab.map(celda).join(';')].concat(rows.map(function(f){
-    return [leadsFecha(f.entrada),f.nombre,f.id].concat(conTel?[telDe(f.id).join(' / ')]:[]).concat([f.campania||'Directo / mensaje',f.asesor_final||'—',f.etapa_actual||'—',
+    return [leadsFecha(f.entrada),f.nombre,f.id].concat(conTel?[telDe(f.id).join(' / ')]:[]).concat([f.campania||'Directo / mensaje']).concat(conAnu?[anuDeFila(f)||'']:[]).concat([f.asesor_final||'—',f.etapa_actual||'—',
       f.tiempo_min==null?'':String(f.tiempo_min).replace('.',','),lab[f.semaforo]||'Sin atender',f.reasignaciones||0,leadsCitaTxt(f)]).map(celda).join(';');
   }));
   const blob=new Blob(['﻿'+lineas.join('\r\n')],{type:'text/csv;charset=utf-8'});
@@ -2063,7 +2068,7 @@ function dinNoContestarHtml(D,invPer,leadsPer){
     +(otras?leadsN(otras)+(otras===1?' lead más del período entró':' leads más del período entraron')+' por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se '+(otras===1?'valoriza porque no tiene':'valorizan porque no tienen')+' campaña.':'')+'</div>');
 }
 
-function renderDinero(D){dinPintar();dinCargarExtra(false);}
+function renderDinero(D){dinPintar();dinCargarExtra(false);if(anuTabActiva())anuCargar(false);/* v3.8 */}
 function dinPintar(){
   const sec=document.getElementById('sec-dinero');const D=LAST_DATA;if(!sec||!D)return;
   let h='<div class="sechead"><h2>💰 Del lead al dinero</h2><span class="cnt">'+esc(D.since===D.until?D.since:D.since+' → '+D.until)+'</span></div>'
@@ -2087,6 +2092,7 @@ function dinPintar(){
   h+='<div style="margin-bottom:16px">'+dinCascadaHtml(D,filasPer,filasHist,invPer,invHist,totalPer)+'</div>';
   h+='<div style="margin-bottom:16px">'+dinRetornoHtml(D,filasPer,filasHist,invPer,invHist)+'</div>';
   h+='<div style="margin-bottom:16px">'+dinCampanasHtml(D,filasPer,filasHist||[],f)+'</div>';
+  try{h+='<div style="margin-bottom:16px">'+anuDineroHtml(D,f)+'</div>';}catch(e){h+='<div class="erbox">⚠ No se pudo dibujar el costo por anuncio: '+esc(e.message)+'</div>';} // v3.8
   if(DIN_EXTRA.err)h+='<div class="icard warn" style="margin-top:12px"><span class="ico">⚠</span><div>No se pudieron '+(X?'actualizar':'leer')+' los datos de Meta de esta pestaña ('+esc(DIN_EXTRA.err)+').'+(X?' Se muestran los últimos de hoy.':'')+' <button class="pb" style="height:28px;padding:0 12px;font-size:12px;margin-left:6px" onclick="dinCargarExtra(true)">↻ Reintentar datos de Meta</button></div></div>';
   sec.innerHTML=h;
 }
@@ -2536,6 +2542,207 @@ function telAvisoHtml(){
   if(TEL.estado==='no-disponible')return'La búsqueda por teléfono se activa cuando se publique el cambio del servidor de Gerencia. Mientras tanto, busca por nombre.';
   if(TEL.err==='CLAVE')return'Para buscar por teléfono falta la clave de Gerencia: '+claveBotonHtml();
   return'No se pudieron traer los teléfonos ('+esc(TEL.err||'sin respuesta')+').';
+}
+
+// ═══════════════ v3.8 · ANUNCIO DE CADA LEAD (fase 5, cierre) ═══════════════
+// Solo LEE. Meta entrega, por el puente de Cloudflare, la hora, el formulario y el anuncio de cada lead
+// (nunca nombre, teléfono ni respuestas: el puente lo bloquea). Se cruza con el CRM por FORMULARIO y HORA:
+// el CRM crea el lead segundos después que Meta (septiembre: la mitad en 9 s, el 99% en menos de 90 s).
+// Gana el candidato más cercano, uno a uno, entre 2 min antes y 10 min después.
+// Necesita la hora de creación que entrega el puente de Kommo (campo ts); si falta, lo avisa y no cruza.
+// Agrega: columna y filtro "Anuncio" en 👤 Leads (y en el Excel) y la tabla de costo por cliente por anuncio en 💰.
+// Se carga solo al abrir 💰 o 👤 (unas 30 consultas a Meta) y se guarda 10 minutos.
+// Para quitarlo: borrar este bloque y las líneas marcadas "v3.8" en Leads, renderDinero, dinPintar y la barra de pestañas.
+const ANU_VENTANA_ANTES=120, ANU_VENTANA_DESPUES=600, ANU_DEMORA_TIPICA=10;
+const ANU_SIN='Sin anuncio identificado', ANU_NOFORM='No vino de un formulario', ANU_PEND='Recién llegado: actualiza para verlo';
+let ANU_HIST={key:'',ts:0,data:null,err:'',cargando:false}; // desde DIN_HIST_DESDE: anuncios, su gasto y los leads de Meta
+let ANU_PER={key:'',data:null,err:'',cargando:false};        // gasto por anuncio del período elegido
+let ANU_CRUCE={rows:null,data:null,res:null};
+let ANU_VISTA='historico';
+
+function anuTabActiva(){const b=document.querySelector('.navtab.on');return !!(b&&(b.dataset.s==='dinero'||b.dataset.s==='leads'));}
+function anuHayHora(){const rows=(KOMMO_DATA&&KOMMO_DATA.ok===true&&KOMMO_DATA.rows)||[];return rows.some(function(r){return r&&r.ts!=null;});}
+async function anuEnParalelo(items,n,fn){
+  const out=new Array(items.length);let i=0;
+  async function trabajador(){while(i<items.length){const k=i++;out[k]=await fn(items[k]);}}
+  const ws=[];for(let w=0;w<Math.min(n,items.length);w++)ws.push(trabajador());
+  await Promise.all(ws);return out;
+}
+async function anuInsightsAnuncio(acct,desde,hasta,fields){
+  const filas=[];let after='',pag=0;
+  do{
+    const p={fields:fields,time_range:{since:desde,until:hasta},level:'ad',limit:500};if(after)p.after=after;
+    const d=await api(acct+'/insights',p);(d.data||[]).forEach(function(r){filas.push(r);});
+    after=(d.paging&&d.paging.next&&d.paging.cursors&&d.paging.cursors.after)||'';pag++;
+  }while(after&&pag<10);
+  return filas;
+}
+async function anuLeadsDeAnuncio(adId,desdeSec){
+  const out=[];let after='',pag=0;
+  do{
+    const p={fields:'created_time,ad_id,form_id',limit:500,filtering:[{field:'time_created',operator:'GREATER_THAN',value:desdeSec-1}]};if(after)p.after=after;
+    const d=await api(adId+'/leads',p);
+    (d.data||[]).forEach(function(x){const t=Math.round(Date.parse(x.created_time)/1000);if(t>=desdeSec&&x.form_id)out.push({t:t,ad:String(x.ad_id||adId),form:String(x.form_id)});});
+    after=(d.paging&&d.paging.next&&d.paging.cursors&&d.paging.cursors.after)||'';pag++;
+  }while(after&&pag<40);
+  return out;
+}
+async function anuCargar(forzar){
+  const sel=document.getElementById('acctDash');const acct=sel&&sel.value;const D=LAST_DATA;if(!acct||!D)return;
+  const hoy=dinHoyLima(),kH=acct+'|'+hoy,kP=acct+'|'+D.since+'|'+D.until+'|'+hoy;
+  const tareas=[];
+  const hFresco=ANU_HIST.key===kH&&ANU_HIST.data&&Date.now()-ANU_HIST.ts<10*60*1000;
+  if((forzar||!hFresco)&&!ANU_HIST.cargando)tareas.push(anuCargarHist(acct,hoy,kH));
+  if((forzar||ANU_PER.key!==kP||(!ANU_PER.data&&!ANU_PER.cargando))&&!(ANU_PER.cargando&&ANU_PER.key===kP))tareas.push(anuCargarPer(acct,D,kP));
+  if(!tareas.length)return;
+  anuRepintar();
+  await Promise.all(tareas);
+  anuRepintar();
+}
+async function anuCargarHist(acct,hoy,key){
+  ANU_HIST=Object.assign({},ANU_HIST,{cargando:true,err:''});
+  try{
+    const filas=await anuInsightsAnuncio(acct,DIN_HIST_DESDE,hoy,'ad_id,ad_name,campaign_name,spend');
+    const ads={};
+    filas.forEach(function(r){const id=String(r.ad_id);if(!ads[id])ads[id]={id:id,name:r.ad_name||('Anuncio '+id),camp:r.campaign_name||'',spend:0};ads[id].spend+=parseFloat(r.spend||0);});
+    const desdeSec=leadsLimaSec(DIN_HIST_DESDE,false);let fallos=0;
+    const listas=await anuEnParalelo(Object.keys(ads).filter(function(id){return ads[id].spend>0;}),4,function(id){return anuLeadsDeAnuncio(id,desdeSec).catch(function(){fallos++;return[];});});
+    const leads=[];listas.forEach(function(l){l.forEach(function(x){leads.push(x);});});
+    ANU_HIST={key:key,ts:Date.now(),cargando:false,err:'',data:{ads:ads,leads:leads,fallos:fallos,anuncios:listas.length}};
+  }catch(e){
+    // Los datos anteriores solo se conservan si son de la misma cuenta y del mismo día.
+    ANU_HIST=Object.assign({},ANU_HIST,{cargando:false,err:(e&&e.message)||'error',data:ANU_HIST.key===key?ANU_HIST.data:null,key:ANU_HIST.key===key?key:''});
+  }
+}
+async function anuCargarPer(acct,D,key){
+  ANU_PER={key:key,data:null,err:'',cargando:true};
+  try{
+    const filas=await anuInsightsAnuncio(acct,D.since,D.until,'ad_id,spend');
+    if(ANU_PER.key!==key)return; // el filtro cambió mientras cargaba
+    const g={};filas.forEach(function(r){const id=String(r.ad_id);g[id]=(g[id]||0)+parseFloat(r.spend||0);});
+    ANU_PER={key:key,data:{gasto:g},err:'',cargando:false};
+  }catch(e){if(ANU_PER.key===key)ANU_PER={key:key,data:null,err:(e&&e.message)||'error',cargando:false};}
+}
+function anuRepintar(){
+  try{if(LAST_DATA&&document.getElementById('sec-dinero'))dinPintar();}catch(e){}
+  try{
+    if(!leadsDatos())return;
+    // Si la persona está escribiendo en el buscador, no se redibujan los filtros (perdería el cursor).
+    const a=document.activeElement,sec=document.getElementById('sec-leads');
+    if(a&&sec&&sec.contains&&sec.contains(a)&&a.tagName==='INPUT')leadsPintarCuerpo();else leadsPintar();
+  }catch(e){}
+}
+// Nombre para mostrar de cada anuncio. Si dos anuncios se llaman igual, se agrega la campaña (y si
+// siguen iguales, los últimos 4 dígitos del anuncio).
+function anuEtiquetas(ads){
+  const cuenta={},et={},usado={};
+  Object.values(ads).forEach(function(a){cuenta[a.name]=(cuenta[a.name]||0)+1;});
+  Object.values(ads).forEach(function(a){let s=a.name;if(cuenta[a.name]>1&&a.camp)s+=' · '+a.camp;if(usado[s])s+=' · #'+a.id.slice(-4);usado[s]=1;et[a.id]=s;});
+  return et;
+}
+// El cruce: para cada lead de Meta, el lead del CRM del MISMO formulario con la hora más cercana
+// (uno a uno, empezando por las parejas más claras). Se recalcula solo si cambian los datos.
+function anuCruce(){
+  const X=ANU_HIST.data;if(!X||!(KOMMO_DATA&&KOMMO_DATA.ok===true))return null;
+  const rows=KOMMO_DATA.rows||[];
+  if(ANU_CRUCE.rows===rows&&ANU_CRUCE.data===X)return ANU_CRUCE.res;
+  const pares=dinParesFormFb(rows),porForm={};let conHora=0,tsMax=0;
+  rows.forEach(function(r,i){
+    const fb=dinTagFb(r.tags),fo=dinTagForm(r.tags),t=r.ts!=null?Number(r.ts):null;
+    if(t!=null&&t>tsMax)tsMax=t;
+    if(!fb&&!fo)return;
+    const form=fb||(fo&&pares[fo])||null;
+    if(t!=null)conHora++;
+    if(form&&t!=null)(porForm[form]=porForm[form]||[]).push({i:i,t:t});
+  });
+  Object.keys(porForm).forEach(function(k){porForm[k].sort(function(a,b){return a.t-b.t;});});
+  const cand=[];
+  X.leads.forEach(function(m,mi){
+    const L=porForm[m.form];if(!L)return;
+    const min=m.t-ANU_VENTANA_ANTES,max=m.t+ANU_VENTANA_DESPUES;let lo=0,hi=L.length;
+    while(lo<hi){const mid=(lo+hi)>>1;if(L[mid].t<min)lo=mid+1;else hi=mid;}
+    for(let j=lo;j<L.length&&L[j].t<=max;j++)cand.push({mi:mi,i:L[j].i,d:Math.abs(L[j].t-m.t-ANU_DEMORA_TIPICA)});
+  });
+  cand.sort(function(a,b){return a.d-b.d;});
+  const usadoM={},adDeFila={};let cruzados=0;
+  cand.forEach(function(p){if(usadoM[p.mi]||adDeFila[p.i]!==undefined)return;usadoM[p.mi]=1;adDeFila[p.i]=X.leads[p.mi].ad;cruzados++;});
+  // Hora exacta (segundo) → anuncio, para la pestaña Leads. '' = de formulario pero sin pareja;
+  // null = dos leads de formulario en el mismo segundo con anuncios distintos (no se adivina).
+  const porTs={};
+  rows.forEach(function(r,i){
+    if(r.ts==null||(!dinTagFb(r.tags)&&!dinTagForm(r.tags)))return;
+    const t=Number(r.ts),ad=adDeFila[i]||'';
+    if(porTs[t]===undefined)porTs[t]=ad;else if(porTs[t]!==ad)porTs[t]=null;
+  });
+  const res={adDeFila:adDeFila,porTs:porTs,conHora:conHora,tsMax:tsMax,metaLeads:X.leads.length,cruzados:cruzados,etiquetas:anuEtiquetas(X.ads)};
+  ANU_CRUCE={rows:rows,data:X,res:res};
+  return res;
+}
+function anuListo(){const r=anuCruce();return !!(r&&r.conHora);}
+function anuNombre(id){const r=anuCruce();return(r&&r.etiquetas[id])||('Anuncio '+id);}
+// Anuncio de una fila de la pestaña Leads (por su hora exacta de entrada).
+function anuDeFila(f){
+  const r=anuCruce();if(!r||!r.conHora)return null;
+  if(!f.entrada)return ANU_NOFORM;
+  const t=Math.round(Date.parse(f.entrada)/1000);
+  if(t>r.tsMax)return ANU_PEND;
+  const v=r.porTs[t];
+  if(v===undefined)return ANU_NOFORM;
+  if(!v)return ANU_SIN;
+  return anuNombre(v);
+}
+function anuBotonReintentar(){return' <button class="pb" style="height:28px;padding:0 12px;font-size:12px;margin-left:6px" onclick="anuCargar(true)">↻ Reintentar</button>';}
+// Nota bajo la tabla de la pestaña Leads.
+function anuNotaLeads(){
+  if(!(KOMMO_DATA&&KOMMO_DATA.ok===true))return'El anuncio de cada lead necesita los datos del CRM, que no cargaron en esta visita.';
+  if(!anuHayHora())return'El filtro por anuncio se activa cuando el puente del CRM entregue la hora de llegada de cada lead (un ajuste de una línea en Cloudflare).';
+  if(ANU_HIST.cargando&&!ANU_HIST.data)return'Cargando desde Meta el anuncio de cada lead…';
+  if(!ANU_HIST.data)return'No se pudo leer en Meta el anuncio de cada lead'+(ANU_HIST.err?' ('+esc(ANU_HIST.err)+')':'')+'.'+anuBotonReintentar();
+  const r=anuCruce();
+  return'Anuncio: sale de Meta y se cruza con el CRM por formulario y hora de llegada ('+leadsN(r.cruzados)+' de '+leadsN(r.metaLeads)+' leads de Meta desde el '+DIN_HIST_DESDE.split('-').reverse().join('/')+' encontraron su lead en el CRM).'
+    +(ANU_HIST.data.fallos?' No se pudieron leer '+leadsN(ANU_HIST.data.fallos)+' anuncio(s).':'');
+}
+// Tabla de 💰: costo por cliente de cada anuncio (misma lógica que la tabla por campaña).
+function anuDineroHtml(D,f){
+  const vista=ANU_VISTA==='periodo'?'periodo':'historico',per=vista==='periodo';
+  const btn=function(v,t){return'<button class="pb'+(vista===v?' on':'')+'" style="height:28px;padding:0 12px;font-size:12px" onclick="ANU_VISTA=\''+v+'\';dinPintar()">'+t+'</button>';};
+  const head='<div class="tcard-h"><span>🎯 Costo por cliente, por anuncio · con IGV</span><span style="display:flex;gap:6px">'+btn('periodo','Período elegido')+btn('historico','Desde el '+DIN_HIST_DESDE.split('-').reverse().join('/'))+'</span></div>';
+  const caja=function(t){return'<div class="tcard">'+head+'<div class="empty">'+t+'</div></div>';};
+  const cargando=function(t){return'<div class="loading" style="padding:10px 0"><div class="spinner"></div>'+t+'</div>';};
+  if(!(KOMMO_DATA&&KOMMO_DATA.ok===true))return caja('Sin los datos del CRM no se puede saber qué anuncio trajo a cada lead.');
+  if(!anuHayHora())return caja('Falta un ajuste del puente del CRM: que entregue la hora de llegada de cada lead. Con eso esta tabla se completa sola.');
+  const X=ANU_HIST.data;
+  if(!X)return caja(ANU_HIST.err?'No se pudo leer en Meta el anuncio de cada lead ('+esc(ANU_HIST.err)+').'+anuBotonReintentar():ANU_HIST.cargando?cargando('Cargando desde Meta el anuncio de cada lead…'):'<button class="pb" onclick="anuCargar(false)">Calcular por anuncio</button>');
+  if(per&&!ANU_PER.data)return caja(ANU_PER.err?'No se pudo leer el gasto por anuncio del período ('+esc(ANU_PER.err)+').'+anuBotonReintentar():cargando('Cargando el gasto de cada anuncio en el período…'));
+  const res=anuCruce(),rows=KOMMO_DATA.rows||[];
+  const desde=per?D.since:DIN_HIST_DESDE,hasta=per?D.until:'9999-12-31';
+  const m={};
+  const nuevo=function(id,s){return{id:id,n:id?anuNombre(id):ANU_SIN,camp:id&&X.ads[id]?X.ads[id].camp:'',s:s,fs:[]};};
+  if(per)Object.keys(ANU_PER.data.gasto).forEach(function(id){const s=ANU_PER.data.gasto[id]*f;if(s>0)m[id]=nuevo(id,s);});
+  else Object.values(X.ads).forEach(function(a){if(a.spend>0)m[a.id]=nuevo(a.id,a.spend*f);});
+  let formTot=0,ident=0;
+  rows.forEach(function(r,i){
+    if(!dinTagFb(r.tags)&&!dinTagForm(r.tags))return;
+    const fe=(r.fecha||'').slice(0,10);if(!fe||fe<desde||fe>hasta)return;
+    formTot++;const ad=res.adDeFila[i]||'';if(ad)ident++;
+    const k=ad||'__sin';if(!m[k])m[k]=nuevo(ad,0);
+    m[k].fs.push({etapaKommo:r.etapaKommo});
+  });
+  const lista=Object.values(m).map(function(x){x.e=dinEmbudo(x.fs);x.inv=conIGV(x.s);return x;})
+    .filter(function(x){return x.s>0||x.fs.length;})
+    .sort(function(a,b){if(!a.id)return 1;if(!b.id)return -1;return b.e.Venta-a.e.Venta||b.e.Meet-a.e.Meet||b.inv-a.inv;});
+  const cuerpo=lista.length?lista.map(function(x){
+    const sin=!x.id,sub=x.camp&&x.n.indexOf(' · '+x.camp)===-1?'<div style="font-size:11px;color:var(--muted);font-weight:500">'+esc(x.camp)+'</div>':'';
+    return'<tr><td class="namecell" title="'+esc(x.n)+'">'+(x.e.Venta>0?'🏆 ':'')+'<b>'+esc(x.n)+'</b>'+sub+'</td>'
+      +'<td class="num">'+(sin?'—':curS(x.inv,D.currency))+'</td><td class="num">'+leadsN(x.e.Lead)+'</td><td class="num">'+leadsN(x.e.Meet)+'</td><td class="num">'+leadsN(x.e.Separacion)+'</td><td class="num"><b>'+leadsN(x.e.Venta)+'</b></td>'
+      +'<td class="num">'+(sin?'—':dinCosto(x.inv,x.e.Lead,D))+'</td><td class="num">'+(sin?'—':dinCosto(x.inv,x.e.Meet,D))+'</td><td class="num"><b>'+(sin?'—':dinCosto(x.inv,x.e.Venta,D))+'</b></td></tr>';
+  }).join(''):'<tr><td colspan="9" class="empty">Sin inversión ni leads de formulario en este período.</td></tr>';
+  const pctId=formTot?Math.round(ident/formTot*100):0;
+  return'<div class="tcard">'+head+'<div class="tscroll"><table><thead><tr><th>Anuncio</th><th>Inversión con IGV</th><th>Leads CRM</th><th>Meet</th><th>Separación</th><th>Ventas</th><th>Costo por lead</th><th>Costo por meet</th><th>Costo por cliente</th></tr></thead><tbody>'+cuerpo+'</tbody></table></div>'
+    +'<div style="font-size:11px;color:var(--hint);padding:11px 16px;line-height:1.6">Meta dice qué anuncio trajo a cada persona; ese dato se cruza con el CRM por <b>formulario y hora de llegada</b> (el CRM registra el lead segundos después). '
+    +'En esta vista: <b>'+leadsN(ident)+' de '+leadsN(formTot)+'</b> leads de formulario con su anuncio identificado ('+pctId+'%). '
+    +'"'+ANU_SIN+'" = leads de formulario sin pareja en Meta (por ejemplo, de un anuncio borrado o llegados antes del '+DIN_HIST_DESDE.split('-').reverse().join('/')+'). Cliente = etapa Venta.'
+    +(X.fallos?' <b>Ojo:</b> no se pudieron leer los leads de '+leadsN(X.fallos)+' anuncio(s) en Meta.'+anuBotonReintentar():'')+'</div></div>';
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
