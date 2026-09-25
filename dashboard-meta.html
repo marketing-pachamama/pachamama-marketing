@@ -168,6 +168,20 @@ td .sol{display:block;margin:2px 0 0}
 .dal-datos .dal-cta{margin-left:auto}
 .dal-nota{font-size:11px;color:var(--hint);line-height:1.55;margin-top:12px;max-width:110ch}
 @media(max-width:640px){.dal-datos .dal-cta{margin-left:0}}
+/* v3.7 · recuadro para la clave de Gerencia */
+.clv-fondo{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,24,16,.55)}
+.clv-fondo[hidden]{display:none}
+.clv-caja{width:100%;max-width:430px;background:var(--surface);color:var(--text);border-radius:var(--r);border-top:5px solid var(--pink);box-shadow:var(--shadow-lg);padding:22px 24px 18px}
+.clv-caja h3{font-family:'Sora',sans-serif;font-size:18px;font-weight:800;margin:0 0 6px}
+.clv-caja p{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 16px}
+.clv-caja input{margin-bottom:10px}
+.clv-err{font-size:12.5px;font-weight:600;color:var(--r-tx);margin:-2px 0 10px}
+.clv-err[hidden]{display:none}
+.clv-bot{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.clv-bot .clv-esp{flex:1}
+.clv-bot [hidden]{display:none}
+.pb.clv-mini{height:30px;padding:0 12px;font-size:12px;vertical-align:middle}
+.tbtn.clv-falta{background:rgba(216,8,121,.55);border-color:rgba(255,255,255,.55)}
 /* v3.6 · franja de alertas (arriba de todas las pestañas) */
 .alr{margin-bottom:16px}
 .alr-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:8px}
@@ -400,6 +414,7 @@ tbody tr:hover td{background:var(--surface2)}
         <span>Cuenta publicitaria</span>
         <select class="acct-sel" id="acctDash" onchange="loadData()"></select>
       </div>
+      <button class="tbtn" id="btnClave" onclick="claveAbrir()" aria-haspopup="dialog">🔑 Clave de Gerencia</button>
       <button class="tbtn" onclick="doShare()">🔗 Compartir</button>
       <button class="tbtn" onclick="window.print()">🖨 PDF</button>
       <button class="tbtn" onclick="doLogout()">Salir</button>
@@ -461,7 +476,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6.2</b> (alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.7</b> (buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -505,20 +520,15 @@ const DAILY_LEAD_OVERRIDES = {
 // El backend (Render) exige la cabecera X-API-Key en todo /api/*. La clave NO va escrita en este
 // archivo (la página es pública): cada persona la escribe una vez y queda guardada solo en su navegador.
 // Solo se tocan las llamadas a ese backend; Meta y Kommo (Cloudflare) siguen exactamente igual.
-// Si la persona deja la clave vacía, no se le vuelve a preguntar en esa sesión y el panel
-// "Datos clave" muestra su aviso de siempre, sin afectar al resto del dashboard.
+// v3.7: la clave se ingresa con el botón "🔑 Clave de Gerencia" de la barra superior (antes con una
+// ventanita del navegador, que algunos navegadores bloquean sin avisar). Sin clave, el servidor responde
+// 401 y cada sección ofrece el mismo botón; el resto del dashboard sigue funcionando.
 (function(){
-  var BACKEND='pachamama-backend-v0v0.onrender.com', STORE='pm_api_key', SKIP='pm_api_key_omitida';
+  var BACKEND='pachamama-backend-v0v0.onrender.com', STORE='pm_api_key';
   var _fetch=window.fetch.bind(window);
-  function clave(){
-    var k='';try{k=localStorage.getItem(STORE)||'';}catch(e){}
-    if(k)return k;
-    try{if(sessionStorage.getItem(SKIP))return '';}catch(e){}
-    k=(window.prompt('Clave de acceso a los datos de Gerencia (déjala vacía para omitir):')||'').trim();
-    if(k){try{localStorage.setItem(STORE,k);}catch(e){}}
-    else{try{sessionStorage.setItem(SKIP,'1');}catch(e){}}
-    return k;
-  }
+  function clave(){var k='';try{k=localStorage.getItem(STORE)||'';}catch(e){}return k;}
+  window.pmClaveGuardada=clave;
+  window.pmClaveGuardar=function(k){try{if(k)localStorage.setItem(STORE,k);else localStorage.removeItem(STORE);}catch(e){}};
   window.fetch=function(input,init){
     var url=(typeof input==='string')?input:((input&&input.url)||'');
     if(url.indexOf(BACKEND)===-1)return _fetch(input,init);
@@ -528,7 +538,7 @@ const DAILY_LEAD_OVERRIDES = {
     init=init||{};
     var h=new Headers(init.headers||{});h.set('X-API-Key',k);init.headers=h;
     return _fetch(input,init).then(function(r){
-      if(r.status===401){try{localStorage.removeItem(STORE);}catch(e){}}
+      if(r.status===401){try{localStorage.removeItem(STORE);}catch(e){}try{if(window.claveActualizarBoton)window.claveActualizarBoton();}catch(e){}}
       return r;
     });
   };
@@ -1348,7 +1358,7 @@ function renderEmbudo(D){
       </div>
     </div>`;
   }else{
-    datosClaveHtml=`<div class="cc" style="margin-top:16px"><div class="cc-ttl">📌 Datos clave</div><div class="empty">No se pudo conectar al backend de Gerencia (pachamama-backend).${D.pachamamaError?' '+esc(D.pachamamaError):''}</div></div>`;
+    datosClaveHtml=`<div class="cc" style="margin-top:16px"><div class="cc-ttl">📌 Datos clave</div><div class="empty">${/401/.test(D.pachamamaError||'')?'Falta la clave de Gerencia para ver estos datos. '+claveBotonHtml():'No se pudo conectar al servidor de Gerencia.'+(D.pachamamaError?' '+esc(D.pachamamaError):'')}</div></div>`;
   }
 
   // ── Observaciones generales (auto) ──
@@ -1579,6 +1589,7 @@ async function leadsCargar(forzar){
       }
     }
     LEADS_CACHE={key:r.key,ts:Date.now(),data:data};LEADS_VER_TODO=false;
+    telCargar(r); // teléfonos para el buscador (no frena la carga de los leads)
   }catch(e){LEADS_ERR=(e&&e.message)||'error desconocido';}
   finally{
     LEADS_LOADING=false;leadsPintar();embudoSlaActualizar();
@@ -1596,7 +1607,7 @@ function leadsFiltrar(filas){
     if(LEADS_F.etapa&&(f.etapa_actual||'—')!==LEADS_F.etapa)return false;
     if(LEADS_F.atencion&&(f.semaforo||'sin')!==LEADS_F.atencion)return false;
     if(LEADS_F.reasig&&!f.reasignado)return false;
-    if(q&&String(f.nombre||'').toLowerCase().indexOf(q)===-1)return false;
+    if(q&&!leadsCoincide(f,q))return false;
     return true;
   });
 }
@@ -1645,7 +1656,7 @@ function leadsPintar(){
   if(!r){sec.innerHTML=h+'<div class="empty">Elige un rango de fechas arriba para ver los leads.</div>';return;}
   if(r.dias>LEADS_MAX_DIAS){sec.innerHTML=h+'<div class="erbox">El rango elegido tiene '+leadsN(r.dias)+' días. Para no sobrecargar el CRM, esta pestaña trabaja con hasta 3 meses: elige un rango más corto arriba.</div>';return;}
   if(LEADS_LOADING){sec.innerHTML=h+'<div class="loading"><div class="spinner"></div>Cargando leads desde el CRM… puede tardar unos segundos.</div>';return;}
-  if(LEADS_ERR==='CLAVE'){sec.innerHTML=h+'<div class="erbox">⚠ Falta la clave de Gerencia o no es correcta. Cierra esta pestaña del navegador, ábrela de nuevo e ingresa la clave cuando la pida. El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
+  if(LEADS_ERR==='CLAVE'){sec.innerHTML=h+'<div class="erbox">⚠ Falta la clave de Gerencia o no es correcta. El resto del dashboard sigue funcionando.<div style="margin-top:10px">'+claveBotonHtml()+'</div></div>';return;}
   if(LEADS_ERR){const pista=leadsPista(LEADS_ERR);sec.innerHTML=h+'<div class="erbox">⚠ No se pudieron traer los leads ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')+'El resto del dashboard sigue funcionando.</div>'+reintentar;return;}
   if(!d){sec.innerHTML=h+'<div class="empty">Los leads se cargan al abrir esta pestaña.<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(false)">Cargar leads del período</button></div></div>';return;}
 
@@ -1664,12 +1675,12 @@ function leadsPintar(){
     +'<div class="fgroup"><div class="fgroup-lbl">Campaña</div><select class="fsel" onchange="leadsSet(\'campania\',this.value)">'+leadsOpciones(campanias,LEADS_F.campania,'Todas')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Etapa</div><select class="fsel" onchange="leadsSet(\'etapa\',this.value)">'+leadsOpciones(etapas,LEADS_F.etapa,'Todas')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Atención</div><select class="fsel" onchange="leadsSet(\'atencion\',this.value)"><option value="">Todas</option>'+atn.map(function(a){return '<option value="'+a[0]+'"'+(LEADS_F.atencion===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div>'
-    +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre del lead" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre o teléfono" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><label style="display:flex;align-items:center;gap:7px;height:34px;margin:0;font-size:13px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;margin:0;padding:0;accent-color:var(--pink)"'+(LEADS_F.reasig?' checked':'')+' onchange="leadsSet(\'reasig\',this.checked)"> Solo reasignados</label></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pb" onclick="leadsCargar(true)">↻ Actualizar leads</button><button class="pb" onclick="leadsExportar()">⬇ Exportar a Excel</button></div></div>'
     +'</div>'
     +'<div id="leadsBody"></div>'
-    +'<div style="font-size:11px;color:var(--hint);margin-top:8px;line-height:1.6">Pendiente: filtrar por anuncio y buscar por teléfono (el panel de Gerencia todavía no entrega esos datos).'+(upd?' · Actualizado: '+esc(upd):'')+'</div>';
+    +'<div style="font-size:11px;color:var(--hint);margin-top:8px;line-height:1.6">Pendiente: filtrar por anuncio (necesita un permiso de Meta para leer los leads de los formularios).'+(upd?' · Actualizado: '+esc(upd):'')+'</div>';
   sec.innerHTML=h;
   leadsPintarCuerpo();
 }
@@ -1692,13 +1703,16 @@ function leadsPintarCuerpo(){
     +kc('🔁 Reasignados',leadsN(reas),null,null,null,false,'Pasaron por más de un asesor')
     +'</div>';
   const vis=LEADS_VER_TODO?rows:rows.slice(0,LEADS_PAGINA);
+  const conTel=TEL.estado==='ok'&&TEL.key===leadsRango().key,aviso=telAvisoHtml();
+  if(aviso)h+='<div class="icard warn" style="margin-bottom:12px"><span class="ico">📞</span><div>'+aviso+'</div></div>';
   h+='<div class="tcard"><div class="tcard-h"><span>Detalle de leads</span><span style="font-size:12px;color:var(--muted);font-weight:600">'+leadsN(n)+' lead(s)</span></div><div class="tscroll"><table>'
-    +'<thead><tr><th>Entrada</th><th>Lead</th><th>Campaña</th><th>Asesor</th><th>Etapa</th><th>1er contacto</th><th>Atención</th><th>Reasig.</th><th>Cita</th></tr></thead><tbody>';
+    +'<thead><tr><th>Entrada</th><th>Lead</th>'+(conTel?'<th>Teléfono</th>':'')+'<th>Campaña</th><th>Asesor</th><th>Etapa</th><th>1er contacto</th><th>Atención</th><th>Reasig.</th><th>Cita</th></tr></thead><tbody>';
   h+=vis.length?vis.map(function(f){
     const cita=leadsCitaTxt(f);
     return '<tr>'
       +'<td class="num">'+leadsFecha(f.entrada)+'</td>'
       +'<td class="namecell" title="'+esc(f.nombre)+'"><a href="'+LEADS_KOMMO+encodeURIComponent(f.id)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(f.nombre||('Lead '+f.id))+'</a></td>'
+      +(conTel?'<td class="num">'+(telDe(f.id).length?esc(telDe(f.id).join(' / ')):'—')+'</td>':'')
       +'<td>'+esc(f.campania||'Directo / mensaje')+'</td>'
       +'<td>'+esc(f.asesor_final||'—')+'</td>'
       +'<td>'+esc(f.etapa_actual||'—')+'</td>'
@@ -1707,7 +1721,7 @@ function leadsPintarCuerpo(){
       +'<td class="num">'+(f.reasignaciones?leadsN(f.reasignaciones):'—')+'</td>'
       +'<td>'+(cita?esc(cita):'—')+'</td>'
       +'</tr>';
-  }).join(''):'<tr><td colspan="9" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
+  }).join(''):'<tr><td colspan="'+(conTel?10:9)+'" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
   h+='</tbody></table></div>';
   if(!LEADS_VER_TODO&&rows.length>LEADS_PAGINA)h+='<div style="padding:12px 16px;text-align:center"><button class="pb" onclick="leadsVerTodo()">Ver los '+leadsN(rows.length-LEADS_PAGINA)+' restantes</button></div>';
   h+='</div>';
@@ -1720,10 +1734,11 @@ function leadsExportar(){
   const lab={verde:'A tiempo',amarillo:'Tarde',rojo:'Muy tarde'};
   // Protege contra fórmulas en Excel y escapa comillas.
   const celda=function(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
-  const cab=['Fecha de entrada','Lead','ID Kommo','Campaña','Asesor','Etapa','Minutos hasta 1er contacto','Atención','Reasignaciones','Cita'];
+  const conTel=TEL.estado==='ok'&&TEL.key===(leadsRango()||{}).key;
+  const cab=['Fecha de entrada','Lead','ID Kommo'].concat(conTel?['Teléfono']:[]).concat(['Campaña','Asesor','Etapa','Minutos hasta 1er contacto','Atención','Reasignaciones','Cita']);
   const lineas=[cab.map(celda).join(';')].concat(rows.map(function(f){
-    return [leadsFecha(f.entrada),f.nombre,f.id,f.campania||'Directo / mensaje',f.asesor_final||'—',f.etapa_actual||'—',
-      f.tiempo_min==null?'':String(f.tiempo_min).replace('.',','),lab[f.semaforo]||'Sin atender',f.reasignaciones||0,leadsCitaTxt(f)].map(celda).join(';');
+    return [leadsFecha(f.entrada),f.nombre,f.id].concat(conTel?[telDe(f.id).join(' / ')]:[]).concat([f.campania||'Directo / mensaje',f.asesor_final||'—',f.etapa_actual||'—',
+      f.tiempo_min==null?'':String(f.tiempo_min).replace('.',','),lab[f.semaforo]||'Sin atender',f.reasignaciones||0,leadsCitaTxt(f)]).map(celda).join(';');
   }));
   const blob=new Blob(['﻿'+lineas.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const r=leadsRango();
@@ -1808,7 +1823,7 @@ function embudoSlaHtml(){
   if(r.dias>LEADS_MAX_DIAS)return'<div class="conv-top">'+tit+'<span class="badge n">Rango muy largo</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">Se mide para rangos de hasta 3 meses. Elige un rango más corto arriba.</div>';
   if(LEADS_LOADING)return'<div class="conv-top">'+tit+'<span class="badge n">Calculando…</span></div>';
   if(!d){
-    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia. ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '):'';
+    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia: '+claveBotonHtml()+' ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '):'';
     return'<div class="conv-top">'+tit+'<span class="badge n">Sin calcular</span></div><div style="font-size:10.5px;color:var(--hint);margin-top:4px">'+err+'Se calcula con los datos del CRM de este período (meta ≥75%). <button class="pb" style="height:26px;padding:0 10px;font-size:11.5px;margin-left:6px" onclick="leadsCargar(false)">Calcular ahora</button></div>';
   }
   const filas=d.filas||[],n=filas.length,ver=filas.filter(function(f){return f.semaforo==='verde';}).length,pct=n?ver/n*100:0;
@@ -2019,7 +2034,7 @@ function dinNoContestarHtml(D,invPer,leadsPer){
   if(LEADS_LOADING)return caja('n','<div class="loading" style="padding:18px 0"><div class="spinner"></div>Calculando con los datos del CRM…</div>');
   if(!d){
     const pista=LEADS_ERR&&LEADS_ERR!=='CLAVE'?leadsPista(LEADS_ERR):'';
-    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia. ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')):'';
+    const err=LEADS_ERR?(LEADS_ERR==='CLAVE'?'Falta la clave de Gerencia: '+claveBotonHtml()+' ':'No se pudo calcular ('+esc(LEADS_ERR)+'). '+(pista?esc(pista)+' ':'')):'';
     return msg(err+'Se calcula con los datos del CRM de la pestaña 👤 Leads para el período elegido.',true);
   }
   const todas=d.filas||[],esForm=function(x){return x.campania&&x.campania!=='Directo / mensaje';},form=todas.filter(esForm);
@@ -2414,9 +2429,113 @@ function alrPintar(){
   }
   const errs=[];
   if(ALR.metaErr)errs.push('No se pudieron revisar las alertas de Meta ('+esc(ALR.metaErr)+').');
-  if(ALR.leadsErr){const p=ALR.leadsErr==='CLAVE'?'Falta la clave de Gerencia.':leadsPista(ALR.leadsErr);errs.push('No se pudo revisar los leads sin contactar ('+esc(ALR.leadsErr==='CLAVE'?'sin clave':ALR.leadsErr)+').'+(p?' '+esc(p):''));}
+  if(ALR.leadsErr){if(ALR.leadsErr==='CLAVE')errs.push('Para revisar los leads sin contactar falta la clave de Gerencia: '+claveBotonHtml());else{const p=leadsPista(ALR.leadsErr);errs.push('No se pudo revisar los leads sin contactar ('+esc(ALR.leadsErr)+').'+(p?' '+esc(p):''));}}
   if(errs.length)h+='<div class="alr-err">'+errs.join(' ')+' <button class="pb" style="height:26px;padding:0 10px;font-size:11px;margin-left:4px" onclick="alrCargar()">↻ Reintentar</button></div>';
   box.innerHTML='<div class="alr">'+h+'</div>';
+}
+
+// ═══════════════ v3.7 · BOTÓN PARA LA CLAVE DE GERENCIA ═══════════════
+// Reemplaza la ventanita del navegador (window.prompt), que algunos navegadores bloquean sin avisar.
+// El botón "🔑" de la barra superior abre un recuadro dentro de la página: se escribe la clave, se comprueba
+// contra el servidor con una consulta liviana (/api/pipelines) y se guarda solo en este navegador.
+// La clave NUNCA va escrita en este archivo (la página es pública).
+const CLAVE_URL_PRUEBA=LEADS_URL.replace('/api/historial','/api/pipelines');
+function claveBotonHtml(){return'<button class="pb clv-mini" onclick="claveAbrir()">🔑 Ingresar la clave de Gerencia</button>';}
+function claveActualizarBoton(){
+  const b=document.getElementById('btnClave');if(!b)return;
+  const hay=!!(window.pmClaveGuardada&&window.pmClaveGuardada());
+  b.textContent=hay?'🔑 Clave de Gerencia ✓':'🔑 Ingresar clave de Gerencia';
+  if(b.classList){if(hay)b.classList.remove('clv-falta');else b.classList.add('clv-falta');}
+  b.title=hay?'Clave guardada en este navegador. Clic para cambiarla u olvidarla.':'Sin clave: la pestaña Leads y la alerta de leads sin contactar no pueden cargar.';
+}
+window.claveActualizarBoton=claveActualizarBoton;
+function claveModal(){
+  let m=document.getElementById('claveModal');
+  if(m)return m;
+  m=document.createElement('div');
+  m.id='claveModal';m.className='clv-fondo';m.hidden=true;
+  m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','clvTit');
+  m.innerHTML='<div class="clv-caja">'
+    +'<h3 id="clvTit">🔑 Clave de Gerencia</h3>'
+    +'<p>Da acceso a los datos del CRM: la pestaña 👤 Leads, "Cuánto cuesta no contestar a tiempo", los Datos clave del Embudo y la alerta de leads sin contactar. Se guarda solo en este navegador.</p>'
+    +'<label for="clvInput">Clave</label>'
+    +'<input type="password" id="clvInput" autocomplete="off" placeholder="Escribe la clave">'
+    +'<div class="clv-err" id="clvErr" hidden></div>'
+    +'<div class="clv-bot"><button class="pb" id="clvOlvidar" onclick="claveOlvidar()">Olvidar la clave</button><span class="clv-esp"></span><button class="pb" onclick="claveCerrar()">Cancelar</button><button class="pb on" id="clvGuardar" onclick="claveGuardar()">Guardar</button></div>'
+    +'</div>';
+  m.addEventListener('click',function(e){if(e.target===m)claveCerrar();});
+  m.addEventListener('keydown',function(e){if(e.key==='Escape')claveCerrar();if(e.key==='Enter'&&e.target&&e.target.id==='clvInput')claveGuardar();});
+  document.body.appendChild(m);
+  return m;
+}
+function claveAbrir(){
+  const m=claveModal(),inp=document.getElementById('clvInput'),err=document.getElementById('clvErr'),olv=document.getElementById('clvOlvidar');
+  inp.value='';err.hidden=true;
+  olv.hidden=!(window.pmClaveGuardada&&window.pmClaveGuardada());
+  m.hidden=false;
+  setTimeout(function(){try{inp.focus();}catch(e){}},30);
+}
+function claveCerrar(){const m=document.getElementById('claveModal');if(m)m.hidden=true;}
+function claveRefrescar(){
+  LEADS_CACHE={key:'',ts:0,data:null};LEADS_ERR='';
+  ALR=Object.assign({},ALR,{ts:0,leads:null,leadsErr:''});
+  claveActualizarBoton();
+  loadData();
+}
+async function claveGuardar(){
+  const inp=document.getElementById('clvInput'),err=document.getElementById('clvErr'),btn=document.getElementById('clvGuardar');
+  const k=(inp.value||'').trim();
+  const mostrar=function(t){err.textContent=t;err.hidden=false;};
+  if(!k){mostrar('Escribe la clave.');inp.focus();return;}
+  err.hidden=true;btn.disabled=true;btn.textContent='Comprobando…';
+  const anterior=window.pmClaveGuardada();
+  window.pmClaveGuardar(k); // la envoltura de fetch la agrega a la consulta de prueba
+  let estado=0;
+  try{const r=await fetch(CLAVE_URL_PRUEBA,{cache:'no-store'});estado=r.status;}catch(e){estado=-1;}
+  btn.disabled=false;btn.textContent='Guardar';
+  if(estado===401){window.pmClaveGuardar(anterior);claveActualizarBoton();mostrar('La clave no es correcta. Revísala y vuelve a intentar.');inp.select();return;}
+  claveCerrar();
+  toast(estado>=200&&estado<300?'✓ Clave guardada':'Clave guardada. El servidor no respondió para comprobarla; si los datos no cargan, vuelve a ingresarla.');
+  claveRefrescar();
+}
+function claveOlvidar(){window.pmClaveGuardar('');claveCerrar();toast('Clave olvidada en este navegador');claveActualizarBoton();}
+try{claveActualizarBoton();}catch(e){}
+
+// ═══════════════ v3.7 · BUSCADOR POR TELÉFONO (fase 5) ═══════════════
+// Los teléfonos vienen de una ruta de SOLO LECTURA del servidor de Gerencia (/api/leads-telefonos), para el
+// mismo rango que la pestaña Leads. Se piden junto con los leads; si esa ruta todavía no está publicada, la
+// pestaña funciona igual que antes y el buscador avisa que falta ese cambio.
+const TEL_URL=LEADS_URL.replace('/api/historial','/api/leads-telefonos');
+let TEL={key:'',mapa:null,estado:'',err:''}; // estado: '' | 'cargando' | 'ok' | 'no-disponible' | 'error'
+function telDigitos(s){return String(s||'').replace(/\D/g,'');}
+function telDe(id){return(TEL.mapa&&TEL.mapa[id])||[];}
+async function telCargar(r){
+  if(!r)return;
+  if(TEL.key===r.key&&(TEL.estado==='ok'||TEL.estado==='cargando'))return;
+  TEL={key:r.key,mapa:null,estado:'cargando',err:''};
+  try{
+    const resp=await fetch(TEL_URL+'?desde='+r.desde+'&hasta='+r.hasta,{cache:'no-store'});
+    if(TEL.key!==r.key)return; // cambió el rango mientras cargaba
+    if(resp.status===404)TEL.estado='no-disponible';
+    else if(resp.status===401){TEL.estado='error';TEL.err='CLAVE';}
+    else if(!resp.ok){let det='';try{const j=await resp.json();det=(j&&j.error)||'';}catch(e){}TEL.estado='error';TEL.err='HTTP '+resp.status+(det?' · '+String(det).slice(0,160):'');}
+    else{const d=await resp.json();const m={};(d.filas||[]).forEach(function(f){m[f.id]=f.telefonos||[];});TEL.mapa=m;TEL.estado='ok';}
+  }catch(e){if(TEL.key===r.key){TEL.estado='error';TEL.err='sin conexión con el servidor de Gerencia';}}
+  try{leadsPintarCuerpo();}catch(e){}
+}
+// ¿El lead coincide con lo buscado? Por nombre, o por teléfono si se escribieron al menos 3 dígitos
+// (se comparan solo los dígitos: "987 654 321", "987654321" y "+51987654321" encuentran lo mismo).
+function leadsCoincide(f,q){
+  if(String(f.nombre||'').toLowerCase().indexOf(q)!==-1)return true;
+  const d=telDigitos(q);if(d.length<3)return false;
+  return telDe(f.id).some(function(t){return telDigitos(t).indexOf(d)!==-1;});
+}
+function telAvisoHtml(){
+  if(telDigitos(LEADS_F.q).length<3||TEL.estado==='ok')return'';
+  if(TEL.estado==='cargando')return'Cargando los teléfonos…';
+  if(TEL.estado==='no-disponible')return'La búsqueda por teléfono se activa cuando se publique el cambio del servidor de Gerencia. Mientras tanto, busca por nombre.';
+  if(TEL.err==='CLAVE')return'Para buscar por teléfono falta la clave de Gerencia: '+claveBotonHtml();
+  return'No se pudieron traer los teléfonos ('+esc(TEL.err||'sin respuesta')+').';
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
