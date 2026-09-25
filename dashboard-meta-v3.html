@@ -461,7 +461,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6 (prueba)</b> (alertas · calidad de datos y creativos ·montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6.1 (prueba)</b> (alertas ·calidad de datos y creativos ·montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -2309,7 +2309,13 @@ let ALR_TIMER=null, ALR_CONFIG=false;
 function alrApagadas(){try{return JSON.parse(localStorage.getItem('pm_alertas_off')||'{}')||{};}catch(e){return{};}}
 function alrCambiar(k,on){const o=alrApagadas();if(on)delete o[k];else o[k]=1;try{localStorage.setItem('pm_alertas_off',JSON.stringify(o));}catch(e){}alrPintar();}
 function alrVerConfig(){ALR_CONFIG=!ALR_CONFIG;alrPintar();}
-function alrIr(tab){const b=document.querySelector('.navtab[data-s="'+tab+'"]');if(b){showSection(b,tab);if(tab==='leads')leadsOnOpen();}}
+// Abre la pestaña de la alerta; si la alerta es de "ayer", también pone el filtro de fechas en "Ayer"
+// para que el gráfico y la tabla muestren lo mismo que la alerta.
+function alrIr(tab,preset){
+  const b=document.querySelector('.navtab[data-s="'+tab+'"]');if(b){showSection(b,tab);if(tab==='leads')leadsOnOpen();}
+  if(preset){const p=document.querySelector('.pb[data-p="'+preset+'"]');if(p)setP(p,preset);}
+}
+function alrFecha(iso){return iso.slice(8,10)+'/'+iso.slice(5,7);}
 
 function renderAlertas(D){
   alrPintar();
@@ -2355,11 +2361,11 @@ function alrCalcular(D){
     const lineas=[];const tc=sube(cuenta);
     if(tc)lineas.push('<b>Toda la cuenta:</b> '+cur(tc.ca,c)+' por lead ayer, contra '+cur(tc.cp,c)+' de promedio (<b>+'+tc.pct.toFixed(0)+'%</b>).');
     Object.keys(camp).forEach(function(n){const x=sube(camp[n]);if(x)lineas.push('<b>'+esc(n)+':</b> '+cur(x.ca,c)+' contra '+cur(x.cp,c)+' (<b>+'+x.pct.toFixed(0)+'%</b>).');});
-    if(lineas.length)out.push({tipo:'cpl',st:'a',ico:'📈',titulo:'El costo por lead subió más de '+ALR_CPL_SUBE+'% contra la semana',detalle:'<p>Costo por lead de ayer comparado con el promedio de los 7 días anteriores (sin IGV).</p><ul>'+lineas.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul>',accion:{t:'Ver campañas',tab:'campanas'}});
+    if(lineas.length)out.push({tipo:'cpl',st:'a',ico:'📈',titulo:'El costo por lead subió más de '+ALR_CPL_SUBE+'% contra la semana',detalle:'<p>Costo por lead de <b>ayer ('+alrFecha(ayer)+')</b> comparado con el promedio del '+alrFecha(sem[sem.length-1])+' al '+alrFecha(sem[0])+' (sin IGV). En las pestañas se ve con el filtro de fechas en <b>"Ayer"</b>.</p><ul>'+lineas.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul>',accion:{t:'Ver ayer en Campañas',tab:'campanas',preset:'yesterday'}});
     // 2 · Campaña gastando sin leads
     const sinL=[];
-    Object.keys(camp).forEach(function(n){const a=camp[n][ayer]||{s:0,t:0},h=camp[n][X.hoy]||{s:0,t:0};if(a.s>=ALR_GASTO_MIN&&a.t+h.t===0)sinL.push('<b>'+esc(n)+':</b> gastó '+cur(a.s+h.s,c)+sol(a.s+h.s)+' desde ayer y no trajo ningún lead.');});
-    if(sinL.length)out.push({tipo:'sinleads',st:'r',ico:'💸',titulo:sinL.length===1?'Una campaña lleva más de 24 horas gastando sin traer leads':sinL.length+' campañas llevan más de 24 horas gastando sin traer leads',detalle:'<ul>'+sinL.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul><p>Revisar si el formulario funciona, si el anuncio fue rechazado o si el público se agotó.</p>',accion:{t:'Ver campañas',tab:'campanas'}});
+    Object.keys(camp).forEach(function(n){const a=camp[n][ayer]||{s:0,t:0},h=camp[n][X.hoy]||{s:0,t:0};if(a.s>=ALR_GASTO_MIN&&a.t+h.t===0)sinL.push('<b>'+esc(n)+':</b> gastó '+cur(a.s+h.s,c)+sol(a.s+h.s)+' desde ayer ('+alrFecha(ayer)+') y no trajo ningún lead.');});
+    if(sinL.length)out.push({tipo:'sinleads',st:'r',ico:'💸',titulo:sinL.length===1?'Una campaña lleva más de 24 horas gastando sin traer leads':sinL.length+' campañas llevan más de 24 horas gastando sin traer leads',detalle:'<ul>'+sinL.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul><p>Revisar si el formulario funciona, si el anuncio fue rechazado o si el público se agotó.</p>',accion:{t:'Ver ayer en Campañas',tab:'campanas',preset:'yesterday'}});
     // 3 · Frecuencia
     const fr=[];
     X.frecCamp.forEach(function(r){const f=parseFloat(r.frequency||0);if(f>ALR_FREC_MAX)fr.push({t:'Campaña <b>'+esc(r.campaign_name||'—')+'</b>',f:f});});
@@ -2401,7 +2407,7 @@ function alrPintar(){
   if(!ALR.ts&&ALR.cargando){box.innerHTML='<div class="alr">'+h+'</div>';return;}
   if(activas.length){
     h+=activas.map(function(a){return'<div class="alr-item '+a.st+'"><span class="alr-ico">'+a.ico+'</span><div class="alr-body"><div class="alr-tit">'+a.titulo+'</div><div class="alr-det">'+a.detalle+'</div></div>'
-      +(a.accion?'<button class="pb" onclick="alrIr(\''+a.accion.tab+'\')">'+a.accion.t+' →</button>':'')+'</div>';}).join('');
+      +(a.accion?'<button class="pb" onclick="alrIr(\''+a.accion.tab+'\''+(a.accion.preset?',\''+a.accion.preset+'\'':'')+')">'+a.accion.t+' →</button>':'')+'</div>';}).join('');
   }else{
     const rev=ALR_TIPOS.filter(function(t){return!off[t.k];}).map(function(t){return'<span>'+t.t+'</span>';}).join('');
     h+='<div class="alr-ok">✓ <b>Sin alertas por ahora.</b> <span class="alr-chips">'+rev+'</span></div>';
