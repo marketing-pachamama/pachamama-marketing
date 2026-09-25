@@ -168,6 +168,37 @@ td .sol{display:block;margin:2px 0 0}
 .dal-datos .dal-cta{margin-left:auto}
 .dal-nota{font-size:11px;color:var(--hint);line-height:1.55;margin-top:12px;max-width:110ch}
 @media(max-width:640px){.dal-datos .dal-cta{margin-left:0}}
+/* v3.6 · franja de alertas (arriba de todas las pestañas) */
+.alr{margin-bottom:16px}
+.alr-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:8px}
+.alr-t{font-family:'Sora',sans-serif;font-size:15px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+.alr-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--red);color:#fff;font-size:12px;font-weight:800}
+.alr-meta{font-size:11.5px;color:var(--muted);flex:1;min-width:180px}
+.alr-config{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 14px;margin-bottom:8px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--rs);font-size:12.5px}
+.alr-config label{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:12.5px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer}
+.alr-config input{width:16px;height:16px;margin:0;padding:0;accent-color:var(--pink)}
+.alr-config span{font-size:11px;color:var(--hint)}
+.alr-item{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;margin-bottom:8px;border:1px solid var(--border);border-left:5px solid var(--amber);border-radius:var(--rs);background:linear-gradient(100deg,var(--a-bg) 0%,var(--surface) 45%);box-shadow:var(--shadow)}
+.alr-item.r{border-left-color:var(--red);background:linear-gradient(100deg,var(--r-bg) 0%,var(--surface) 45%)}
+.alr-ico{font-size:20px;line-height:1.2;flex-shrink:0}
+.alr-body{flex:1;min-width:0}
+.alr-tit{font-family:'Sora',sans-serif;font-size:14.5px;font-weight:800;line-height:1.3}
+.alr-det{font-size:12.5px;line-height:1.55;color:var(--text2);margin-top:4px}
+.alr-det p{margin:0 0 4px}
+.alr-det ul{margin:4px 0 4px;padding-left:18px}
+.alr-det li{margin:2px 0}
+.alr-item>.pb{flex-shrink:0;align-self:center;height:32px;padding:0 13px;font-size:12px}
+ul.alr-leads{list-style:none;padding:0;display:flex;flex-direction:column;gap:4px}
+li.alr-lead{display:grid;grid-template-columns:minmax(140px,1.4fr) minmax(110px,1fr) minmax(120px,.9fr) minmax(90px,.8fr);gap:4px 12px;align-items:baseline;padding:5px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rxs)}
+li.alr-lead a{color:var(--text)}
+li.alr-lead span{font-size:12px;color:var(--muted)}
+li.alr-lead .alr-espera{color:var(--r-tx);font-weight:700}
+.alr-ok{padding:10px 14px;border:1px solid var(--border);border-left:5px solid var(--green);border-radius:var(--rs);background:var(--surface);font-size:13px;color:var(--text2);display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.alr-ok b{color:var(--g-tx)}
+.alr-chips{display:inline-flex;flex-wrap:wrap;gap:5px}
+.alr-chips span{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--g-bg);color:var(--g-tx)}
+.alr-err{font-size:11.5px;color:var(--muted);margin-top:6px}
+@media(max-width:640px){li.alr-lead{grid-template-columns:1fr 1fr}.alr-item{flex-wrap:wrap}.alr-item>.pb{margin-left:32px}}
 .kc-meta{display:flex;align-items:center;gap:7px;font-size:11px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
 .pill.g{background:var(--g-bg);color:var(--g-tx)}
@@ -430,7 +461,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.5</b> (calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.6</b> (alertas · calidad de datos y creativos ·montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -861,6 +892,7 @@ function renderAll(D){
   const mPrev=buildMetrics((D.acctInsPrev.data||[])[0]);
   const main=document.getElementById('main');
   main.innerHTML=`${tcAvisoHtml(D)}
+    <div id="alertasFranja"></div>
     <div class="section on" id="sec-resumen"></div>
     <div class="section" id="sec-campanas"></div>
     <div class="section" id="sec-creativos"></div>
@@ -881,6 +913,7 @@ function renderAll(D){
   renderEmbudo(D);
   try{renderDinero(D);}catch(e){const s=document.getElementById('sec-dinero');if(s)s.innerHTML='<div class="erbox">⚠ No se pudo dibujar la pestaña Lead → dinero: '+esc(e.message)+'</div>';}
   try{renderCalidad(D);}catch(e){console.warn('Fase 3 (calidad):',e);}
+  try{renderAlertas(D);}catch(e){console.warn('Fase 4 (alertas):',e);}
   const ins=computeInsights(m,mPrev,D);
   renderInsights(ins,D);
   renderRecomendaciones(ins,D,m);
@@ -2012,7 +2045,7 @@ function dinNoContestarHtml(D,invPer,leadsPer){
       +(tarde.length?'<div class="dal-cta"><button class="pb on" onclick="dinIrALeads()">Ver estos leads →</button></div>':'')
     +'</div>'
     +'<div class="dal-nota">No es plata perdida segura: es lo que costó traer leads que se atendieron tarde o nunca, donde es más probable perderlos. '
-    +(otras?leadsN(otras)+' leads más del período entraron por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se valorizan porque no tienen campaña.':'')+'</div>');
+    +(otras?leadsN(otras)+(otras===1?' lead más del período entró':' leads más del período entraron')+' por mensaje, importación u otra vía ('+leadsN(otrasTarde)+' fuera de tiempo) y no se '+(otras===1?'valoriza porque no tiene':'valorizan porque no tienen')+' campaña.':'')+'</div>');
 }
 
 function renderDinero(D){dinPintar();dinCargarExtra(false);}
@@ -2254,6 +2287,130 @@ function calAudienciasHtml(D){
   }
   h+=calTablaDesglose(D,'📍 Por ubicación',ub,PINK,'Ubicación')+calTablaDesglose(D,'📱 Por dispositivo',dv,DARK,'Dispositivo');
   return h;
+}
+
+// ═══════════════ v3.6 · FASE 4 · ALERTAS DENTRO DEL TABLERO ═══════════════
+// Una franja arriba de todas las pestañas que avisa sola. NO depende del filtro de fechas: mira "ahora".
+//  1. Costo por lead de AYER ≥30% sobre el promedio de los 7 días anteriores (cuenta y cada campaña).
+//  2. Campaña que gastó al menos US$ 5 ayer y no trae leads desde ayer (ayer + lo que va de hoy).
+//     (Meta no entrega a tiempo los datos por hora, así que se usa el día completo de ayer.)
+//  3. Frecuencia de los últimos 7 días sobre 3 (campañas y anuncios).
+//  4. Leads de las últimas 24 h sin contactar después de 10 min, con nombre y asesor (servidor de Gerencia).
+// Solo LEE: 3 consultas a Meta por el puente y 1 al servidor de Gerencia (/api/historial, que tiene caché).
+// Se revisa al cargar y cada 5 minutos mientras la página está a la vista. Cada alerta se puede apagar por
+// separado (se recuerda en este navegador). Para quitarlo: borrar este bloque y sus 2 líneas en renderAll.
+const ALR_REFRESCO_MS=5*60*1000;
+const ALR_CPL_SUBE=30, ALR_FREC_MAX=3, ALR_SLA_MIN=10, ALR_GASTO_MIN=5;
+const ALR_TIPOS=[{k:'sla',t:'Leads sin contactar'},{k:'sinleads',t:'Campaña gastando sin leads'},{k:'cpl',t:'Costo por lead que sube'},{k:'frec',t:'Frecuencia sobre 3'}];
+const ALR_ETAPA_AVANZADA=/contactad|respondi|no responde|agenda|meet|separ|ganad|perdid|descart|venta|interesad/i;
+let ALR={acct:'',meta:null,metaErr:'',leads:null,leadsErr:'',cargando:false,ts:0};
+let ALR_TIMER=null, ALR_CONFIG=false;
+
+function alrApagadas(){try{return JSON.parse(localStorage.getItem('pm_alertas_off')||'{}')||{};}catch(e){return{};}}
+function alrCambiar(k,on){const o=alrApagadas();if(on)delete o[k];else o[k]=1;try{localStorage.setItem('pm_alertas_off',JSON.stringify(o));}catch(e){}alrPintar();}
+function alrVerConfig(){ALR_CONFIG=!ALR_CONFIG;alrPintar();}
+function alrIr(tab){const b=document.querySelector('.navtab[data-s="'+tab+'"]');if(b){showSection(b,tab);if(tab==='leads')leadsOnOpen();}}
+
+function renderAlertas(D){
+  alrPintar();
+  const sel=document.getElementById('acctDash'),acct=sel&&sel.value;
+  if(!ALR.ts||ALR.acct!==acct||Date.now()-ALR.ts>ALR_REFRESCO_MS)alrCargar();
+  if(!ALR_TIMER&&typeof setInterval==='function')ALR_TIMER=setInterval(function(){
+    if(typeof document.visibilityState==='undefined'||document.visibilityState==='visible')alrCargar();
+  },ALR_REFRESCO_MS);
+}
+async function alrCargar(){
+  const sel=document.getElementById('acctDash');const acct=sel&&sel.value;if(!acct||!LAST_DATA||ALR.cargando)return;
+  ALR.cargando=true;alrPintar();
+  const hoy=dinHoyLima(),ahora=Math.floor(Date.now()/1000);
+  const meta=Promise.all([
+    api(acct+'/insights',{fields:'campaign_name,spend,actions,cost_per_action_type,cost_per_result,results',time_range:{since:calAddDias(hoy,-8),until:hoy},level:'campaign',time_increment:1,limit:500}),
+    api(acct+'/insights',{fields:'campaign_name,frequency,impressions',date_preset:'last_7d',level:'campaign',limit:100}),
+    api(acct+'/insights',{fields:'ad_name,campaign_name,frequency,impressions',date_preset:'last_7d',level:'ad',limit:300})
+  ]).then(function(r){return{diario:r[0].data||[],frecCamp:r[1].data||[],frecAd:r[2].data||[],hoy:hoy};});
+  const leads=leadsPedir(LEADS_URL+'?desde='+(ahora-86400)+'&hasta='+ahora);
+  const res=await Promise.allSettled([meta,leads]);
+  const motivo=function(x){return(x&&x.message)||'error';};
+  ALR=Object.assign({},ALR,{acct:acct,cargando:false,ts:Date.now(),
+    meta:res[0].status==='fulfilled'?res[0].value:(ALR.acct===acct?ALR.meta:null),metaErr:res[0].status==='rejected'?motivo(res[0].reason):'',
+    leads:res[1].status==='fulfilled'?res[1].value:(ALR.acct===acct?ALR.leads:null),leadsErr:res[1].status==='rejected'?motivo(res[1].reason):''});
+  alrPintar();
+}
+
+// Calcula las alertas con los datos cargados. Devuelve [{tipo,st,ico,titulo,detalle,accion}].
+function alrCalcular(D){
+  const out=[],c=D.currency,X=ALR.meta;
+  if(X){
+    const ayer=calAddDias(X.hoy,-1),sem=[];for(let i=2;i<=8;i++)sem.push(calAddDias(X.hoy,-i));
+    const camp={},cuenta={};
+    X.diario.forEach(function(r){
+      const d=r.date_start,n=r.campaign_name||'—',s=parseFloat(r.spend||0),l=rowResults(r).leads,t=rowTotal(r);
+      camp[n]=camp[n]||{};
+      const a=camp[n][d]=camp[n][d]||{s:0,l:0,t:0};a.s+=s;a.l+=l;a.t+=t;
+      const b=cuenta[d]=cuenta[d]||{s:0,l:0,t:0};b.s+=s;b.l+=l;b.t+=t;
+    });
+    const suma=function(m,ds){return ds.reduce(function(x,d){const v=m[d];if(v){x.s+=v.s;x.l+=v.l;x.t+=v.t;}return x;},{s:0,l:0,t:0});};
+    // 1 · Costo por lead que sube
+    const sube=function(m){const a=m[ayer],p=suma(m,sem);if(!a||a.l<3||p.l<5)return null;const ca=a.s/a.l,cp=p.s/p.l,pct=(ca/cp-1)*100;return pct>=ALR_CPL_SUBE?{ca:ca,cp:cp,pct:pct}:null;};
+    const lineas=[];const tc=sube(cuenta);
+    if(tc)lineas.push('<b>Toda la cuenta:</b> '+cur(tc.ca,c)+' por lead ayer, contra '+cur(tc.cp,c)+' de promedio (<b>+'+tc.pct.toFixed(0)+'%</b>).');
+    Object.keys(camp).forEach(function(n){const x=sube(camp[n]);if(x)lineas.push('<b>'+esc(n)+':</b> '+cur(x.ca,c)+' contra '+cur(x.cp,c)+' (<b>+'+x.pct.toFixed(0)+'%</b>).');});
+    if(lineas.length)out.push({tipo:'cpl',st:'a',ico:'📈',titulo:'El costo por lead subió más de '+ALR_CPL_SUBE+'% contra la semana',detalle:'<p>Costo por lead de ayer comparado con el promedio de los 7 días anteriores (sin IGV).</p><ul>'+lineas.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul>',accion:{t:'Ver campañas',tab:'campanas'}});
+    // 2 · Campaña gastando sin leads
+    const sinL=[];
+    Object.keys(camp).forEach(function(n){const a=camp[n][ayer]||{s:0,t:0},h=camp[n][X.hoy]||{s:0,t:0};if(a.s>=ALR_GASTO_MIN&&a.t+h.t===0)sinL.push('<b>'+esc(n)+':</b> gastó '+cur(a.s+h.s,c)+sol(a.s+h.s)+' desde ayer y no trajo ningún lead.');});
+    if(sinL.length)out.push({tipo:'sinleads',st:'r',ico:'💸',titulo:sinL.length===1?'Una campaña lleva más de 24 horas gastando sin traer leads':sinL.length+' campañas llevan más de 24 horas gastando sin traer leads',detalle:'<ul>'+sinL.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul><p>Revisar si el formulario funciona, si el anuncio fue rechazado o si el público se agotó.</p>',accion:{t:'Ver campañas',tab:'campanas'}});
+    // 3 · Frecuencia
+    const fr=[];
+    X.frecCamp.forEach(function(r){const f=parseFloat(r.frequency||0);if(f>ALR_FREC_MAX)fr.push({t:'Campaña <b>'+esc(r.campaign_name||'—')+'</b>',f:f});});
+    X.frecAd.forEach(function(r){const f=parseFloat(r.frequency||0);if(f>ALR_FREC_MAX&&parseInt(r.impressions||0,10)>=1000)fr.push({t:'Anuncio <b>'+esc(r.ad_name||'—')+'</b> <span style="color:var(--muted)">('+esc(r.campaign_name||'')+')</span>',f:f});});
+    fr.sort(function(a,b){return b.f-a.f;});
+    if(fr.length)out.push({tipo:'frec',st:'a',ico:'🔁',titulo:'La frecuencia pasó de '+ALR_FREC_MAX,detalle:'<p>Veces promedio que cada persona vio el anuncio en los últimos 7 días. Sobre '+ALR_FREC_MAX+' el público empieza a cansarse: conviene renovar creativos o ampliar el público.</p><ul>'+fr.slice(0,6).map(function(x){return'<li>'+x.t+': <b>'+x.f.toFixed(1)+'</b></li>';}).join('')+'</ul>'+(fr.length>6?'<p>Y '+(fr.length-6)+' más.</p>':''),accion:{t:'Ver creativos',tab:'creativos'}});
+  }
+  // 4 · Leads sin contactar
+  const L=ALR.leads;
+  if(L&&Array.isArray(L.filas)){
+    const ahora=Date.now();
+    const esperando=L.filas.filter(function(f){
+      if(f.tiempo_min!=null||!f.entrada)return false;
+      if(ALR_ETAPA_AVANZADA.test(f.etapa_actual||''))return false;
+      return(ahora-new Date(f.entrada).getTime())/60000>ALR_SLA_MIN;
+    }).sort(function(a,b){return new Date(a.entrada)-new Date(b.entrada);});
+    if(esperando.length){
+      const fila=function(f){const m=(ahora-new Date(f.entrada).getTime())/60000;return'<li class="alr-lead"><a href="'+LEADS_KOMMO+encodeURIComponent(f.id)+'" target="_blank" rel="noopener"><b>'+esc(f.nombre||('Lead '+f.id))+'</b></a><span>'+esc(f.asesor_final||'Sin asesor')+'</span><span class="alr-espera">esperando '+esc(leadsMin(m))+'</span><span>'+esc(f.etapa_actual||'—')+'</span></li>';};
+      out.unshift({tipo:'sla',st:'r',ico:'⏰',titulo:(esperando.length===1?'1 lead lleva':esperando.length+' leads llevan')+' más de '+ALR_SLA_MIN+' minutos sin contactar',
+        detalle:'<p>Leads de las últimas 24 horas sin contacto registrado (la tarea de contacto no se marcó como completada) y que siguen sin avanzar de etapa. Clic en el nombre para abrirlo en Kommo.</p><ul class="alr-leads">'+esperando.slice(0,8).map(fila).join('')+'</ul>'+(esperando.length>8?'<p>Y '+(esperando.length-8)+' más en la pestaña 👤 Leads.</p>':''),
+        accion:{t:'Ver en Leads',tab:'leads'}});
+    }
+  }
+  return out;
+}
+
+function alrPintar(){
+  const box=document.getElementById('alertasFranja');if(!box||!LAST_DATA)return;
+  const off=alrApagadas(),todas=alrCalcular(LAST_DATA),activas=todas.filter(function(a){return!off[a.tipo];});
+  const hora=ALR.ts?new Date(ALR.ts).toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit'}):'';
+  const estado=ALR.cargando&&!ALR.ts?'Revisando…':ALR.cargando?'Actualizando…':(hora?'Revisado a las '+hora+' · se actualiza cada 5 min':'');
+  const nApag=ALR_TIPOS.filter(function(t){return off[t.k];}).length;
+  let h='<div class="alr-h"><span class="alr-t">🔔 Alertas'+(activas.length?' <span class="alr-n">'+activas.length+'</span>':'')+'</span>'
+    +'<span class="alr-meta">'+esc(estado)+(nApag?' · '+nApag+' apagada'+(nApag>1?'s':''):'')+'</span>'
+    +'<button class="pb" style="height:28px;padding:0 11px;font-size:11.5px" onclick="alrVerConfig()" aria-expanded="'+(ALR_CONFIG?'true':'false')+'">⚙ Configurar</button></div>';
+  if(ALR_CONFIG){
+    h+='<div class="alr-config">'+ALR_TIPOS.map(function(t){return'<label><input type="checkbox" id="alr-'+t.k+'"'+(off[t.k]?'':' checked')+' onchange="alrCambiar(\''+t.k+'\',this.checked)"> '+t.t+'</label>';}).join('')+'<span>Se guarda solo en este navegador.</span></div>';
+  }
+  if(!ALR.ts&&ALR.cargando){box.innerHTML='<div class="alr">'+h+'</div>';return;}
+  if(activas.length){
+    h+=activas.map(function(a){return'<div class="alr-item '+a.st+'"><span class="alr-ico">'+a.ico+'</span><div class="alr-body"><div class="alr-tit">'+a.titulo+'</div><div class="alr-det">'+a.detalle+'</div></div>'
+      +(a.accion?'<button class="pb" onclick="alrIr(\''+a.accion.tab+'\')">'+a.accion.t+' →</button>':'')+'</div>';}).join('');
+  }else{
+    const rev=ALR_TIPOS.filter(function(t){return!off[t.k];}).map(function(t){return'<span>'+t.t+'</span>';}).join('');
+    h+='<div class="alr-ok">✓ <b>Sin alertas por ahora.</b> <span class="alr-chips">'+rev+'</span></div>';
+  }
+  const errs=[];
+  if(ALR.metaErr)errs.push('No se pudieron revisar las alertas de Meta ('+esc(ALR.metaErr)+').');
+  if(ALR.leadsErr){const p=ALR.leadsErr==='CLAVE'?'Falta la clave de Gerencia.':leadsPista(ALR.leadsErr);errs.push('No se pudo revisar los leads sin contactar ('+esc(ALR.leadsErr==='CLAVE'?'sin clave':ALR.leadsErr)+').'+(p?' '+esc(p):''));}
+  if(errs.length)h+='<div class="alr-err">'+errs.join(' ')+' <button class="pb" style="height:26px;padding:0 10px;font-size:11px;margin-left:4px" onclick="alrCargar()">↻ Reintentar</button></div>';
+  box.innerHTML='<div class="alr">'+h+'</div>';
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
