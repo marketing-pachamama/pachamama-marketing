@@ -213,6 +213,17 @@ li.alr-lead .alr-espera{color:var(--r-tx);font-weight:700}
 .alr-chips span{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--g-bg);color:var(--g-tx)}
 .alr-err{font-size:11.5px;color:var(--muted);margin-top:6px}
 @media(max-width:640px){li.alr-lead{grid-template-columns:1fr 1fr}.alr-item{flex-wrap:wrap}.alr-item>.pb{margin-left:32px}}
+/* v3.11 · clientes esperando respuesta (chats) */
+.tcard.cht{margin:0 0 18px}
+.cht-der{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.cht-hora{font-size:11.5px;font-weight:500;color:var(--muted)}
+.cht-cuerpo{padding:14px 16px 16px}
+.cht-cuerpo .kgrid{margin-bottom:12px}
+.cht-cuerpo .tscroll{border:1px solid var(--border2);border-radius:var(--rs)}
+.cht-cuerpo td a{color:inherit}
+.cht-nota{padding:14px 18px;font-size:12.5px;color:var(--muted);line-height:1.6}
+.cht-pie{font-size:11px;color:var(--hint);margin-top:12px;line-height:1.6}
+.cht-espera{font-weight:700}.cht-espera.tarde{color:var(--a-tx)}.cht-espera.viejo{color:var(--r-tx)}
 .kc-meta{display:flex;align-items:center;gap:7px;font-size:11px;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
 .pill.g{background:var(--g-bg);color:var(--g-tx)}
@@ -477,7 +488,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.10.1</b> (pestaña TikTok, cruce con el CRM corregido · CAC real en Datos clave · anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.11</b> (clientes esperando respuesta en el chat · pestaña TikTok · CAC real en Datos clave · anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -1518,6 +1529,7 @@ function doShare(){
 // Control. No escribe nada en Kommo. Se carga SOLO al abrir esta pestaña (no en cada carga del
 // dashboard) y guarda la respuesta 5 minutos por rango de fechas, para no sobrecargar el CRM.
 // Búsqueda por teléfono: v3.7 (bloque BUSCADOR POR TELÉFONO). Anuncio de cada lead: v3.8 (bloque ANUNCIO DE CADA LEAD).
+// Chats sin responder: v3.11 (bloque CLIENTES ESPERANDO RESPUESTA).
 const LEADS_URL="https://pachamama-backend-v0v0.onrender.com/api/historial";
 const LEADS_KOMMO="https://asistentegerenciaparadiseinmueblescom.kommo.com/leads/detail/";
 const LEADS_TTL_MS=5*60*1000, LEADS_MAX_DIAS=93, LEADS_PAGINA=300;
@@ -1544,8 +1556,14 @@ function leadsTabActiva(){const b=document.querySelector('.navtab.on');return !!
 function leadsDatos(){const r=leadsRango();return(r&&LEADS_CACHE.data&&LEADS_CACHE.key===r.key)?LEADS_CACHE.data:null;}
 function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.sla_objetivo_min)||10;}
 
-function leadsOnOpen(){leadsCargar(false);anuCargar(false);/* v3.8 */}
-function renderLeads(D){leadsPintar();if(leadsTabActiva()){leadsCargar(false);anuCargar(false);/* v3.8 */}}
+function leadsOnOpen(){leadsCargar(false);anuCargar(false);/* v3.8 */chtCargar(false);/* v3.11 */}
+function renderLeads(D){leadsPintar();if(leadsTabActiva()){leadsCargar(false);anuCargar(false);/* v3.8 */chtCargar(false);/* v3.11 */}}
+
+// v3.11: el servidor entrega las dos etapas de cierre de Kommo con su número en vez de su nombre
+// (142 = Leads ganados, 143 = Leads perdidos). Se corrige aquí, al recibir los datos, para que valga
+// en la tabla, el filtro de Etapa, el Excel y las alertas.
+const LEADS_ETAPA_CIERRE={'142':'Leads ganados','143':'Leads perdidos'};
+function leadsEtapaNombre(e){return LEADS_ETAPA_CIERRE[String(e==null?'':e).trim()]||e;}
 
 // Un intento de pedir los leads. Devuelve los datos o lanza un Error con el motivo real que da el
 // servidor (por ejemplo, un límite de consultas de Kommo), marcado como reintentable si fue un fallo del servidor.
@@ -1562,6 +1580,7 @@ async function leadsPedir(url){
   }
   const data=await resp.json();
   if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+  data.filas.forEach(function(f){if(f)f.etapa_actual=leadsEtapaNombre(f.etapa_actual);}); // v3.11
   return data;
 }
 // Explica en simple qué hacer según el motivo del fallo.
@@ -1655,7 +1674,8 @@ function leadsPintar(){
   const r=leadsRango(), d=leadsDatos(), sla=leadsSla();
   let h='<div class="sechead"><h2>👤 Leads · lead por lead</h2><span class="cnt">'+(r?esc(r.s===r.u?r.s:r.s+' → '+r.u):'')+'</span></div>'
     +'<p class="subtitle">Cada persona que entró en el período: la campaña por la que llegó, el asesor que la tiene, en qué etapa está y cuánto tardaron en contactarla. Datos en vivo del CRM a través del panel de Gerencia, solo lectura. '
-    +'Atención: <b>a tiempo</b> hasta '+sla+' min · <b>tarde</b> hasta 30 min · <b>muy tarde</b> más de 30 min. Clic en un nombre para abrirlo en Kommo.</p>';
+    +'Atención: <b>a tiempo</b> hasta '+sla+' min · <b>tarde</b> hasta 30 min · <b>muy tarde</b> más de 30 min. Clic en un nombre para abrirlo en Kommo.</p>'
+    +chtCajaHtml(); // v3.11
   const reintentar='<div style="margin-top:12px"><button class="pb" onclick="leadsCargar(true)">↻ Reintentar</button></div>';
   if(!r){sec.innerHTML=h+'<div class="empty">Elige un rango de fechas arriba para ver los leads.</div>';return;}
   if(r.dias>LEADS_MAX_DIAS){sec.innerHTML=h+'<div class="erbox">El rango elegido tiene '+leadsN(r.dias)+' días. Para no sobrecargar el CRM, esta pestaña trabaja con hasta 3 meses: elige un rango más corto arriba.</div>';return;}
@@ -2321,12 +2341,13 @@ function calAudienciasHtml(D){
 //     (Meta no entrega a tiempo los datos por hora, así que se usa el día completo de ayer.)
 //  3. Frecuencia de los últimos 7 días sobre 3 (campañas y anuncios).
 //  4. Leads de las últimas 24 h sin contactar después de 10 min, con nombre y asesor (servidor de Gerencia).
+//  5. (v3.11) Clientes que escribieron por chat y llevan más de 30 min sin respuesta (puente del CRM, "?chats=1").
 // Solo LEE: 3 consultas a Meta por el puente y 1 al servidor de Gerencia (/api/historial, que tiene caché).
 // Se revisa al cargar y cada 5 minutos mientras la página está a la vista. Cada alerta se puede apagar por
 // separado (se recuerda en este navegador). Para quitarlo: borrar este bloque y sus 2 líneas en renderAll.
 const ALR_REFRESCO_MS=5*60*1000;
 const ALR_CPL_SUBE=30, ALR_FREC_MAX=3, ALR_SLA_MIN=10, ALR_GASTO_MIN=5;
-const ALR_TIPOS=[{k:'sla',t:'Leads sin contactar'},{k:'sinleads',t:'Campaña gastando sin leads'},{k:'cpl',t:'Costo por lead que sube'},{k:'frec',t:'Frecuencia sobre 3'}];
+const ALR_TIPOS=[{k:'sla',t:'Leads sin contactar'},{k:'chat',t:'Clientes esperando respuesta'},{k:'sinleads',t:'Campaña gastando sin leads'},{k:'cpl',t:'Costo por lead que sube'},{k:'frec',t:'Frecuencia sobre 3'}];
 const ALR_ETAPA_AVANZADA=/contactad|respondi|no responde|agenda|meet|separ|ganad|perdid|descart|venta|interesad/i;
 let ALR={acct:'',meta:null,metaErr:'',leads:null,leadsErr:'',cargando:false,ts:0};
 let ALR_TIMER=null, ALR_CONFIG=false;
@@ -2353,6 +2374,7 @@ function renderAlertas(D){
 async function alrCargar(){
   const sel=document.getElementById('acctDash');const acct=sel&&sel.value;if(!acct||!LAST_DATA||ALR.cargando)return;
   ALR.cargando=true;alrPintar();
+  chtCargar(false); // v3.11: chats sin responder (no frena las demás alertas)
   const hoy=dinHoyLima(),ahora=Math.floor(Date.now()/1000);
   const meta=Promise.all([
     api(acct+'/insights',{fields:'campaign_name,spend,actions,cost_per_action_type,cost_per_result,results',time_range:{since:calAddDias(hoy,-8),until:hoy},level:'campaign',time_increment:1,limit:500}),
@@ -2398,6 +2420,8 @@ function alrCalcular(D){
     fr.sort(function(a,b){return b.f-a.f;});
     if(fr.length)out.push({tipo:'frec',st:'a',ico:'🔁',titulo:'La frecuencia pasó de '+ALR_FREC_MAX,detalle:'<p>Veces promedio que cada persona vio el anuncio en los últimos 7 días. Sobre '+ALR_FREC_MAX+' el público empieza a cansarse: conviene renovar creativos o ampliar el público.</p><ul>'+fr.slice(0,6).map(function(x){return'<li>'+x.t+': <b>'+x.f.toFixed(1)+'</b></li>';}).join('')+'</ul>'+(fr.length>6?'<p>Y '+(fr.length-6)+' más.</p>':''),accion:{t:'Ver creativos',tab:'creativos'}});
   }
+  // 5 · Clientes esperando respuesta en el chat (v3.11)
+  const chat=chtAlerta();if(chat)out.unshift(chat);
   // 4 · Leads sin contactar
   const L=ALR.leads;
   if(L&&Array.isArray(L.filas)){
@@ -2434,12 +2458,13 @@ function alrPintar(){
     h+=activas.map(function(a){return'<div class="alr-item '+a.st+'"><span class="alr-ico">'+a.ico+'</span><div class="alr-body"><div class="alr-tit">'+a.titulo+'</div><div class="alr-det">'+a.detalle+'</div></div>'
       +(a.accion?'<button class="pb" onclick="alrIr(\''+a.accion.tab+'\''+(a.accion.preset?',\''+a.accion.preset+'\'':'')+')">'+a.accion.t+' →</button>':'')+'</div>';}).join('');
   }else{
-    const rev=ALR_TIPOS.filter(function(t){return!off[t.k];}).map(function(t){return'<span>'+t.t+'</span>';}).join('');
+    const rev=ALR_TIPOS.filter(function(t){return!off[t.k]&&!(t.k==='chat'&&!CHT.data);}).map(function(t){return'<span>'+t.t+'</span>';}).join('');
     h+='<div class="alr-ok">✓ <b>Sin alertas por ahora.</b> <span class="alr-chips">'+rev+'</span></div>';
   }
   const errs=[];
   if(ALR.metaErr)errs.push('No se pudieron revisar las alertas de Meta ('+esc(ALR.metaErr)+').');
   if(ALR.leadsErr){if(ALR.leadsErr==='CLAVE')errs.push('Para revisar los leads sin contactar falta la clave de Gerencia: '+claveBotonHtml());else{const p=leadsPista(ALR.leadsErr);errs.push('No se pudo revisar los leads sin contactar ('+esc(ALR.leadsErr)+').'+(p?' '+esc(p):''));}}
+  if(CHT.err&&!CHT.data&&!off.chat)errs.push('No se pudieron revisar los chats sin responder ('+esc(CHT.err)+').'); // v3.11
   if(errs.length)h+='<div class="alr-err">'+errs.join(' ')+' <button class="pb" style="height:26px;padding:0 10px;font-size:11px;margin-left:4px" onclick="alrCargar()">↻ Reintentar</button></div>';
   box.innerHTML='<div class="alr">'+h+'</div>';
 }
@@ -2907,6 +2932,171 @@ function anuDineroHtml(D,f){
     +'En esta vista: <b>'+leadsN(ident)+' de '+leadsN(formTot)+'</b> leads de formulario con su anuncio identificado ('+pctId+'%). '
     +'"'+ANU_SIN+'" = leads de formulario sin pareja en Meta (por ejemplo, de un anuncio borrado o llegados antes del '+DIN_HIST_DESDE.split('-').reverse().join('/')+'). Cliente = etapa Venta.'
     +(X.fallos?' <b>Ojo:</b> no se pudieron leer los leads de '+leadsN(X.fallos)+' anuncio(s) en Meta.'+anuBotonReintentar():'')+'</div></div>';
+}
+
+// ═══════════════ v3.11 · CLIENTES ESPERANDO RESPUESTA (chats) ═══════════════
+// La pestaña 👤 Leads mide el PRIMER contacto con cada lead. Este bloque mira lo que pasa después: los chats
+// (WhatsApp, Facebook, Instagram y TikTok) en los que el último mensaje es del cliente y nadie le respondió,
+// y cuántas consultas respondió el chatbot y cuántas una persona.
+// Lo calcula el puente del CRM (consulta "?chats=1", puente v2.2) con los avisos de mensaje de Kommo de los
+// últimos 14 días: NO lee el texto de los mensajes y solo entrega números de id. El nombre del cliente y el del
+// asesor se completan aquí con lo que da el servidor de Gerencia (con su clave); sin clave se ve "Lead <id>".
+// Solo LEE. Se pide al abrir 👤 Leads y junto con las alertas, y se guarda 5 minutos. No depende del filtro de fechas.
+// Si el puente todavía es el anterior (no conoce "?chats=1"), el bloque avisa que está por encenderse y nada más cambia.
+// Para quitarlo: borrar este bloque, chtCajaHtml() en leadsPintar, chtCargar en leadsOnOpen/renderLeads/alrCargar
+// y la alerta 'chat' (ALR_TIPOS, alrCalcular y alrPintar).
+const CHT_URL=KOMMO_WORKER_URL?KOMMO_WORKER_URL+'?chats=1':'', CHT_TTL_MS=5*60*1000, CHT_ALERTA_MIN=30, CHT_ALERTA_DIAS=7, CHT_FILAS=8;
+const CHT_CANAL={waba:'WhatsApp',facebook:'Facebook',instagram_business:'Instagram',tiktok_kommo:'TikTok'};
+let CHT={ts:0,data:null,err:'',cargando:false,pendiente:false}, CHT_USU=null, CHT_USU_PIDIENDO=false, CHT_VER_TODO=false;
+
+function chtCanal(c){return CHT_CANAL[c]||c||'—';}
+function chtMinutos(x){return(Date.now()/1000-x.desde)/60;}
+// Situación de cada chat sin responder:
+//  'activo'  = su lead sigue abierto (o es un contacto sin lead);
+//  'volvio'  = escribió DESPUÉS de que su lead se cerró como perdido o ganado: volvió a escribir;
+//  'cerrado' = su lead se cerró después del mensaje: alguien lo vio y lo dio por terminado. No se cuenta como espera.
+function chtSituacion(x){
+  if(!x.cerrado)return'activo';
+  return(x.cerradoTs&&x.desde>x.cerradoTs)?'volvio':'cerrado';
+}
+// Los que de verdad esperan, del más reciente al más antiguo.
+function chtEsperando(){
+  const d=CHT.data;if(!d||!Array.isArray(d.esperando))return[];
+  return d.esperando.filter(function(x){return chtSituacion(x)!=='cerrado';});
+}
+// Nombre y asesor de cada lead, de lo que ya trajo el servidor de Gerencia (pestaña Leads y alertas).
+function chtFilasLead(){
+  const m={};
+  [ALR.leads,LEADS_CACHE.data].forEach(function(s){((s&&s.filas)||[]).forEach(function(f){if(f&&f.id!=null)m[f.id]=f;});});
+  return m;
+}
+function chtAsesor(x,f){
+  if(CHT_USU&&x.resp&&CHT_USU[x.resp])return CHT_USU[x.resp];
+  if(f&&f.asesor_final)return f.asesor_final;
+  return x.resp?'—':'Sin asesor';
+}
+function chtEnlace(x,f){
+  const url=x.lead?LEADS_KOMMO+encodeURIComponent(x.lead):LEADS_KOMMO.replace('/leads/detail/','/contacts/detail/')+encodeURIComponent(x.id);
+  const nom=x.lead?((f&&f.nombre)||('Lead '+x.lead)):'Contacto sin lead';
+  return'<a href="'+url+'" target="_blank" rel="noopener"><b>'+esc(nom)+'</b></a>';
+}
+function chtEtapa(x){return x.lead?(x.etapa||'—'):'Sin lead';}
+
+async function chtCargar(forzar){
+  if(!CHT_URL||CHT.cargando)return;
+  if(!forzar&&CHT.ts&&!CHT.err&&Date.now()-CHT.ts<CHT_TTL_MS){chtUsuarios();return;}
+  CHT.cargando=true;chtRepintar();
+  try{
+    const r=await fetch(CHT_URL,{cache:'no-store'});
+    let j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok||!j||j.ok===false)throw new Error((j&&j.error)?String(j.error).slice(0,200):('HTTP '+r.status));
+    // El puente anterior no conoce "?chats=1" y responde el embudo de siempre: el bloque queda "por encenderse".
+    if(j.tipo==='chats'&&Array.isArray(j.esperando)){CHT.data=j;CHT.pendiente=false;}
+    else{CHT.data=null;CHT.pendiente=true;}
+    CHT.err='';
+  }catch(e){CHT.err=(e&&e.message)||'error';}
+  CHT.cargando=false;CHT.ts=Date.now();
+  chtRepintar();chtUsuarios();
+}
+// Nombres de los asesores (id → nombre) desde el servidor de Gerencia. Solo si hay clave guardada; se pide una vez.
+// De cada usuario se guarda únicamente el nombre.
+async function chtUsuarios(){
+  if(CHT_USU||CHT_USU_PIDIENDO||!CHT.data||!window.pmClaveGuardada||!window.pmClaveGuardada())return;
+  CHT_USU_PIDIENDO=true;
+  try{
+    const r=await fetch(LEADS_URL.replace('/api/historial','/api/usuarios'),{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json(),m={};
+      (Array.isArray(j)?j:[]).forEach(function(u){if(u&&u.id!=null&&u.name)m[u.id]=String(u.name);});
+      if(Object.keys(m).length){CHT_USU=m;chtRepintar();}
+    }
+  }catch(e){}
+  CHT_USU_PIDIENDO=false;
+}
+function chtRepintar(){
+  const b=document.getElementById('chtBox');if(b)b.innerHTML=chtHtml();
+  try{if(LAST_DATA)alrPintar();}catch(e){}
+}
+function chtVerTodo(v){CHT_VER_TODO=!!v;const b=document.getElementById('chtBox');if(b)b.innerHTML=chtHtml();}
+function chtCajaHtml(){return CHT_URL?'<div id="chtBox">'+chtHtml()+'</div>':'';}
+
+function chtHtml(){
+  const btn='<button class="pb" style="height:28px;padding:0 11px;font-size:11.5px" onclick="chtCargar(true)">↻ Actualizar</button>';
+  const cab=function(der){return'<div class="tcard cht"><div class="tcard-h"><span>💬 Clientes esperando respuesta en el chat</span><span class="cht-der">'+(der||'')+'</span></div>';};
+  const d=CHT.data;
+  if(!d){
+    if(CHT.cargando)return cab()+'<div class="cht-nota">Revisando los chats del CRM…</div></div>';
+    if(CHT.err)return cab(btn)+'<div class="cht-nota">⚠ No se pudieron revisar los chats ('+esc(CHT.err)+'). El resto de la pestaña sigue funcionando.</div></div>';
+    if(CHT.pendiente)return cab()+'<div class="cht-nota">Este bloque se enciende cuando se actualice el puente que trae los datos del CRM (versión 2.2). Mientras tanto, el resto de la pestaña funciona igual que siempre.</div></div>';
+    return cab(btn)+'<div class="cht-nota">Se revisa al abrir esta pestaña.</div></div>';
+  }
+  const R=d.resumen||{},todos=Array.isArray(d.esperando)?d.esperando:[],esp=chtEsperando();
+  const ahora=Date.now()/1000,dias=d.resumenDias||7;
+  const mas30=esp.filter(function(x){return chtMinutos(x)>CHT_ALERTA_MIN;}).length;
+  const mas24=esp.filter(function(x){return chtMinutos(x)>1440;}).length;
+  const volvieron=esp.filter(function(x){return chtSituacion(x)==='volvio';}).length;
+  const cerrados=todos.length-esp.length;
+  const sin7=esp.filter(function(x){return x.desde>=ahora-dias*86400;}).length;
+  const consultas=Number(R.esperas||0),pct=function(n){return consultas?(n/consultas*100).toFixed(0)+'%':'–';};
+  const st=!esp.length?'g':mas30?'r':'a';
+  const hora=d.updated?new Date(d.updated).toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit'}):'';
+
+  let h=cab((CHT.cargando?'<span class="cht-hora">Actualizando…</span>':(hora?'<span class="cht-hora">Revisado a las '+esc(hora)+'</span>':''))+btn)
+    +'<div class="cht-cuerpo"><div class="kgrid">'
+    +kc('💬 Esperando ahora',leadsN(esp.length),st,st==='g'?'Al día':st==='r'?'Responder':'Recién escribieron',null,true,
+      esp.length?(leadsN(mas24)+' hace más de 24 h'+(volvieron?' · '+(volvieron===1?'1 volvió':leadsN(volvieron)+' volvieron')+' a escribir tras cerrarse':'')):'Nadie espera respuesta')
+    +kc('🤖 Respondió el chatbot',leadsN(R.porBot),null,null,null,true,pct(Number(R.porBot||0))+' de '+leadsN(consultas)+' consultas · últimos '+dias+' días')
+    +kc('🧑 Respondió una persona',leadsN(R.porPersona),null,null,null,true,pct(Number(R.porPersona||0))+' de las consultas'+(R.medianaPersonaMin!=null?' · tarda '+leadsMin(R.medianaPersonaMin)+' (mediana)':''))
+    +kc('🐢 Persona tardó más de 30 min',leadsN(R.personaMas30),Number(R.personaMas30||0)?'a':null,'Vigilar',null,false,'De '+leadsN(R.porPersona)+' respuestas de persona')
+    +kc('📭 Sin respuesta',leadsN(sin7),sin7?'r':null,'Pendientes',null,false,'Consultas de los últimos '+dias+' días que nadie respondió')
+    +'</div>';
+
+  if(esp.length){
+    const F=chtFilasLead(),vis=CHT_VER_TODO?esp:esp.slice(0,CHT_FILAS);
+    h+='<div class="tscroll"><table><thead><tr><th>Cliente</th><th>Canal</th><th>Escribió</th><th>Esperando</th><th>Mensajes</th><th>Etapa</th><th>Asesor</th></tr></thead><tbody>'
+      +vis.map(function(x){
+        const f=x.lead?F[x.lead]:null,m=chtMinutos(x);
+        return'<tr>'
+          +'<td class="namecell">'+chtEnlace(x,f)+'</td>'
+          +'<td>'+esc(chtCanal(x.canal))+'</td>'
+          +'<td class="num">'+leadsFecha(new Date(x.desde*1000).toISOString())+'</td>'
+          +'<td class="num"><span class="cht-espera'+(m>1440?' viejo':m>CHT_ALERTA_MIN?' tarde':'')+'">'+esc(leadsMin(m))+'</span></td>'
+          +'<td class="num">'+leadsN(x.mensajes)+'</td>'
+          +'<td>'+esc(chtEtapa(x))+(chtSituacion(x)==='volvio'?' <span class="badge a">volvió a escribir</span>':'')+'</td>'
+          +'<td>'+esc(chtAsesor(x,f))+'</td>'
+          +'</tr>';
+      }).join('')+'</tbody></table></div>';
+    if(esp.length>CHT_FILAS)h+='<div style="padding:10px 0 0;text-align:center"><button class="pb" onclick="chtVerTodo('+(CHT_VER_TODO?'false':'true')+')">'+(CHT_VER_TODO?'Ver menos':'Ver los '+leadsN(esp.length-CHT_FILAS)+' restantes')+'</button></div>';
+  }else{
+    h+='<div class="cht-nota" style="padding:4px 0 0">✓ En los últimos '+(d.dias||14)+' días no hay ningún chat con el último mensaje del cliente sin responder.</div>';
+  }
+
+  const can=Object.keys(d.canales||{}).sort(function(a,b){return d.canales[b]-d.canales[a];}).map(function(c){return esc(chtCanal(c))+' '+leadsN(d.canales[c]);}).join(' · ');
+  const quien=(CHT_USU&&Array.isArray(d.porUsuario))?d.porUsuario.filter(function(u){return CHT_USU[u.id];}).map(function(u){return esc(CHT_USU[u.id])+' '+leadsN(u.respuestas)+(u.medianaMin!=null?' (tarda '+esc(leadsMin(u.medianaMin))+')':'');}).join(' · '):'';
+  const sinClave=!(window.pmClaveGuardada&&window.pmClaveGuardada());
+  h+='<div class="cht-pie">'
+    +'Un chat cuenta como «esperando» cuando su último mensaje es del cliente y nadie le contestó después, ni el chatbot ni una persona. '
+    +'No se lee el texto, así que alguno puede ser un simple «gracias». Mira los últimos '+(d.dias||14)+' días y no depende del filtro de fechas de arriba.'
+    +(cerrados?(cerrados===1?' No se cuenta 1 chat':' No se cuentan '+leadsN(cerrados)+' chats')+' cuyo lead se cerró después de su último mensaje.':'')
+    +(can?'<br><b>Mensajes de clientes por canal ('+dias+' días):</b> '+can+'.':'')
+    +(quien?'<br><b>Quién respondió ('+dias+' días):</b> '+quien+'.':'')
+    +(sinClave?'<br>Con la clave de Gerencia se ven el nombre del cliente y el asesor.':'')
+    +(d.parcial||d.recortado?'<br>⚠ Hubo más actividad de la que el puente puede leer de una vez: la lista puede estar incompleta.':'')
+    +'</div></div></div>';
+  return h;
+}
+
+// Alerta: chats de los últimos 7 días con el cliente esperando hace más de 30 minutos.
+function chtAlerta(){
+  const esp=chtEsperando().filter(function(x){const m=chtMinutos(x);return m>CHT_ALERTA_MIN&&m<=CHT_ALERTA_DIAS*1440;})
+    .sort(function(a,b){return a.desde-b.desde;});
+  if(!esp.length)return null;
+  const F=chtFilasLead();
+  const fila=function(x){const f=x.lead?F[x.lead]:null;return'<li class="alr-lead">'+chtEnlace(x,f)+'<span>'+esc(chtAsesor(x,f))+'</span><span class="alr-espera">esperando '+esc(leadsMin(chtMinutos(x)))+'</span><span>'+esc(chtCanal(x.canal))+' · '+esc(chtEtapa(x))+'</span></li>';};
+  return{tipo:'chat',st:'r',ico:'💬',
+    titulo:(esp.length===1?'1 cliente escribió por chat y lleva':esp.length+' clientes escribieron por chat y llevan')+' más de '+CHT_ALERTA_MIN+' minutos sin respuesta',
+    detalle:'<p>Chats de los últimos '+CHT_ALERTA_DIAS+' días en los que el último mensaje es del cliente y nadie le contestó (WhatsApp, Facebook, Instagram o TikTok). No se lee el texto, así que alguno puede ser un simple «gracias». Clic en el nombre para abrirlo en Kommo.</p><ul class="alr-leads">'+esp.slice(0,8).map(fila).join('')+'</ul>'+(esp.length>8?'<p>Y '+(esp.length-8)+' más en la pestaña 👤 Leads.</p>':''),
+    accion:{t:'Ver en Leads',tab:'leads'}};
 }
 
 // ═══════════════ ACCESO CON CLAVE (token incrustado) ═══════════════
