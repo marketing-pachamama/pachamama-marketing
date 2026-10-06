@@ -488,7 +488,7 @@ tbody tr:hover td{background:var(--surface2)}
 
     <div id="main"><div class="loading"><div class="spinner"></div>Cargando datos de Meta Ads…</div></div>
 
-    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.11 (prueba)</b> (clientes esperando respuesta en el chat · pestaña TikTok · CAC real en Datos clave · anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
+    <div class="foot-note">Megaproyecto Pachamama · Centro de Inteligencia de Marketing · Generado en vivo desde Meta Ads — los datos se actualizan en cada carga. · <b>v3.11.1 (prueba)</b> (etapas del CRM con su nombre · clientes esperando respuesta en el chat ·pestaña TikTok · CAC real en Datos clave · anuncio de cada lead y costo por cliente por anuncio · buscador por teléfono · botón para la clave de Gerencia · alertas · calidad de datos y creativos · montos en dólares con soles de referencia · pestaña Lead → dinero · pestaña Leads · inversión con y sin IGV · contacto a tiempo en el Embudo)</div>
   </div>
 </div>
 
@@ -1559,11 +1559,36 @@ function leadsSla(){const d=leadsDatos();return(d&&d.consolidado&&d.consolidado.
 function leadsOnOpen(){leadsCargar(false);anuCargar(false);/* v3.8 */chtCargar(false);/* v3.11 */}
 function renderLeads(D){leadsPintar();if(leadsTabActiva()){leadsCargar(false);anuCargar(false);/* v3.8 */chtCargar(false);/* v3.11 */}}
 
-// v3.11: el servidor entrega las dos etapas de cierre de Kommo con su número en vez de su nombre
-// (142 = Leads ganados, 143 = Leads perdidos). Se corrige aquí, al recibir los datos, para que valga
-// en la tabla, el filtro de Etapa, el Excel y las alertas.
-const LEADS_ETAPA_CIERRE={'142':'Leads ganados','143':'Leads perdidos'};
-function leadsEtapaNombre(e){return LEADS_ETAPA_CIERRE[String(e==null?'':e).trim()]||e;}
+// v3.11 / v3.11.1: el servidor conoce una lista fija de etapas. Las demás las entrega con su número en vez
+// de su nombre: las dos de cierre (142 y 143) y las que se agreguen después al embudo en Kommo (por ejemplo
+// "Por contactar"). Se corrige aquí, al recibir los datos, para que valga en la tabla, el filtro de Etapa,
+// el Excel y las alertas. Los nombres se leen del mismo servidor (/api/pipelines, solo lectura, una vez por
+// hora y solo si llegó algún número); si eso falla se usa la lista de respaldo, que es la del 06/10/2026.
+const LEADS_EMBUDO_VENTAS=13969395, LEADS_ETAPAS_TTL_MS=60*60*1000;
+let LEADS_ETAPAS={'142':'Venta concretada','143':'Venta Perdido','109089464':'Por contactar','110663372':'MASIVO'};
+let LEADS_ETAPAS_TS=0, LEADS_ETAPAS_PIDIENDO=null;
+function leadsEtapaEsNumero(e){return /^\d+$/.test(String(e==null?'':e).trim());}
+function leadsEtapaNombre(e){
+  if(!leadsEtapaEsNumero(e))return e;
+  const k=String(e).trim();
+  return LEADS_ETAPAS[k]||('Etapa nueva ('+k+')');
+}
+function leadsEtapasCargar(){
+  if(LEADS_ETAPAS_TS&&Date.now()-LEADS_ETAPAS_TS<LEADS_ETAPAS_TTL_MS)return Promise.resolve();
+  if(LEADS_ETAPAS_PIDIENDO)return LEADS_ETAPAS_PIDIENDO;
+  LEADS_ETAPAS_PIDIENDO=(async function(){
+    try{
+      const r=await fetch(LEADS_URL.replace('/api/historial','/api/pipelines'),{cache:'no-store'});
+      if(!r.ok)return;
+      const j=await r.json();
+      const emb=(Array.isArray(j)?j:[]).filter(function(p){return p&&Number(p.id)===LEADS_EMBUDO_VENTAS;})[0];
+      if(!emb||!Array.isArray(emb.stages))return;
+      emb.stages.forEach(function(s){if(s&&s.id!=null&&s.name)LEADS_ETAPAS[String(s.id)]=String(s.name);});
+      LEADS_ETAPAS_TS=Date.now();
+    }catch(e){}
+  })();
+  return LEADS_ETAPAS_PIDIENDO.then(function(){LEADS_ETAPAS_PIDIENDO=null;});
+}
 
 // Un intento de pedir los leads. Devuelve los datos o lanza un Error con el motivo real que da el
 // servidor (por ejemplo, un límite de consultas de Kommo), marcado como reintentable si fue un fallo del servidor.
@@ -1580,6 +1605,7 @@ async function leadsPedir(url){
   }
   const data=await resp.json();
   if(!data||!Array.isArray(data.filas))throw new Error('la respuesta no trae la lista de leads');
+  if(data.filas.some(function(f){return f&&leadsEtapaEsNumero(f.etapa_actual);}))await leadsEtapasCargar(); // v3.11.1
   data.filas.forEach(function(f){if(f)f.etapa_actual=leadsEtapaNombre(f.etapa_actual);}); // v3.11
   return data;
 }
