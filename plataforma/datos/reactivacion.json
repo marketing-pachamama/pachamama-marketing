@@ -1,0 +1,1347 @@
+{
+ "generado": "2026-09-15T17:31:35",
+ "fuente": "Difusiones_Kommo_detalle_14sep2026.xlsx",
+ "difusiones": [
+  {
+   "id": 10989,
+   "nombre": "NR T03 · DOG 13sep 12:00 ·SOCIO AGRO· tanda 4",
+   "fecha": "2026-09-13T12:00:00",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda4 . sep",
+   "plantilla": "DIA 1 - SOCIO AGRO - SET",
+   "leads": 186,
+   "procesados": 167,
+   "errores": 19,
+   "total_mensajes": 193,
+   "costo": 10.8965,
+   "destinatarios": 193,
+   "entregado": 70,
+   "leido": 71,
+   "respondido": 0,
+   "enviado": 14,
+   "fallido": 38,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 187,
+    "Venta Perdido": 4,
+    "Contactado": 2
+   },
+   "responsables": {
+    "Esteban Reategui": 58,
+    "Brunella Sanchez": 53,
+    "Alexander Alcalde": 10,
+    "Jhon Pullo": 63,
+    "Fátima Abad": 9
+   },
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10983,
+   "nombre": "NR.T02.SAB.12.SEP.7PM.",
+   "fecha": "2026-09-12T19:00:17",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda3 . julio",
+   "plantilla": "ENTRANTE - Bienvenida - 09 SET",
+   "leads": 168,
+   "procesados": 136,
+   "errores": 32,
+   "total_mensajes": 165,
+   "costo": 9.9038,
+   "destinatarios": 165,
+   "entregado": 78,
+   "leido": 56,
+   "respondido": 3,
+   "enviado": 4,
+   "fallido": 24,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 157,
+    "Venta Perdido": 3,
+    "Contactado": 5
+   },
+   "responsables": {
+    "Yormary Aranguren": 91,
+    "Brunella Sanchez": 51,
+    "Alexander Alcalde": 11,
+    "Fátima Abad": 5,
+    "Esteban Reategui": 7
+   },
+   "resp_etapas": {
+    "Contactado": 3
+   },
+   "resp_leads": [
+    12484785,
+    15242793,
+    15503687
+   ]
+  },
+  {
+   "id": 10985,
+   "nombre": "NR T01 · sab 12sep 5:00 ·Bienvenida · tanda 4",
+   "fecha": "2026-09-12T17:00:41",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda4 . sep",
+   "plantilla": "ENTRANTE - Bienvenida - 09 SET",
+   "leads": 186,
+   "procesados": 171,
+   "errores": 15,
+   "total_mensajes": 193,
+   "costo": 11.1074,
+   "destinatarios": 193,
+   "entregado": 54,
+   "leido": 88,
+   "respondido": 6,
+   "enviado": 10,
+   "fallido": 35,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 187,
+    "Venta Perdido": 4,
+    "Contactado": 2
+   },
+   "responsables": {
+    "Esteban Reategui": 58,
+    "Brunella Sanchez": 53,
+    "Alexander Alcalde": 10,
+    "Jhon Pullo": 63,
+    "Fátima Abad": 9
+   },
+   "resp_etapas": {
+    "Venta Perdido": 3,
+    "Contactado": 1,
+    "No responde": 2
+   },
+   "resp_leads": [
+    21076039,
+    21159273,
+    21212773,
+    21412421,
+    21423083,
+    21711053
+   ]
+  },
+  {
+   "id": 10977,
+   "nombre": "NR2 T01 . sab12sep 12:00 .EXPORTACION . agosto",
+   "fecha": "2026-09-12T12:00:09",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda2 . agosto",
+   "plantilla": "DIA 3 - EXPORTACION DIEGO - SET",
+   "leads": 229,
+   "procesados": 216,
+   "errores": 13,
+   "total_mensajes": 223,
+   "costo": 12.9313,
+   "destinatarios": 223,
+   "entregado": 98,
+   "leido": 77,
+   "respondido": 5,
+   "enviado": 5,
+   "fallido": 38,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 220,
+    "Contactado": 2,
+    "Agenda": 1
+   },
+   "responsables": {
+    "Esteban Reategui": 113,
+    "Alexander Alcalde": 54,
+    "Fátima Abad": 21,
+    "Brunella Sanchez": 34,
+    "Jhon Pullo": 1
+   },
+   "resp_etapas": {
+    "No responde": 2,
+    "Contactado": 2,
+    "Agenda": 1
+   },
+   "resp_leads": [
+    15952045,
+    16788137,
+    19132261,
+    19684967,
+    20617543
+   ]
+  },
+  {
+   "id": 10975,
+   "nombre": "NR T03 · sab 12sep 11:40 ·Prensa Noticias · tanda 1",
+   "fecha": "2026-09-12T11:40:57",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "CONTACTADOS - Prensa Noticias - 09 SET",
+   "leads": 157,
+   "procesados": 139,
+   "errores": 18,
+   "total_mensajes": 163,
+   "costo": 10.1232,
+   "destinatarios": 163,
+   "entregado": 45,
+   "leido": 92,
+   "respondido": 7,
+   "enviado": 0,
+   "fallido": 19,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 156,
+    "Contactado": 4,
+    "Venta Perdido": 3
+   },
+   "responsables": {
+    "Esteban Reategui": 52,
+    "Alexander Alcalde": 10,
+    "Brunella Sanchez": 51,
+    "Fátima Abad": 3,
+    "Jhon Pullo": 47
+   },
+   "resp_etapas": {
+    "Venta Perdido": 2,
+    "Contactado": 3,
+    "No responde": 2
+   },
+   "resp_leads": [
+    21101455,
+    21133595,
+    21207067,
+    21214345,
+    21215157,
+    21216377,
+    21257283
+   ]
+  },
+  {
+   "id": 10939,
+   "nombre": "Difusiones (11.09.2026)",
+   "fecha": "2026-09-11T20:00:16",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda3 . julio",
+   "plantilla": "ENTRANTE - Comercial - 09 SET",
+   "leads": 168,
+   "procesados": 149,
+   "errores": 19,
+   "total_mensajes": 165,
+   "costo": 10.7474,
+   "destinatarios": 165,
+   "entregado": 61,
+   "leido": 87,
+   "respondido": 2,
+   "enviado": 3,
+   "fallido": 12,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 157,
+    "Venta Perdido": 3,
+    "Contactado": 5
+   },
+   "responsables": {
+    "Yormary Aranguren": 91,
+    "Brunella Sanchez": 51,
+    "Alexander Alcalde": 11,
+    "Fátima Abad": 5,
+    "Esteban Reategui": 7
+   },
+   "resp_etapas": {
+    "No responde": 2
+   },
+   "resp_leads": [
+    5812577,
+    20868383
+   ]
+  },
+  {
+   "id": 10941,
+   "nombre": "Difusiones (11.09.2026)",
+   "fecha": "2026-09-11T19:50:07",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda2 . agosto",
+   "plantilla": "ENTRANTE - Testimonios - 09SET",
+   "leads": 235,
+   "procesados": 207,
+   "errores": 28,
+   "total_mensajes": 230,
+   "costo": 13.7083,
+   "destinatarios": 230,
+   "entregado": 80,
+   "leido": 107,
+   "respondido": 6,
+   "enviado": 4,
+   "fallido": 33,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 225,
+    "Contactado": 3,
+    "Venta Perdido": 1,
+    "Agenda": 1
+   },
+   "responsables": {
+    "Esteban Reategui": 113,
+    "Alexander Alcalde": 55,
+    "Fátima Abad": 24,
+    "Brunella Sanchez": 37,
+    "Jhon Pullo": 1
+   },
+   "resp_etapas": {
+    "Venta Perdido": 1,
+    "No responde": 5
+   },
+   "resp_leads": [
+    16727361,
+    19241261,
+    19930725,
+    20514595,
+    20540023,
+    20611357
+   ]
+  },
+  {
+   "id": 10775,
+   "nombre": "NR2 T01 . mier09sep 20:00 . Reapertura . agosto",
+   "fecha": "2026-09-09T20:00:51",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "nr . tanda2 . agosto",
+   "plantilla": "NO RESPONDE - Reapertura - 09 SET",
+   "leads": 253,
+   "procesados": 244,
+   "errores": 9,
+   "total_mensajes": 248,
+   "costo": 15.1721,
+   "destinatarios": 248,
+   "entregado": 66,
+   "leido": 137,
+   "respondido": 9,
+   "enviado": 5,
+   "fallido": 31,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 234,
+    "Contactado": 5,
+    "Venta Perdido": 8,
+    "Agenda": 1
+   },
+   "responsables": {
+    "Esteban Reategui": 117,
+    "Alexander Alcalde": 66,
+    "Fátima Abad": 26,
+    "Brunella Sanchez": 38,
+    "Jhon Pullo": 1
+   },
+   "resp_etapas": {
+    "No responde": 6,
+    "Contactado": 1,
+    "Venta Perdido": 2
+   },
+   "resp_leads": [
+    19046694,
+    19202913,
+    19241261,
+    19673663,
+    20471597,
+    20639259,
+    20657051,
+    21043577,
+    21054051
+   ]
+  },
+  {
+   "id": 10695,
+   "nombre": "NR T03 · mar 08sep 19:40 · Testimonios · tanda 1",
+   "fecha": "2026-09-08T19:40:00",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "Plantilla eliminada (id 76297)",
+   "leads": 160,
+   "procesados": 141,
+   "errores": 19,
+   "total_mensajes": 163,
+   "costo": 9.7717,
+   "destinatarios": 163,
+   "entregado": 112,
+   "leido": 15,
+   "respondido": 4,
+   "enviado": 9,
+   "fallido": 22,
+   "en_proceso": 1,
+   "etapas": {
+    "No responde": 143,
+    "Venta Perdido": 10,
+    "Contactado": 7,
+    "Agenda": 3
+   },
+   "responsables": {
+    "Esteban Reategui": 50,
+    "Brunella Sanchez": 48,
+    "Alexander Alcalde": 21,
+    "Jhon Pullo": 43,
+    "Fátima Abad": 1
+   },
+   "resp_etapas": {
+    "No responde": 1,
+    "Contactado": 2,
+    "Venta Perdido": 1
+   },
+   "resp_leads": [
+    20868383,
+    21009755,
+    21051865,
+    21102717
+   ]
+  },
+  {
+   "id": 10661,
+   "nombre": "NR T02 · mar 08sep 13:00 · Reapertura · tanda 1)",
+   "fecha": "2026-09-08T13:00:13",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "Plantilla eliminada (id 76415)",
+   "leads": 156,
+   "procesados": 137,
+   "errores": 19,
+   "total_mensajes": 159,
+   "costo": 9.0687,
+   "destinatarios": 159,
+   "entregado": 103,
+   "leido": 19,
+   "respondido": 5,
+   "enviado": 4,
+   "fallido": 28,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 139,
+    "Venta Perdido": 9,
+    "Contactado": 8,
+    "Agenda": 3
+   },
+   "responsables": {
+    "Esteban Reategui": 51,
+    "Brunella Sanchez": 50,
+    "Alexander Alcalde": 18,
+    "Jhon Pullo": 39,
+    "Fátima Abad": 1
+   },
+   "resp_etapas": {
+    "No responde": 2,
+    "Contactado": 2,
+    "Venta Perdido": 1
+   },
+   "resp_leads": [
+    20868383,
+    21013729,
+    21076039,
+    21086089,
+    21178551
+   ]
+  },
+  {
+   "id": 10615,
+   "nombre": "NR T01 · lun 07sep 19:40 · Reapertura · tanda 1",
+   "fecha": "2026-09-07T19:40:40",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "Plantilla eliminada (id 76293)",
+   "leads": 162,
+   "procesados": 143,
+   "errores": 19,
+   "total_mensajes": 165,
+   "costo": 9.842,
+   "destinatarios": 165,
+   "entregado": 111,
+   "leido": 25,
+   "respondido": 7,
+   "enviado": 1,
+   "fallido": 21,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 138,
+    "Venta Perdido": 15,
+    "Contactado": 9,
+    "Agenda": 3
+   },
+   "responsables": {
+    "Esteban Reategui": 54,
+    "Brunella Sanchez": 52,
+    "Alexander Alcalde": 19,
+    "Jhon Pullo": 38,
+    "Fátima Abad": 2
+   },
+   "resp_etapas": {
+    "No responde": 2,
+    "Venta Perdido": 5
+   },
+   "resp_leads": [
+    20868383,
+    20944597,
+    21000021,
+    21000035,
+    21001277,
+    21002735,
+    21214345
+   ]
+  },
+  {
+   "id": 10609,
+   "nombre": "Difusiones (07.09.2026)",
+   "fecha": "2026-09-07T17:00:28",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "Plantilla eliminada (id 76293)",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10607,
+   "nombre": "Difusiones (07.09.2026)",
+   "fecha": "2026-09-07T16:35:12",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "NR · Cohorte septiembre (07.09.2026)",
+   "plantilla": "Plantilla eliminada (id 76293)",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 1,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 1,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {
+    "Agenda": 1
+   },
+   "responsables": {
+    "Brunella Sanchez": 1
+   },
+   "resp_etapas": {
+    "Agenda": 1
+   },
+   "resp_leads": [
+    16648843
+   ]
+  },
+  {
+   "id": 10525,
+   "nombre": "Difusiones (05.09.2026)",
+   "fecha": "2026-09-05T12:20:38",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "Plantilla eliminada (id 76415)",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10503,
+   "nombre": "Difusiones (04.09.2026)",
+   "fecha": "2026-09-04T22:32:24",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "Plantilla eliminada (id 76415)",
+   "leads": 2,
+   "procesados": 2,
+   "errores": 0,
+   "total_mensajes": 2,
+   "costo": 0.1406,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10501,
+   "nombre": "Difusiones (04.09.2026)",
+   "fecha": "2026-09-04T22:03:59",
+   "creada_por": "Asistente Gerencia",
+   "segmento": "Segmento para \"Difusiones (04.09.2026)\"",
+   "plantilla": "Plantilla eliminada (id 76415)",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 1,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 1,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 1
+   },
+   "responsables": {
+    "Jhon Pullo": 1
+   },
+   "resp_etapas": {
+    "No responde": 1
+   },
+   "resp_leads": [
+    21171189
+   ]
+  },
+  {
+   "id": 10441,
+   "nombre": "Difusiones (03.09.2026)",
+   "fecha": "2026-09-03T18:22:23",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "PRUEBA FINANCIAMIENTO",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 1,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 1,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {
+    "Agenda": 1
+   },
+   "responsables": {
+    "Brunella Sanchez": 1
+   },
+   "resp_etapas": {
+    "Agenda": 1
+   },
+   "resp_leads": [
+    16648843
+   ]
+  },
+  {
+   "id": 10439,
+   "nombre": "Difusiones (03.09.2026)",
+   "fecha": "2026-09-03T18:17:14",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "PRUEBA FINANCIAMIENTO",
+   "leads": 12,
+   "procesados": 12,
+   "errores": 0,
+   "total_mensajes": 12,
+   "costo": 0.703,
+   "destinatarios": 12,
+   "entregado": 3,
+   "leido": 7,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 2,
+   "en_proceso": 0,
+   "etapas": {
+    "Venta Perdido": 2,
+    "No responde": 10
+   },
+   "responsables": {
+    "Fátima Abad": 1,
+    "Alexander Alcalde": 2,
+    "Esteban Reategui": 8,
+    "Brunella Sanchez": 1
+   },
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10307,
+   "nombre": "Difusiones (02.09.2026)",
+   "fecha": "2026-09-02T13:34:36",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "Plantilla eliminada (id 76293)",
+   "leads": 7,
+   "procesados": 7,
+   "errores": 0,
+   "total_mensajes": 7,
+   "costo": 0.3515,
+   "destinatarios": 7,
+   "entregado": 4,
+   "leido": 2,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 1,
+   "en_proceso": 0,
+   "etapas": {
+    "Venta Perdido": 2,
+    "No responde": 5
+   },
+   "responsables": {
+    "Esteban Reategui": 5,
+    "Brunella Sanchez": 2
+   },
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10305,
+   "nombre": "Difusiones (02.09.2026)",
+   "fecha": "2026-09-02T13:20:14",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "Plantilla eliminada (id 76293)",
+   "leads": 7,
+   "procesados": 7,
+   "errores": 0,
+   "total_mensajes": 7,
+   "costo": 0.4218,
+   "destinatarios": 6,
+   "entregado": 3,
+   "leido": 2,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 1,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 6
+   },
+   "responsables": {
+    "Brunella Sanchez": 5,
+    "Esteban Reategui": 1
+   },
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": 10257,
+   "nombre": "Difusiones (01.09.2026)",
+   "fecha": "2026-09-01T20:13:56",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "Plantilla eliminada (id 74465)",
+   "leads": 8,
+   "procesados": 8,
+   "errores": 0,
+   "total_mensajes": 8,
+   "costo": 0.2109,
+   "destinatarios": 8,
+   "entregado": 5,
+   "leido": 0,
+   "respondido": 1,
+   "enviado": 0,
+   "fallido": 2,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 7,
+    "Venta Perdido": 1
+   },
+   "responsables": {
+    "Esteban Reategui": 4,
+    "Alexander Alcalde": 3,
+    "Brunella Sanchez": 1
+   },
+   "resp_etapas": {
+    "No responde": 1
+   },
+   "resp_leads": [
+    20856211
+   ]
+  },
+  {
+   "id": 10255,
+   "nombre": "Difusiones (01.09.2026)",
+   "fecha": "2026-09-01T19:12:08",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "CONTACTADOS - PRODUCTOS (plantilla eliminada)",
+   "leads": 142,
+   "procesados": 137,
+   "errores": 5,
+   "total_mensajes": 169,
+   "costo": 8.9537,
+   "destinatarios": 149,
+   "entregado": 67,
+   "leido": 40,
+   "respondido": 8,
+   "enviado": 6,
+   "fallido": 28,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 132,
+    "Agenda": 5,
+    "Contactado": 3,
+    "Venta Perdido": 9
+   },
+   "responsables": {
+    "Brunella Sanchez": 25,
+    "Esteban Reategui": 52,
+    "Alexander Alcalde": 66,
+    "Fátima Abad": 4,
+    "Jhon Pullo": 2
+   },
+   "resp_etapas": {
+    "No responde": 7,
+    "Venta Perdido": 1
+   },
+   "resp_leads": [
+    19241261,
+    19648803,
+    19911549,
+    19956230,
+    19989697,
+    20318051,
+    20603043,
+    20868383
+   ]
+  },
+  {
+   "id": 10203,
+   "nombre": "Difusiones (01.09.2026)",
+   "fecha": "2026-09-01T13:23:24",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "CONTACTADOS - PRODUCTOS (plantilla eliminada)",
+   "leads": 13,
+   "procesados": 10,
+   "errores": 3,
+   "total_mensajes": 15,
+   "costo": 0.3515,
+   "destinatarios": 14,
+   "entregado": 3,
+   "leido": 5,
+   "respondido": 1,
+   "enviado": 0,
+   "fallido": 5,
+   "en_proceso": 0,
+   "etapas": {
+    "Venta Perdido": 2,
+    "No responde": 12
+   },
+   "responsables": {
+    "Alexander Alcalde": 3,
+    "Esteban Reategui": 9,
+    "Brunella Sanchez": 1,
+    "Fátima Abad": 1
+   },
+   "resp_etapas": {
+    "No responde": 1
+   },
+   "resp_leads": [
+    20664055
+   ]
+  },
+  {
+   "id": 10059,
+   "nombre": "Difusiones (29.08.2026)",
+   "fecha": "2026-08-29T12:02:50",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "NO RESPONDE - REAPERTURA (plantilla eliminada)",
+   "leads": 150,
+   "procesados": 150,
+   "errores": 0,
+   "total_mensajes": 150,
+   "costo": 9.4061,
+   "destinatarios": 150,
+   "entregado": 113,
+   "leido": 10,
+   "respondido": 10,
+   "enviado": 1,
+   "fallido": 16,
+   "en_proceso": 0,
+   "etapas": {
+    "Evolta - Por contactar": 124,
+    "Descartado": 21,
+    "Respondió": 4,
+    "Contactado": 1
+   },
+   "responsables": {
+    "Brunella Sanchez": 50,
+    "Fátima Abad": 51,
+    "Jhon Pullo": 49
+   },
+   "resp_etapas": {
+    "Descartado": 5,
+    "Respondió": 4,
+    "Contactado": 1
+   },
+   "resp_leads": [
+    20581689,
+    20582011,
+    20582191,
+    20582295,
+    20582315,
+    20582363,
+    20582501,
+    20582527,
+    20582559,
+    20582691
+   ]
+  },
+  {
+   "id": 10057,
+   "nombre": "Difusiones (29.08.2026)",
+   "fecha": "2026-08-29T11:59:41",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "CONTACTADOS - PRODUCTOS (plantilla eliminada)",
+   "leads": 150,
+   "procesados": 150,
+   "errores": 0,
+   "total_mensajes": 150,
+   "costo": 9.6753,
+   "destinatarios": 150,
+   "entregado": 115,
+   "leido": 13,
+   "respondido": 7,
+   "enviado": 3,
+   "fallido": 12,
+   "en_proceso": 0,
+   "etapas": {
+    "Evolta - Por contactar": 131,
+    "Descartado": 15,
+    "Respondió": 4
+   },
+   "responsables": {
+    "Brunella Sanchez": 49,
+    "Fátima Abad": 50,
+    "Jhon Pullo": 51
+   },
+   "resp_etapas": {
+    "Respondió": 4,
+    "Descartado": 3
+   },
+   "resp_leads": [
+    20581803,
+    20582089,
+    20582415,
+    20582529,
+    20582555,
+    20582623,
+    20582655
+   ]
+  },
+  {
+   "id": 10055,
+   "nombre": "Difusiones (29.08.2026)",
+   "fecha": "2026-08-29T11:08:26",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "CONTACTADOS - PRODUCTOS (plantilla eliminada)",
+   "leads": 47,
+   "procesados": 43,
+   "errores": 4,
+   "total_mensajes": 47,
+   "costo": 2.1793,
+   "destinatarios": 44,
+   "entregado": 17,
+   "leido": 12,
+   "respondido": 7,
+   "enviado": 0,
+   "fallido": 8,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 34,
+    "Venta Perdido": 5,
+    "Agenda": 2,
+    "Meet": 2,
+    "Contactado": 1
+   },
+   "responsables": {
+    "Alexander Alcalde": 19,
+    "Brunella Sanchez": 11,
+    "Fátima Abad": 3,
+    "Esteban Reategui": 8,
+    "Jhon Pullo": 3
+   },
+   "resp_etapas": {
+    "No responde": 4,
+    "Agenda": 1,
+    "Venta Perdido": 1,
+    "Meet": 1
+   },
+   "resp_leads": [
+    19241261,
+    19648859,
+    20427175,
+    20458825,
+    20471597,
+    20593869,
+    20601963
+   ]
+  },
+  {
+   "id": 10053,
+   "nombre": "Difusiones (29.08.2026)",
+   "fecha": "2026-08-29T10:36:54",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "CONTACTADOS - PRODUCTOS (plantilla eliminada)",
+   "leads": 47,
+   "procesados": 45,
+   "errores": 2,
+   "total_mensajes": 47,
+   "costo": 1.8005,
+   "destinatarios": 45,
+   "entregado": 19,
+   "leido": 11,
+   "respondido": 4,
+   "enviado": 0,
+   "fallido": 11,
+   "en_proceso": 0,
+   "etapas": {
+    "No responde": 43,
+    "Venta Perdido": 1,
+    "Agenda": 1
+   },
+   "responsables": {
+    "Alexander Alcalde": 26,
+    "Brunella Sanchez": 15,
+    "Esteban Reategui": 3,
+    "Fátima Abad": 1
+   },
+   "resp_etapas": {
+    "No responde": 4
+   },
+   "resp_leads": [
+    19950250,
+    20322403,
+    20471909,
+    20587239
+   ]
+  },
+  {
+   "id": 10037,
+   "nombre": "Difusiones (28.08.2026)",
+   "fecha": "2026-08-28T18:40:16",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "NO RESPONDE - REAPERTURA (plantilla eliminada)",
+   "leads": 149,
+   "procesados": 148,
+   "errores": 1,
+   "total_mensajes": 149,
+   "costo": 9.4314,
+   "destinatarios": 149,
+   "entregado": 110,
+   "leido": 16,
+   "respondido": 7,
+   "enviado": 3,
+   "fallido": 13,
+   "en_proceso": 0,
+   "etapas": {
+    "Evolta - Por contactar": 129,
+    "Descartado": 17,
+    "Respondió": 3
+   },
+   "responsables": {
+    "Alexander Alcalde": 29,
+    "Jhon Pullo": 29,
+    "Brunella Sanchez": 29,
+    "Esteban Reategui": 30,
+    "Fátima Abad": 32
+   },
+   "resp_etapas": {
+    "Respondió": 3,
+    "Descartado": 4
+   },
+   "resp_leads": [
+    20581303,
+    20581309,
+    20581335,
+    20581383,
+    20581529,
+    20581535,
+    20581595
+   ]
+  },
+  {
+   "id": 10035,
+   "nombre": "Difusiones (28.08.2026)",
+   "fecha": "2026-08-28T18:36:46",
+   "creada_por": "Asistente Gerencia",
+   "segmento": null,
+   "plantilla": "NO RESPONDE - REAPERTURA (plantilla eliminada)",
+   "leads": 1,
+   "procesados": 1,
+   "errores": 0,
+   "total_mensajes": 1,
+   "costo": 0.0703,
+   "destinatarios": 1,
+   "entregado": 1,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {
+    "Evolta - Por contactar": 1
+   },
+   "responsables": {
+    "Brunella Sanchez": 1
+   },
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "Notas",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• \"Total mensajes\" puede ser mayor que \"Leads\": Kommo manda un mensaje por cada contacto/teléfono del lead.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• Costo estimado: el que informa Kommo. \"Costo por respuesta\" = costo ÷ respondidos (solo si hubo respuestas).",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• \"Destinatarios en Detalle\" cuenta las filas de la hoja Detalle mensajes; debería coincidir con Total mensajes.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• \"Respondido\" es el que registra Kommo en la difusión; las respuestas reales pueden ser más (campaña NR: 55 por etiqueta nr_respondio).",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• Las plantillas marcadas \"eliminada\" ya no existen en Kommo; su nombre no se puede recuperar por API.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• Enviado, Entregado y Leído son acumulados (un mensaje leído también cuenta como entregado y enviado), igual que en Kommo.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• En 8 difusiones el Detalle tiene menos filas que Total mensajes (p. ej. 01/09 de 142 leads: 169 mensajes, 149 filas). Kommo no devuelve los destinatarios cuyo lead se fusionó o eliminó después del envío.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  },
+  {
+   "id": "• La hoja \"Estados por difusión\" muestra el estado ACTUAL de cada destinatario (no acumulado): Entregado = entregado y no leído.",
+   "nombre": null,
+   "fecha": null,
+   "creada_por": null,
+   "segmento": null,
+   "plantilla": null,
+   "leads": 0,
+   "procesados": 0,
+   "errores": 0,
+   "total_mensajes": 0,
+   "costo": 0,
+   "destinatarios": 0,
+   "entregado": 0,
+   "leido": 0,
+   "respondido": 0,
+   "enviado": 0,
+   "fallido": 0,
+   "en_proceso": 0,
+   "etapas": {},
+   "responsables": {},
+   "resp_etapas": {},
+   "resp_leads": []
+  }
+ ],
+ "estados_catalogo": [
+  "Entregado",
+  "Leído",
+  "Fallido",
+  "Respondido",
+  "Enviado",
+  "En proceso"
+ ],
+ "etapas_catalogo": [
+  "No responde",
+  "Evolta - Por contactar",
+  "Venta Perdido",
+  "Contactado",
+  "Descartado",
+  "Agenda",
+  "Respondió",
+  "Meet"
+ ]
+}

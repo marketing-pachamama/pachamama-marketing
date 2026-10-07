@@ -1,0 +1,6 @@
+{
+  "_que_es": "Metros cuadrados obtenidos (vendidos) que usa el calculo 'Costo por cada 1000 m2' de la pestana Lead a dinero.",
+  "_como_se_usa": "Cambia el numero de m2_obtenidos y publica el archivo. Es el valor que ve todo el equipo. Cada persona puede probar otro valor desde la propia pagina, pero eso vale solo en su navegador.",
+  "_pendiente": "Mas adelante este dato deberia salir solo del sistema de ventas, sin escribirlo a mano.",
+  "m2_obtenidos": 0
+}
