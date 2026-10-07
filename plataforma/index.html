@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pachamama · Sala de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&display=swap">
+<style>
+:root{
+  --pink:#D80879; --pink-dark:#a8065e; --pink-soft:#E44472; --lime:#9EBD31; --dark:#0A412D;
+  --grad-brand:linear-gradient(120deg,#D80879,#9EBD31);
+  --bg:#f4f6f3; --bg2:#eef2ec; --surface:#ffffff; --surface2:#fbfcfa;
+  --text:#15291f; --muted:#5d6f66; --border:#dbe3dd; --border-2:#c6d2ca;
+  --green:#1d9e75; --amber:#d98a07; --red:#e0245e;
+  --r:16px; --rs:11px; --rxs:8px;
+  --shadow:0 1px 2px rgba(10,65,45,.05),0 10px 28px -20px rgba(10,65,45,.3);
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --disp:'Sora','Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0a120d; --bg2:#0f1a14; --surface:#121f18; --surface2:#172720;
+    --text:#eef4ea; --muted:#9bb0a4; --border:#23372c; --border-2:#2e4738;
+    --pink:#ff4d9d; --pink-dark:#ff7ab4; --lime:#b9d94f;
+    --green:#3fc295; --amber:#eca93c; --red:#ff5c82;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -20px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0a120d; --bg2:#0f1a14; --surface:#121f18; --surface2:#172720;
+  --text:#eef4ea; --muted:#9bb0a4; --border:#23372c; --border-2:#2e4738;
+  --pink:#ff4d9d; --pink-dark:#ff7ab4; --lime:#b9d94f;
+  --green:#3fc295; --amber:#eca93c; --red:#ff5c82;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -20px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+  display:flex;flex-direction:column;
+}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+
+/* ================= puerta ================= */
+#gate{
+  position:fixed;inset:0;z-index:50;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:24px 16px;
+}
+.gate-box{
+  width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);padding:28px 24px;
+}
+.gate-box h1{font-family:var(--disp);font-size:22px;margin:14px 0 6px;letter-spacing:-.02em}
+.gate-box p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+.gate-box input{
+  width:100%;padding:11px 13px;border:1px solid var(--border-2);border-radius:var(--rs);
+  background:var(--surface2);color:var(--text);font-size:15px;font-family:inherit
+}
+.gate-box .btn{width:100%;margin-top:12px;justify-content:center}
+.gate-err{color:var(--red);font-size:13px;margin-top:10px;font-weight:600}
+.gate-nota{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+
+/* ================= marca ================= */
+.marca{display:flex;align-items:center;gap:10px}
+.marca-svg{width:30px;height:30px;flex:0 0 auto}
+.marca-txt{display:flex;flex-direction:column;line-height:1.15}
+.marca-txt b{font-family:var(--disp);font-size:15px;font-weight:800;letter-spacing:-.02em}
+.marca-txt span{font-size:11px;color:var(--muted);font-weight:500}
+
+/* ================= barras ================= */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:10px 16px;
+}
+.topbar-r{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.estado{
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.punto{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+.punto.vivo{background:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.18)}
+.punto.malo{background:var(--red);box-shadow:0 0 0 3px rgba(224,36,94,.18)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 13px;border:1px solid var(--border-2);border-radius:var(--rs);
+  background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .15s,border-color .15s
+}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--grad-brand);color:#fff;border:0;box-shadow:0 4px 12px rgba(216,8,121,.25)}
+.btn-primary:hover{filter:brightness(1.06);background:var(--grad-brand)}
+.btn[aria-pressed="true"]{border-color:var(--pink);color:var(--pink)}
+
+.areas{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none
+}
+.areas::-webkit-scrollbar,.subtabs::-webkit-scrollbar{height:0;width:0}
+.areas button{
+  padding:11px 16px;border:0;background:transparent;color:var(--muted);
+  font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+  border-bottom:3px solid transparent;margin-bottom:-1px
+}
+.areas button.on{color:var(--pink);border-bottom-color:var(--pink)}
+.areas button:hover:not(.on){color:var(--text)}
+
+.subtabs{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:8px 16px;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none
+}
+.subtabs:empty{display:none}
+.subtabs button{
+  padding:7px 13px;border:1px solid transparent;border-radius:999px;background:transparent;
+  color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+.subtabs button.on{background:var(--surface);border-color:var(--border-2);color:var(--text)}
+.subtabs button:hover:not(.on){color:var(--text)}
+
+/* ================= contenido ================= */
+main{flex:1 1 auto;min-height:0;position:relative}
+.vista{position:absolute;inset:0;overflow:auto;display:none}
+.vista.on{display:block}
+.marco{position:absolute;inset:0;display:none}
+.marco.on{display:block}
+.marco iframe{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+.cargando-marco{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:13px;background:var(--bg);gap:9px
+}
+.spin{
+  width:15px;height:15px;border:2px solid var(--border-2);border-top-color:var(--pink);
+  border-radius:50%;animation:gira .8s linear infinite
+}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+/* ================= portada ================= */
+.portada{max-width:1180px;margin:0 auto;padding:22px 16px 56px}
+.portada h2{
+  font-family:var(--disp);font-size:13px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin:30px 0 12px
+}
+.portada h2:first-of-type{margin-top:0}
+.hero{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:22px 22px 20px;margin-bottom:26px
+}
+.hero h1{font-family:var(--disp);font-size:clamp(20px,4vw,27px);margin:0 0 6px;letter-spacing:-.025em}
+.hero p{margin:0;color:var(--muted);font-size:14px;max-width:70ch}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:12px}
+.tarjeta{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:15px 16px
+}
+.tarjeta .lbl{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tarjeta .num{
+  font-family:var(--disp);font-size:29px;font-weight:800;letter-spacing:-.03em;
+  margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.1
+}
+.tarjeta .num small{font-size:15px;font-weight:700;color:var(--muted)}
+.tarjeta .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.tarjeta.ok .num{color:var(--green)} .tarjeta.warn .num{color:var(--amber)} .tarjeta.bad .num{color:var(--red)}
+.tarjeta.acc .num{color:var(--pink)}
+.atajos{display:flex;flex-wrap:wrap;gap:8px}
+.aviso{
+  border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:var(--rs);
+  background:var(--surface);padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:14px
+}
+.aviso b{color:var(--text)}
+.aviso.malo{border-left-color:var(--red)}
+.pie-portada{
+  margin-top:34px;padding-top:16px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--muted)
+}
+
+/* ================= recuadro de clave ================= */
+.capa{position:fixed;inset:0;z-index:40;background:rgba(10,65,45,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.capa.on{display:flex}
+.dialogo{
+  width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:0 24px 60px -20px rgba(0,0,0,.45);padding:22px
+}
+.dialogo h3{font-family:var(--disp);font-size:17px;margin:0 0 8px;letter-spacing:-.02em}
+.dialogo p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.dialogo input{
+  width:100%;padding:10px 12px;border:1px solid var(--border-2);border-radius:var(--rs);
+  background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit
+}
+.dialogo .fila{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.dialogo .fila .btn{flex:1 1 auto;justify-content:center}
+
+@media (max-width:620px){
+  .topbar{padding:9px 12px;gap:8px}
+  .marca-txt span{display:none}
+  .areas,.subtabs{padding-inline:12px}
+  .portada{padding:18px 12px 44px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ puerta de entrada ============ -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="marca">
+      <svg class="marca-svg" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3C9 3 4 8 4 15c0 7 5 12 12 12 1 0 2-.1 3-.3C13 24 10 20 10 15S13 6 19 3.3C18 3.1 17 3 16 3z" fill="#9EBD31"/>
+        <circle cx="22" cy="20" r="6" fill="#D80879"/>
+      </svg>
+      <div class="marca-txt"><b>Pachamama</b><span>Sala de Control</span></div>
+    </div>
+    <h1>Entrar</h1>
+    <p>Escribe la contraseña del tablero.</p>
+    <label for="gatePass" style="position:absolute;left:-9999px">Contraseña</label>
+    <input id="gatePass" type="password" autocomplete="current-password" placeholder="Contraseña">
+    <button class="btn btn-primary" id="gateBtn">Entrar</button>
+    <div class="gate-err" id="gateErr" hidden></div>
+    <p class="gate-nota">
+      Esta puerta ordena el acceso, <b>no es una medida de seguridad</b>: la contraseña viaja
+      dentro de la página y quien lea su código puede verla. Los datos del CRM necesitan además
+      la clave de Gerencia.
+    </p>
+  </div>
+</div>
+
+<!-- ============ plataforma ============ -->
+<div id="app" hidden style="display:contents">
+
+  <header class="topbar">
+    <div class="marca">
+      <svg class="marca-svg" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3C9 3 4 8 4 15c0 7 5 12 12 12 1 0 2-.1 3-.3C13 24 10 20 10 15S13 6 19 3.3C18 3.1 17 3 16 3z" fill="#9EBD31"/>
+        <circle cx="22" cy="20" r="6" fill="#D80879"/>
+      </svg>
+      <div class="marca-txt"><b>Pachamama</b><span>Sala de Control</span></div>
+    </div>
+    <div class="topbar-r">
+      <span class="estado"><span class="punto" id="punto"></span><span id="estadoTxt">Listo</span></span>
+      <button class="btn" id="btnClave">Clave de Gerencia</button>
+      <button class="btn" id="btnActualizar">Actualizar</button>
+      <button class="btn" id="btnCompartir">Compartir</button>
+      <button class="btn" id="btnSalir">Salir</button>
+    </div>
+  </header>
+
+  <nav class="areas" id="areas" aria-label="Áreas"></nav>
+  <nav class="subtabs" id="subtabs" aria-label="Vistas del área"></nav>
+
+  <main>
+    <section class="vista on" id="v-portada">
+      <div class="portada">
+        <div class="hero">
+          <h1>Todo Pachamama en una sola plataforma</h1>
+          <p>
+            A la izquierda, cómo va el equipo con los leads que ya entraron. A la derecha, cuánto
+            cuesta traerlos. Las dos partes se abren desde el menú de arriba y cada una carga sus
+            datos recién cuando la abres.
+          </p>
+        </div>
+
+        <div id="avisos"></div>
+
+        <h2>Equipo y ventas · del tablero de Gerencia</h2>
+        <div class="rejilla" id="kpiGer">
+          <div class="tarjeta"><div class="lbl">Cargando</div><div class="num">—</div></div>
+        </div>
+
+        <h2>Inversión en Meta · del tablero de Marketing</h2>
+        <div class="rejilla" id="kpiMkt">
+          <div class="tarjeta"><div class="lbl">Cargando</div><div class="num">—</div></div>
+        </div>
+
+        <h2>Ir directo a</h2>
+        <div class="atajos" id="atajos"></div>
+
+        <p class="pie-portada" id="piePortada">
+          La portada pide solo tres datos para abrir rápido. El detalle está en cada área.
+        </p>
+      </div>
+    </section>
+
+    <div class="marco" id="marco-gerencia"></div>
+    <div class="marco" id="marco-marketing"></div>
+  </main>
+</div>
+
+<!-- ============ recuadro de la clave ============ -->
+<div class="capa" id="capaClave">
+  <div class="dialogo" role="dialog" aria-modal="true" aria-labelledby="clvTit">
+    <h3 id="clvTit">Clave de Gerencia</h3>
+    <p>
+      Abre los datos del CRM: leads, atención, citas, perdidos y el embudo.
+      Se guarda en este navegador y no se comparte con nadie.
+    </p>
+    <label for="clvInput" style="position:absolute;left:-9999px">Clave</label>
+    <input id="clvInput" type="password" autocomplete="off" placeholder="Clave del servidor">
+    <div class="gate-err" id="clvErr" hidden></div>
+    <div class="fila">
+      <button class="btn btn-primary" id="clvGuardar">Guardar</button>
+      <button class="btn" id="clvOlvidar">Olvidar</button>
+      <button class="btn" id="clvCerrar">Cerrar</button>
+    </div>
+    <p style="margin:14px 0 0;font-size:12px;color:var(--muted)">
+      Una sola clave abre la lectura y la escritura del servidor: quien la tiene puede además
+      cambiar el reparto de leads. Está pendiente separarla en dos.
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ======================= constantes ======================= */
+var BACKEND   = "https://pachamama-backend-v0v0.onrender.com";
+var META_PROXY= "https://meta-proxy.m-palomino.workers.dev/";
+var KOMMO_PUENTE = "https://kommo-embudo.m-palomino.workers.dev/";
+var CUENTA_META  = "4260660664079722";
+var LLAVE_CLAVE  = "pm_api_key";
+var LLAVE_PUERTA = "pachamama_unlocked";
+var LLAVE_VISTA  = "pm_ultima_vista";
+var REFRESCO_MS  = 120000;
+
+var AREAS = [
+  {id:"portada", nombre:"Portada", tabs:[]},
+  {id:"gerencia", nombre:"Gerencia", archivo:"tablero-gerencia.html", tabs:[
+    ["dash","Tablero"],["equipo","Equipo y reparto"],["citas","Citas"],["hist","Historial"],
+    ["horas","Horarios de entrada"],["perd","Perdidos"],["react","Reactivación"],["n8n","Errores de n8n"]
+  ]},
+  {id:"marketing", nombre:"Marketing", archivo:"dashboard-marketing.html", tabs:[
+    ["resumen","Resumen"],["campanas","Campañas"],["creativos","Creativos"],["audiencias","Audiencias"],
+    ["embudo","Embudo"],["dinero","Lead → dinero"],["insights","Insights"],
+    ["recomendaciones","Plan de acción"],["tiktok","TikTok"],["leads","Leads"]
+  ]}
+];
+
+var areaActual = "portada", subActual = {}, marcos = {}, reloj = null, portadaPedida = false;
+
+function $(id){ return document.getElementById(id); }
+function leer(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
+function guardar(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function borrar(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function estado(txt, clase){
+  $("estadoTxt").textContent = txt;
+  $("punto").className = "punto" + (clase ? " "+clase : "");
+}
+
+/* ======================= puerta ======================= */
+var CLAVE_PUERTA = null;
+
+function abrirApp(){
+  $("gate").hidden = true;
+  $("gate").style.display = "none";
+  $("app").hidden = false;
+  dibujarAreas();
+  var ultima = (location.hash||"").replace("#","") || leer(LLAVE_VISTA) || "portada";
+  irArea(AREAS.some(function(a){return a.id===ultima;}) ? ultima : "portada");
+  arrancarReloj();
+}
+
+function comprobarPuerta(){
+  var v = $("gatePass").value.trim();
+  if(!v){ return; }
+  if(CLAVE_PUERTA === null){
+    /* Sin archivo de acceso configurado: no se inventa una contraseña */
+    guardar(LLAVE_PUERTA,"1"); abrirApp(); return;
+  }
+  if(v === CLAVE_PUERTA){
+    guardar(LLAVE_PUERTA,"1"); abrirApp();
+  }else{
+    var e = $("gateErr"); e.hidden = false; e.textContent = "Esa contraseña no es.";
+    $("gatePass").select();
+  }
+}
+
+fetch("datos/acceso.json",{cache:"no-store"})
+  .then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(j){
+    CLAVE_PUERTA = (j && typeof j.clave === "string" && j.clave && j.clave.indexOf("PON_AQUI") !== 0) ? j.clave : null;
+  })
+  .catch(function(){ CLAVE_PUERTA = null; })
+  .then(function(){
+    if(leer(LLAVE_PUERTA) === "1"){ abrirApp(); }
+  });
+
+$("gateBtn").addEventListener("click", comprobarPuerta);
+$("gatePass").addEventListener("keydown", function(ev){ if(ev.key === "Enter") comprobarPuerta(); });
+
+/* ======================= menús ======================= */
+function dibujarAreas(){
+  var cont = $("areas");
+  cont.innerHTML = "";
+  AREAS.forEach(function(a){
+    var b = document.createElement("button");
+    b.textContent = a.nombre;
+    b.dataset.area = a.id;
+    b.addEventListener("click", function(){ irArea(a.id); });
+    cont.appendChild(b);
+  });
+}
+
+function dibujarSubtabs(area){
+  var cont = $("subtabs");
+  cont.innerHTML = "";
+  var a = AREAS.filter(function(x){ return x.id === area; })[0];
+  if(!a || !a.tabs.length) return;
+  a.tabs.forEach(function(t){
+    var b = document.createElement("button");
+    b.textContent = t[1];
+    b.dataset.tab = t[0];
+    b.addEventListener("click", function(){ irTab(area, t[0]); });
+    cont.appendChild(b);
+  });
+  marcarSub(area, subActual[area] || a.tabs[0][0]);
+}
+
+function marcarSub(area, tab){
+  subActual[area] = tab;
+  $("subtabs").querySelectorAll("button").forEach(function(b){
+    b.classList.toggle("on", b.dataset.tab === tab);
+  });
+}
+
+/* ======================= navegación ======================= */
+function irArea(id){
+  areaActual = id;
+  guardar(LLAVE_VISTA, id);
+  try{ history.replaceState(null,"","#"+id); }catch(e){}
+  $("areas").querySelectorAll("button").forEach(function(b){
+    b.classList.toggle("on", b.dataset.area === id);
+  });
+  $("v-portada").classList.toggle("on", id === "portada");
+  AREAS.forEach(function(a){
+    if(!a.archivo) return;
+    var m = $("marco-"+a.id);
+    var activo = (a.id === id);
+    m.classList.toggle("on", activo);
+    marcarVisible(a.id, activo);
+    if(activo) asegurarMarco(a);
+  });
+  dibujarSubtabs(id);
+  if(id === "portada") cargarPortada();
+}
+
+function asegurarMarco(a){
+  if(marcos[a.id]) return;
+  var m = $("marco-"+a.id);
+  m.innerHTML = '<div class="cargando-marco"><span class="spin"></span>Abriendo '+esc(a.nombre)+'…</div>';
+  var fr = document.createElement("iframe");
+  fr.title = "Tablero de " + a.nombre;
+  fr.addEventListener("load", function(){
+    var c = m.querySelector(".cargando-marco");
+    if(c) c.remove();
+    marcarVisible(a.id, areaActual === a.id);
+    var t = subActual[a.id];
+    if(t) setTimeout(function(){ irTab(a.id, t, true); }, 60);
+  });
+  fr.src = a.archivo;
+  m.appendChild(fr);
+  marcos[a.id] = fr;
+}
+
+function irTab(area, tab, soloDentro){
+  if(area !== areaActual && !soloDentro){ irArea(area); }
+  marcarSub(area, tab);
+  var fr = marcos[area];
+  if(!fr || !fr.contentWindow) return;
+  try{
+    if(area === "gerencia" && typeof fr.contentWindow.go === "function"){
+      fr.contentWindow.go(tab);
+    }else if(area === "marketing"){
+      var b = fr.contentDocument && fr.contentDocument.querySelector('[data-s="'+tab+'"]');
+      if(b) b.click();
+    }
+  }catch(e){ /* el marco todavía no terminó de abrir */ }
+}
+
+/* Le dice al marco si está a la vista, para que no refresque en segundo plano */
+function marcarVisible(id, visible){
+  var fr = marcos[id];
+  if(!fr) return;
+  try{
+    var d = fr.contentDocument;
+    if(d && d.documentElement) d.documentElement.dataset.pmVisible = visible ? "1" : "0";
+  }catch(e){}
+}
+
+/* ======================= la clave de Gerencia ======================= */
+function hayClave(){ return !!leer(LLAVE_CLAVE); }
+
+function pintarBotonClave(){
+  $("btnClave").textContent = hayClave() ? "Clave puesta" : "Clave de Gerencia";
+  $("btnClave").setAttribute("aria-pressed", hayClave() ? "true" : "false");
+}
+
+function abrirClave(){ $("capaClave").classList.add("on"); $("clvInput").focus(); }
+function cerrarClave(){ $("capaClave").classList.remove("on"); $("clvErr").hidden = true; }
+
+function guardarClave(){
+  var v = $("clvInput").value.trim();
+  if(!v) return;
+  var err = $("clvErr");
+  err.hidden = false; err.style.color = "var(--muted)"; err.textContent = "Comprobando…";
+  fetch(BACKEND + "/api/pipelines", {headers:{"X-API-Key": v}})
+    .then(function(r){
+      if(r.status === 401 || r.status === 403) throw new Error("La clave no es válida.");
+      if(!r.ok) throw new Error("El servidor no respondió (" + r.status + ").");
+      guardar(LLAVE_CLAVE, v);
+      $("clvInput").value = "";
+      cerrarClave();
+      pintarBotonClave();
+      estado("Clave puesta", "vivo");
+      recargarTodo();
+    })
+    .catch(function(e){
+      err.hidden = false; err.style.color = "var(--red)";
+      err.textContent = e.message || "No se pudo comprobar.";
+    });
+}
+
+function olvidarClave(){
+  borrar(LLAVE_CLAVE);
+  pintarBotonClave();
+  cerrarClave();
+  estado("Sin clave de Gerencia", "malo");
+}
+
+$("btnClave").addEventListener("click", abrirClave);
+$("clvGuardar").addEventListener("click", guardarClave);
+$("clvOlvidar").addEventListener("click", olvidarClave);
+$("clvCerrar").addEventListener("click", cerrarClave);
+$("clvInput").addEventListener("keydown", function(ev){ if(ev.key === "Enter") guardarClave(); });
+$("capaClave").addEventListener("click", function(ev){ if(ev.target === $("capaClave")) cerrarClave(); });
+document.addEventListener("keydown", function(ev){ if(ev.key === "Escape") cerrarClave(); });
+
+/* Los marcos avisan cuando les falta la clave o se la rechazaron */
+window.addEventListener("message", function(ev){
+  if(ev.origin !== location.origin) return;
+  var d = ev.data;
+  if(!d || d.pm !== "clave") return;
+  pintarBotonClave();
+  if(d.motivo === "invalida"){ estado("La clave venció", "malo"); abrirClave(); }
+  else if(!hayClave()){ estado("Falta la clave de Gerencia", "malo"); }
+});
+
+/* ======================= un solo reloj ======================= */
+function arrancarReloj(){
+  if(reloj) clearInterval(reloj);
+  reloj = setInterval(function(){
+    if(document.hidden) return;
+    if(Date.now() - (window.__ultimaInteraccion||0) < 20000) return;
+    refrescarVisible(true);
+  }, REFRESCO_MS);
+}
+document.addEventListener("input", function(){ window.__ultimaInteraccion = Date.now(); }, true);
+document.addEventListener("click", function(){ window.__ultimaInteraccion = Date.now(); }, true);
+
+function refrescarVisible(suave){
+  if(areaActual === "portada"){ portadaPedida = false; cargarPortada(); return; }
+  var fr = marcos[areaActual];
+  if(!fr || !fr.contentWindow) return;
+  try{
+    if(areaActual === "gerencia" && typeof fr.contentWindow.recargar === "function"){
+      fr.contentWindow.recargar(suave === true);
+    }else if(areaActual === "marketing" && typeof fr.contentWindow.loadData === "function"){
+      fr.contentWindow.loadData();
+    }
+  }catch(e){}
+  estado("Actualizado " + horaCorta(), "vivo");
+}
+
+function recargarTodo(){
+  Object.keys(marcos).forEach(function(id){
+    try{ marcos[id].contentWindow.location.reload(); }catch(e){}
+  });
+  portadaPedida = false;
+  if(areaActual === "portada") cargarPortada();
+}
+
+$("btnActualizar").addEventListener("click", function(){ refrescarVisible(false); });
+
+function horaCorta(){
+  return new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+}
+
+/* ======================= compartir y salir ======================= */
+$("btnCompartir").addEventListener("click", function(){
+  var url = location.origin + location.pathname + "#" + areaActual;
+  var ok = function(){ estado("Enlace copiado", "vivo"); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(ok).catch(function(){ prompt2(url); });
+  }else{ prompt2(url); }
+});
+function prompt2(url){ estado("Copia: " + url, ""); }
+
+$("btnSalir").addEventListener("click", function(){
+  borrar(LLAVE_PUERTA);
+  location.reload();
+});
+
+/* ======================= portada ======================= */
+function tarjeta(clase, lbl, num, uni, sub){
+  return '<div class="tarjeta '+clase+'"><div class="lbl">'+esc(lbl)+'</div>'+
+         '<div class="num">'+esc(num)+(uni?' <small>'+esc(uni)+'</small>':'')+'</div>'+
+         (sub?'<div class="sub">'+esc(sub)+'</div>':'')+'</div>';
+}
+function nf(n,d){
+  if(n==null||isNaN(n)) return "—";
+  return Number(n).toLocaleString("es-PE",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+}
+
+function cargarPortada(){
+  if(portadaPedida) return;
+  portadaPedida = true;
+  if(CLAVE_PUERTA === null){
+    avisar('La puerta de entrada <b>no está configurada</b>: ahora mismo pasa cualquiera. Pon la contraseña en <b>datos/acceso.json</b> del repositorio.', true);
+  }
+  dibujarAtajos();
+  pedirGerencia();
+  pedirMeta();
+}
+
+function dibujarAtajos(){
+  var a = $("atajos");
+  if(a.childElementCount) return;
+  var lista = [
+    ["gerencia","hist","Historial de atenciones"],
+    ["gerencia","perd","Perdidos"],
+    ["gerencia","citas","Citas de hoy"],
+    ["marketing","dinero","Lead → dinero"],
+    ["marketing","leads","Leads lead por lead"],
+    ["marketing","creativos","Creativos"]
+  ];
+  a.innerHTML = "";
+  lista.forEach(function(x){
+    var b = document.createElement("button");
+    b.className = "btn";
+    b.textContent = x[2];
+    b.addEventListener("click", function(){ irArea(x[0]); irTab(x[0], x[1]); });
+    a.appendChild(b);
+  });
+}
+
+function avisar(html, malo){
+  var c = $("avisos");
+  var d = document.createElement("div");
+  d.className = "aviso" + (malo ? " malo" : "");
+  d.innerHTML = html;
+  c.appendChild(d);
+}
+
+function pedirGerencia(){
+  var cont = $("kpiGer");
+  if(!hayClave()){
+    cont.innerHTML = tarjeta("", "Equipo y ventas", "—", "", "Pon la clave de Gerencia para ver estos números");
+    avisar('Falta la <b>clave de Gerencia</b>. Sin ella se ve la inversión en Meta, pero no los datos del CRM.', true);
+    return;
+  }
+  estado("Pidiendo datos…", "");
+  fetch(BACKEND + "/api/dashboard", {headers:{"X-API-Key": leer(LLAVE_CLAVE)}})
+    .then(function(r){
+      if(r.status === 401){ borrar(LLAVE_CLAVE); pintarBotonClave(); throw new Error("La clave venció."); }
+      if(!r.ok) throw new Error("El servidor respondió " + r.status + ".");
+      return r.json();
+    })
+    .then(function(j){
+      var m = j.meta_mensual || {};
+      var lotes = m.lotes_vendidos != null ? m.lotes_vendidos : 0;
+      var metaLotes = 60, metaLeads = 30;
+      var leadsHoy = j.leads_hoy != null ? j.leads_hoy : (j.leads_hoy_campanas != null ? j.leads_hoy_campanas : null);
+      var sinAtender = (j.cola && j.cola.length != null) ? j.cola.length : (j.sin_atender != null ? j.sin_atender : null);
+      var html = "";
+      html += tarjeta(lotes >= metaLotes ? "ok" : "acc", "Clientes del mes", nf(lotes), "de " + metaLotes,
+                      Math.round(lotes / metaLotes * 100) + "% de la meta");
+      html += tarjeta(leadsHoy != null && leadsHoy >= metaLeads ? "ok" : "warn", "Leads hoy", nf(leadsHoy), "de " + metaLeads, "solo campañas");
+      html += tarjeta(sinAtender ? "bad" : "ok", "Leads sin atender", nf(sinAtender), "", "ahora mismo");
+      var emb = j.embudo || {};
+      var totalEmb = emb.leads != null ? emb.leads : null;
+      html += tarjeta("", "Leads en el embudo", nf(totalEmb), "", "del embudo de ventas");
+      cont.innerHTML = html;
+      estado("Datos de las " + horaCorta(), "vivo");
+    })
+    .catch(function(e){
+      var m = (e && e.message) || "";
+      var txt = /Failed to fetch|NetworkError|ERR_FAILED/i.test(m)
+        ? "No se pudo llegar al servidor de Gerencia"
+        : (m || "No se pudo cargar");
+      cont.innerHTML = tarjeta("bad", "Equipo y ventas", "—", "", txt);
+      estado("No se pudo cargar Gerencia", "malo");
+    });
+}
+
+function pedirMeta(){
+  var cont = $("kpiMkt");
+  var ruta = "act_" + CUENTA_META + "/insights?date_preset=this_month&fields=spend,impressions,clicks,actions,cpm,ctr";
+  fetch(META_PROXY + "?path=" + encodeURIComponent(ruta), {cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("El puente de Meta respondió " + r.status + "."); return r.json(); })
+    .then(function(j){
+      var d = (j && j.data && j.data[0]) || null;
+      if(!d){
+        cont.innerHTML = tarjeta("warn", "Inversión del mes", "0", "US$", "Meta no reporta gasto en este mes");
+        avisar('Meta no reporta inversión en el mes en curso. Si las campañas figuran activas pero sin entrega, revisa <b>Facturación y pagos</b> de la cuenta.');
+        return;
+      }
+      var gasto = parseFloat(d.spend || 0);
+      var leads = 0;
+      (d.actions || []).forEach(function(a){
+        if(a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped") leads += parseFloat(a.value || 0);
+      });
+      var cpl = leads ? gasto / leads : null;
+      var html = "";
+      html += tarjeta("acc", "Inversión del mes", "US$ " + nf(gasto, 2), "sin IGV", "US$ " + nf(gasto * 1.18, 2) + " con IGV");
+      html += tarjeta("", "Leads de Meta", nf(leads), "", "formularios del mes");
+      html += tarjeta(cpl != null && cpl <= 4.51 ? "ok" : "warn", "Costo por lead", cpl != null ? "US$ " + nf(cpl, 2) : "—", "con IGV no",
+                      "techo de palta: US$ 4.51 con IGV");
+      cont.innerHTML = html;
+    })
+    .catch(function(e){
+      var m = (e && e.message) || "";
+      var txt = /Failed to fetch|NetworkError|ERR_FAILED/i.test(m)
+        ? "No se pudo llegar al puente de Meta desde esta dirección"
+        : (m || "No se pudo cargar");
+      cont.innerHTML = tarjeta("bad", "Inversión del mes", "—", "", txt);
+    });
+}
+
+/* Si la puerta ya estaba abierta en este navegador, no esperamos al archivo de acceso */
+if(leer(LLAVE_PUERTA) === "1"){ abrirApp(); }
+pintarBotonClave();
+
+})();
+</script>
+</body>
+</html>
