@@ -346,6 +346,7 @@ var AREAS = [
 ];
 
 var areaActual = "portada", subActual = {}, marcos = {}, reloj = null, portadaPedida = false;
+var claveYaOfrecida = false;
 
 function $(id){ return document.getElementById(id); }
 function leer(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
@@ -523,6 +524,7 @@ function guardarClave(){
       cerrarClave();
       pintarBotonClave();
       estado("Clave puesta", "vivo");
+      claveYaOfrecida = false;
       recargarTodo();
     })
     .catch(function(e){
@@ -552,8 +554,13 @@ window.addEventListener("message", function(ev){
   var d = ev.data;
   if(!d || d.pm !== "clave") return;
   pintarBotonClave();
-  if(d.motivo === "invalida"){ estado("La clave venció", "malo"); abrirClave(); }
-  else if(!hayClave()){ estado("Falta la clave de Gerencia", "malo"); }
+  /* Se ofrece una sola vez por visita: si no, cada consulta fallida vuelve a tapar la pantalla */
+  if(d.motivo === "invalida"){
+    estado(hayClave() ? "La clave venció" : "Falta la clave de Gerencia", "malo");
+    if(!claveYaOfrecida){ claveYaOfrecida = true; abrirClave(); }
+  }else if(!hayClave()){
+    estado("Falta la clave de Gerencia", "malo");
+  }
 });
 
 /* ======================= un solo reloj ======================= */
@@ -703,10 +710,25 @@ function pedirGerencia(){
     });
 }
 
+/* La misma lista y el mismo orden que usa la pestaña de Marketing, para que las dos
+   cifras de leads coincidan. Meta reporta el mismo lead bajo varios nombres: gana el primero. */
+var TIPOS_LEAD = ["onsite_conversion.lead_grouped","offsite_complete_registration_add_meta_leads","offsite_conversion.fb_pixel_lead","lead"];
+function leadsDe(acciones){
+  if(!acciones || !acciones.length) return 0;
+  for(var i = 0; i < TIPOS_LEAD.length; i++){
+    for(var j = 0; j < acciones.length; j++){
+      if(acciones[j].action_type === TIPOS_LEAD[i]) return parseFloat(acciones[j].value || 0);
+    }
+  }
+  return 0;
+}
+
 function pedirMeta(){
   var cont = $("kpiMkt");
-  var ruta = "act_" + CUENTA_META + "/insights?date_preset=this_month&fields=spend,impressions,clicks,actions,cpm,ctr";
-  fetch(META_PROXY + "?path=" + encodeURIComponent(ruta), {cache:"no-store"})
+  /* El puente solo acepta la ruta pelada: los parámetros van aparte, o responde 403 */
+  var qs = "path=" + encodeURIComponent("act_" + CUENTA_META + "/insights") +
+           "&date_preset=this_month&fields=spend,actions";
+  fetch(META_PROXY + "?" + qs, {cache:"no-store"})
     .then(function(r){ if(!r.ok) throw new Error("El puente de Meta respondió " + r.status + "."); return r.json(); })
     .then(function(j){
       var d = (j && j.data && j.data[0]) || null;
@@ -716,16 +738,13 @@ function pedirMeta(){
         return;
       }
       var gasto = parseFloat(d.spend || 0);
-      var leads = 0;
-      (d.actions || []).forEach(function(a){
-        if(a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped") leads += parseFloat(a.value || 0);
-      });
+      var leads = leadsDe(d.actions);
       var cpl = leads ? gasto / leads : null;
       var html = "";
       html += tarjeta("acc", "Inversión del mes", "US$ " + nf(gasto, 2), "sin IGV", "US$ " + nf(gasto * 1.18, 2) + " con IGV");
       html += tarjeta("", "Leads de Meta", nf(leads), "", "formularios del mes");
-      html += tarjeta(cpl != null && cpl <= 4.51 ? "ok" : "warn", "Costo por lead", cpl != null ? "US$ " + nf(cpl, 2) : "—", "con IGV no",
-                      "techo de palta: US$ 4.51 con IGV");
+      html += tarjeta(cpl != null && cpl <= 3.82 ? "ok" : "warn", "Costo por lead", cpl != null ? "US$ " + nf(cpl, 2) : "—", "sin IGV",
+                      "techo de palta: US$ 3.82 sin IGV (4.51 con IGV)");
       cont.innerHTML = html;
     })
     .catch(function(e){
@@ -736,6 +755,14 @@ function pedirMeta(){
       cont.innerHTML = tarjeta("bad", "Inversión del mes", "—", "", txt);
     });
 }
+
+/* Un enlace con #gerencia o #marketing cambia de area aunque la pagina ya este abierta.
+   Sin esto, pegar el enlace que da Compartir no hacia nada para quien ya la tenia abierta. */
+window.addEventListener("hashchange", function(){
+  if($("app").hidden) return;
+  var id = (location.hash||"").replace("#","");
+  if(id && id !== areaActual && AREAS.some(function(a){ return a.id === id; })) irArea(id);
+});
 
 /* Si la puerta ya estaba abierta en este navegador, no esperamos al archivo de acceso */
 if(leer(LLAVE_PUERTA) === "1"){ abrirApp(); }

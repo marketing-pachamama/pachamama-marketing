@@ -1,5 +1,5 @@
 {
   "_que_es": "Contraseña de entrada a la plataforma. NO es una medida de seguridad: este repositorio es publico y cualquiera puede leer este archivo. Sirve para ordenar el acceso, no para proteger. Los datos del CRM piden ademas la clave de Gerencia.",
-  "_como_se_usa": "Reemplaza el valor de 'clave' por la misma contrasena que usa hoy el dashboard de Marketing. Mientras diga PON_AQUI_LA_CONTRASENA, la puerta deja pasar a cualquiera y lo avisa.",
-  "clave": "PON_AQUI_LA_CONTRASENA"
+  "_como_se_usa": "Es la misma contrasena que ya usaba el dashboard de Marketing. Para cambiarla, edita este campo y publica. Recuerda que no protege nada: solo ordena el acceso.",
+  "clave": "pachamama2026"
 }
