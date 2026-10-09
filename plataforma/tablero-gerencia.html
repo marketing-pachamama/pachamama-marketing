@@ -324,6 +324,7 @@ table.t tr:hover td{background:var(--accent-100)}
           <span id="rCustom" hidden style="display:inline-flex;gap:6px;align-items:center"><input type="date" id="rDesde" onchange="renderReact()"><span style="color:var(--muted)">→</span><input type="date" id="rHasta" onchange="renderReact()"></span>
           <span class="count mono" id="rCount"></span>
         </div>
+        <div id="rFrescura" style="margin-bottom:12px"></div>
         <div class="grid kpis" id="rKpis" style="margin-bottom:12px"></div>
         <div class="panel" style="margin-bottom:12px"><div class="phead"><h2>Enviados por día</h2><span class="n">pasa el cursor por cada barra</span></div><div class="tw" id="rChart"></div></div>
         <div class="grid two" style="margin-bottom:12px">
@@ -774,11 +775,32 @@ function loadReact(cb){
   if(RJSON){cb&&cb();return;}
   var k=document.getElementById('rKpis');if(k)k.innerHTML='<div class="loading">Cargando difusiones…</div>';
   fetch('datos/reactivacion.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){
-    RJSON=j;fillReactSel();cb&&cb();
+    RJSON=j;pintarFrescuraReact();fillReactSel();cb&&cb();
   }).catch(function(){
     if(k)k.innerHTML='<div class="empty" style="padding:26px">No se encontró <b>datos/reactivacion.json</b> en el repositorio.<br>Sube el archivo de difusiones para activar esta pestaña.</div>';
   });
 }
+/* Esta pestaña no lee el CRM: sale de un archivo que se sube a mano.
+   Sin decir de cuándo es, cualquiera lee cifras viejas como si fueran de hoy. */
+function pintarFrescuraReact(){
+  var caja=document.getElementById('rFrescura');
+  if(!caja)return;
+  var gen=RJSON&&RJSON.generado?new Date(RJSON.generado):null;
+  if(!gen||isNaN(gen)){
+    caja.innerHTML='<div class="note">Estos datos salen de un archivo que se sube a mano, no del CRM en vivo. El archivo no dice de cuándo es.</div>';
+    return;
+  }
+  var dias=Math.floor((Date.now()-gen.getTime())/86400000);
+  var fecha=gen.toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
+  var viejo=dias>14;
+  var texto='Datos del <b>'+fecha+'</b>'+(dias>0?' · hace '+dias+' '+(dias===1?'día':'días'):' · de hoy')+'. '+
+            'Esta pestaña no lee el CRM en vivo: sale de un archivo que se sube a mano.';
+  if(viejo)texto+=' <b>Lleva más de dos semanas sin actualizarse</b>, así que lo que ves aquí no es la foto de hoy.';
+  caja.innerHTML=viejo
+    ? '<div class="panel" style="border-left:4px solid var(--warn);padding:11px 13px"><div class="note" style="margin:0">'+texto+'</div></div>'
+    : '<div class="note">'+texto+'</div>';
+}
+
 function fillReactSel(){
   var s=document.getElementById('rDif');if(!s||!RJSON)return;
   var opts='<option value="__all">Todas · consolidado</option>';
