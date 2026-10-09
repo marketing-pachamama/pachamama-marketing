@@ -480,6 +480,17 @@ tbody tr:hover td{background:var(--surface2)}
       </div>
       <div class="sep"></div>
       <div class="fgroup">
+        <span class="fgroup-lbl">Hora de entrada</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="time" class="di" id="hf" onchange="horaCambio()" aria-label="Desde esta hora">
+          <span style="color:var(--hint)">→</span>
+          <input type="time" class="di" id="ht" onchange="horaCambio()" aria-label="Hasta esta hora">
+          <button class="btn btn-secondary" id="horaLimpiar" onclick="horaLimpiar()" hidden>Quitar</button>
+        </div>
+        <div id="horaNota" class="help" style="margin-top:4px;max-width:260px" hidden></div>
+      </div>
+      <div class="sep"></div>
+      <div class="fgroup">
         <span class="fgroup-lbl">Producto</span>
         <select class="fsel" id="productSelDash" onchange="loadData()">
           <option value="palta">🥑 Palta Hass</option>
@@ -1334,11 +1345,19 @@ function renderEmbudo(D){
   if(!KOMMO_WORKER_URL){sec.innerHTML=`<div class="sechead"><h2>Embudo Comercial</h2></div><div class="acard-rec"><h3>Conecta tu CRM Kommo</h3><p style="font-size:13px">Define KOMMO_WORKER_URL en el código.</p></div>`;return;}
   if(D.kommoError||!KOMMO_DATA||KOMMO_DATA.ok!==true){sec.innerHTML=`<div class="sechead"><h2>Embudo Comercial</h2></div><div class="erbox">⚠ No se pudo leer Kommo: ${esc(D.kommoError||(KOMMO_DATA&&KOMMO_DATA.error)||'sin datos')}</div>`;return;}
 
-  const allRows=KOMMO_DATA.rows||[];
+  /* A2 · los leads importados de Evolta no son leads propios: no cuentan en el embudo */
+  const filasCrudas=KOMMO_DATA.rows||[];
+  const esEvolta=function(r){return (r.tags||[]).some(function(t){return /^evolta-/i.test(String(t));});};
+  const puenteMarcaEvolta=filasCrudas.some(esEvolta);
+  const allRows=puenteMarcaEvolta?filasCrudas.filter(function(r){return !esEvolta(r);}):filasCrudas;
+  const evoltaFuera=filasCrudas.length-allRows.length;
   // "Embudo del período" sigue el rango de fechas elegido en el filtro de arriba (D.since/D.until).
   // "Embudo acumulado" es SIEMPRE el total histórico completo, sin importar el filtro.
-  const periodRows=allRows.filter(r=>{const f=(r.fecha||'').slice(0,10);return f&&f>=D.since&&f<=D.until;});
+  const periodRows=allRows.filter(r=>{const f=(r.fecha||'').slice(0,10);return f&&f>=D.since&&f<=D.until&&enHora(r.ts);});
   const rangeLabel=D.since===D.until?D.since:`${D.since} → ${D.until}`;
+  const avisoEvolta=puenteMarcaEvolta
+    ? '<div class="help" style="margin:-6px 0 12px">Se dejaron fuera <b>'+leadsN(evoltaFuera)+'</b> leads importados de Evolta: no entraron por una campaña, así que no cuentan en el embudo.</div>'
+    : '<div class="erbox" style="margin:-6px 0 12px">Los leads importados de <b>Evolta</b> todavía se están contando en este embudo. Para dejarlos fuera hay que habilitar la etiqueta <code>evolta-&lt;año&gt;</code> en el puente de Kommo; en cuanto esté, esta página los excluye sola. Mientras tanto, los escalones de abajo salen más altos de lo real.</div>';
   const upd=KOMMO_DATA.updated?new Date(KOMMO_DATA.updated).toLocaleString('es-PE'):'';
 
   const fPeriod=buildKommoFunnel(periodRows);
@@ -1459,6 +1478,7 @@ function renderEmbudo(D){
 
   sec.innerHTML=`
     <div class="sechead"><h2>Embudo Comercial</h2><span class="cnt">${fAll.total} leads totales · Kommo en vivo</span></div>
+    ${avisoEvolta}
     <p class="subtitle">Cada etapa cuenta los leads que <b>ya llegaron a esa etapa o más adelante</b> (no solo los que siguen parados ahí). Debajo de cada etapa: % real vs. % saludable recomendado — verde si cumple la meta, rojo si está por debajo. Actualizado: ${esc(upd)}.</p>
     <div class="crow">
       ${funnelBlock('📅 Embudo del período · '+esc(rangeLabel),fmt(periodRows.length)+' leads ingresaron en el rango de fechas elegido arriba.',fPeriod,true)}
@@ -1675,9 +1695,61 @@ async function leadsCargar(forzar){
   }
 }
 
+/* ============ C5 · filtro por hora de entrada ============
+   Solo alcanza a los datos del CRM: Meta no entrega sus cifras por hora.
+   Las horas se leen siempre en hora de Lima, igual que el resto de la plataforma. */
+function horaRangoActivo(){
+  var d=((document.getElementById('hf')||{}).value||'').trim();
+  var h=((document.getElementById('ht')||{}).value||'').trim();
+  if(!d&&!h)return null;
+  return {d:d||'00:00', h:h||'23:59'};
+}
+function minutosLima(x){
+  if(x==null||x==='')return null;
+  var ms;
+  if(typeof x==='number')ms=x<1e12?x*1000:x;
+  else ms=Date.parse(x);
+  if(isNaN(ms))return null;
+  var s=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ms));
+  var p=s.split(':');
+  return (+p[0])*60+(+p[1]);
+}
+function enHora(x){
+  var r=horaRangoActivo();
+  if(!r)return true;
+  var m=minutosLima(x);
+  if(m==null)return true;   /* sin hora conocida no se descarta: se vería como un hueco falso */
+  var a=(+r.d.slice(0,2))*60+(+r.d.slice(3,5));
+  var b=(+r.h.slice(0,2))*60+(+r.h.slice(3,5));
+  return a<=b ? (m>=a&&m<=b) : (m>=a||m<=b);   /* a>b = el rango cruza medianoche */
+}
+function horaPintarNota(){
+  var r=horaRangoActivo();
+  var nota=document.getElementById('horaNota');
+  var btn=document.getElementById('horaLimpiar');
+  if(nota){
+    nota.hidden=!r;
+    if(r)nota.innerHTML='Solo cuenta los leads que entraron entre las <b>'+r.d+'</b> y las <b>'+r.h+'</b>'+
+      (r.d>r.h?' del día siguiente':'')+'. Afecta al embudo del período y a la tabla de leads. '+
+      '<b>No cambia las cifras de Meta</b>: Meta no reporta por hora.';
+  }
+  if(btn)btn.hidden=!r;
+}
+window.horaCambio=function(){
+  horaPintarNota();
+  if(typeof LAST_DATA!=='undefined'&&LAST_DATA)renderAll(LAST_DATA);
+  if(typeof leadsPintarCuerpo==='function'&&document.getElementById('leadsBody'))leadsPintarCuerpo();
+};
+window.horaLimpiar=function(){
+  var a=document.getElementById('hf'),b=document.getElementById('ht');
+  if(a)a.value='';if(b)b.value='';
+  window.horaCambio();
+};
+
 function leadsFiltrar(filas){
   const q=(LEADS_F.q||'').trim().toLowerCase();
   return filas.filter(function(f){
+    if(!enHora(f.entrada))return false;
     if(LEADS_F.asesor&&(f.asesor_final||'—')!==LEADS_F.asesor)return false;
     if(LEADS_F.campania&&(f.campania||'Directo / mensaje')!==LEADS_F.campania)return false;
     if(LEADS_F.anuncio&&anuDeFila(f)!==LEADS_F.anuncio)return false; // v3.8
