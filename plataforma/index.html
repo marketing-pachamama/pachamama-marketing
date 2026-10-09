@@ -346,6 +346,7 @@ var AREAS = [
 ];
 
 var areaActual = "portada", subActual = {}, marcos = {}, reloj = null, portadaPedida = false;
+var claveYaOfrecida = false;
 
 function $(id){ return document.getElementById(id); }
 function leer(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
@@ -523,6 +524,7 @@ function guardarClave(){
       cerrarClave();
       pintarBotonClave();
       estado("Clave puesta", "vivo");
+      claveYaOfrecida = false;
       recargarTodo();
     })
     .catch(function(e){
@@ -552,8 +554,13 @@ window.addEventListener("message", function(ev){
   var d = ev.data;
   if(!d || d.pm !== "clave") return;
   pintarBotonClave();
-  if(d.motivo === "invalida"){ estado("La clave venció", "malo"); abrirClave(); }
-  else if(!hayClave()){ estado("Falta la clave de Gerencia", "malo"); }
+  /* Se ofrece una sola vez por visita: si no, cada consulta fallida vuelve a tapar la pantalla */
+  if(d.motivo === "invalida"){
+    estado(hayClave() ? "La clave venció" : "Falta la clave de Gerencia", "malo");
+    if(!claveYaOfrecida){ claveYaOfrecida = true; abrirClave(); }
+  }else if(!hayClave()){
+    estado("Falta la clave de Gerencia", "malo");
+  }
 });
 
 /* ======================= un solo reloj ======================= */
@@ -748,6 +755,14 @@ function pedirMeta(){
       cont.innerHTML = tarjeta("bad", "Inversión del mes", "—", "", txt);
     });
 }
+
+/* Un enlace con #gerencia o #marketing cambia de area aunque la pagina ya este abierta.
+   Sin esto, pegar el enlace que da Compartir no hacia nada para quien ya la tenia abierta. */
+window.addEventListener("hashchange", function(){
+  if($("app").hidden) return;
+  var id = (location.hash||"").replace("#","");
+  if(id && id !== areaActual && AREAS.some(function(a){ return a.id === id; })) irArea(id);
+});
 
 /* Si la puerta ya estaba abierta en este navegador, no esperamos al archivo de acceso */
 if(leer(LLAVE_PUERTA) === "1"){ abrirApp(); }
