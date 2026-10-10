@@ -1346,7 +1346,9 @@ function campaignAttributionKommo(rows){
   const map={};
   rows.forEach(r=>{
     const tags=r.tags||[];let camp='(sin campaña)',ad='—';
-    for(const t of tags){if(/^form/i.test(t)){camp=t;break;}}
+    /* La etiqueta del formulario puede venir con almohadilla delante: #FORM 28 SET...
+       Sin esto, esos leads caen en «sin campaña» aunque el puente ya los deje pasar. */
+    for(const t of tags){if(/^#?s*form/i.test(t)){camp=t;break;}}
     for(const t of tags){if(/^fb\d+/i.test(t)){ad=t;break;}}
     const cls=clasificarEtapaKommo(r.etapaKommo);
     if(!map[camp])map[camp]={camp,ad,total:0,agenda:0,meet:0,separacion:0,venta:0,perdido:0,ganadores:0};
