@@ -676,13 +676,27 @@ const STCOL={g:LIME,a:AMBER,r:RED,n:'#93a59b'};
 const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico',n:'Sin comparar'};
 
 // ═══════════════ API ═══════════════
+/* Varios bloques piden por su cuenta la misma consulta en la misma carga (el resumen por
+   cuenta, el de campañas y la lista de anuncios se pedían hasta tres veces). Aquí se hace
+   UNA vez y se reparte el resultado. El contador se reinicia en cada carga, así que el botón
+   Actualizar sigue trayendo datos frescos. */
+var API_CARGA=0, API_HECHAS={};
+function apiNuevaCarga(){ API_CARGA++; API_HECHAS={}; }
+
 async function api(path,params={}){
   // Va al puente de Cloudflare (que agrega el token de Meta de forma privada), no directo a Graph.
   const u=new URL(META_WORKER_URL);
   u.searchParams.set('path',path);
   if(path.includes('/insights')) params={...params,use_unified_attribution_setting:'true'};
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
-  const r=await fetch(u,{cache:'no-store'});const d=await r.json();
+  const clave=API_CARGA+'|'+u.toString();
+  if(!API_HECHAS[clave]){
+    API_HECHAS[clave]=fetch(u,{cache:'no-store'}).then(function(r){return r.text();})
+      .catch(function(e){ delete API_HECHAS[clave]; throw e; });
+  }
+  /* Cada quien recibe su propia copia: así nadie puede pisarle el objeto a otro */
+  const texto=await API_HECHAS[clave];
+  const d=JSON.parse(texto);
   if(d.error)throw new Error(d.error.message||'API');return d;
 }
 
@@ -780,6 +794,7 @@ function showSection(btn,s){document.querySelectorAll('.navtab').forEach(b=>b.cl
 
 // ═══════════════ LOAD DATA ═══════════════
 async function loadData(){
+  apiNuevaCarga();
   const acct=document.getElementById('acctDash').value;
   if(!acct||!TOKEN)return;
   product=document.getElementById('productSelDash').value;
@@ -801,8 +816,15 @@ async function loadData(){
     ]);
     const adsList=ads.data||[];let adsWithIns=adsList;
     if(adsList.length){
-      try{const ip=adsList.map(a=>api(a.id+'/insights',{fields:'spend,impressions,clicks,ctr,cpc,actions,cost_per_action_type,frequency,cost_per_result,results',time_range:tr}).catch(()=>({data:[]})));
-        const ir=await Promise.all(ip);adsWithIns=adsList.map((ad,i)=>({...ad,_ins:(ir[i].data||[])[0]||{}}));}
+      /* Antes: una consulta por anuncio (28 viajes al puente en una carga normal).
+         Ahora: una sola con level=ad, que devuelve la fila de cada anuncio.
+         Comprobado el 2026-10-10 contra el puente real: mismas cifras. */
+      try{
+        const todos=await api(acct+'/insights',{fields:'ad_id,spend,impressions,clicks,ctr,cpc,actions,cost_per_action_type,frequency,cost_per_result,results',time_range:tr,level:'ad',limit:500}).catch(()=>({data:[]}));
+        const porAnuncio={};
+        (todos.data||[]).forEach(function(f){ if(f.ad_id)porAnuncio[String(f.ad_id)]=f; });
+        adsWithIns=adsList.map(ad=>({...ad,_ins:porAnuncio[String(ad.id)]||{}}));
+      }
       catch(e){adsWithIns=adsList.map(ad=>({...ad,_ins:{}}));}
     }
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
