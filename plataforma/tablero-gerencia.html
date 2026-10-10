@@ -375,19 +375,36 @@ table.t tr:hover td{background:var(--accent-100)}
               <code>nr_tanda3</code>, <code>nr_tanda4</code> y <code>ola2-tanda1</code>.
             </p>
 
-            <p><b>Qué hace falta</b></p>
+            <p><b>Qué NO hace falta: el servidor ya está bien</b></p>
             <p>
-              Una ruta de <b>solo lectura</b> en el servidor, <code>GET /api/reactivacion/difusiones</code>,
-              con caché de 10 minutos y pasando por el regulador que ya tiene <code>kommoClient</code>
-              (Kommo bloquea por IP, y el servidor sale por la misma que reparte los leads).
-              La escribe Nicolás por rama y pull request, igual que <code>/tipo-cambio</code> y
-              <code>/api/leads-telefonos</code>, bajo el permiso que Gerencia dio el 24 de
-              septiembre para rutas de solo lectura. De tu lado queda revisarla y confirmar que
-              se desplegó.
+              Se iba a pedir una ruta nueva y, al revisarlo, resultó innecesaria:
+              <code>/api/reactivacion/atencion</code> <b>ya hace la parte en vivo</b>. Para los
+              leads que respondieron devuelve su etapa de hoy, su asesor y en cuántos minutos se
+              los atendió. Es lo que alimenta los paneles «Cómo quedaron los que respondieron» y
+              «Atención de los que respondieron». <b>No hay nada que agregar de tu lado.</b>
+            </p>
+
+            <p><b>Por qué no se puede extender al resto</b></p>
+            <p>
+              Para traer en vivo a <i>todos</i> los destinatarios de una difusión, y no solo a los
+              que respondieron, habría que preguntarle a Kommo cuáles son. Se probó el 10 de
+              octubre y <b>Kommo no filtra leads por etiqueta</b>: con
+              <code>filter[tags_name]</code> una etiqueta inventada devuelve 250 leads igual, y
+              con <code>filter[tags]</code> por id devuelve 5,000 de los dos embudos. El filtro se
+              ignora.
             </p>
             <p>
-              Pídele a Nicolás la página con el detalle campo por campo. Mientras tanto, arriba
-              está la fecha del archivo para que nadie lea cifras viejas sin saberlo.
+              Sin filtro, encontrar los leads de una difusión obliga a <b>recorrer el embudo
+              entero</b>: los <code>nr_tanda*</code> viven casi todos en Reactivación Evolta, que
+              pasa de 10,800 leads, o sea más de 40 páginas en cada carga. Y saldrían por la misma
+              IP que reparte los leads cada 30 segundos, que es justo lo que provocó el bloqueo de
+              cuatro horas y media del 24 de septiembre. <b>No vale la pena</b> por una pestaña que
+              hoy se alimenta de un archivo de septiembre.
+            </p>
+            <p>
+              Lo que sí ayudaría, y es barato: que quien exporta el archivo lo suba más seguido.
+              Arriba está la fecha para que se note cuándo se quedó viejo. Si quieres el detalle
+              de las pruebas, pídele a Nicolás la página con todo.
             </p>
           </div>
         </details>
