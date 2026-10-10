@@ -676,13 +676,27 @@ const STCOL={g:LIME,a:AMBER,r:RED,n:'#93a59b'};
 const STLBL={g:'Saludable',a:'Vigilar',r:'Crítico',n:'Sin comparar'};
 
 // ═══════════════ API ═══════════════
+/* Varios bloques piden por su cuenta la misma consulta en la misma carga (el resumen por
+   cuenta, el de campañas y la lista de anuncios se pedían hasta tres veces). Aquí se hace
+   UNA vez y se reparte el resultado. El contador se reinicia en cada carga, así que el botón
+   Actualizar sigue trayendo datos frescos. */
+var API_CARGA=0, API_HECHAS={};
+function apiNuevaCarga(){ API_CARGA++; API_HECHAS={}; }
+
 async function api(path,params={}){
   // Va al puente de Cloudflare (que agrega el token de Meta de forma privada), no directo a Graph.
   const u=new URL(META_WORKER_URL);
   u.searchParams.set('path',path);
   if(path.includes('/insights')) params={...params,use_unified_attribution_setting:'true'};
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
-  const r=await fetch(u,{cache:'no-store'});const d=await r.json();
+  const clave=API_CARGA+'|'+u.toString();
+  if(!API_HECHAS[clave]){
+    API_HECHAS[clave]=fetch(u,{cache:'no-store'}).then(function(r){return r.text();})
+      .catch(function(e){ delete API_HECHAS[clave]; throw e; });
+  }
+  /* Cada quien recibe su propia copia: así nadie puede pisarle el objeto a otro */
+  const texto=await API_HECHAS[clave];
+  const d=JSON.parse(texto);
   if(d.error)throw new Error(d.error.message||'API');return d;
 }
 
@@ -780,6 +794,7 @@ function showSection(btn,s){document.querySelectorAll('.navtab').forEach(b=>b.cl
 
 // ═══════════════ LOAD DATA ═══════════════
 async function loadData(){
+  apiNuevaCarga();
   const acct=document.getElementById('acctDash').value;
   if(!acct||!TOKEN)return;
   product=document.getElementById('productSelDash').value;
@@ -801,8 +816,15 @@ async function loadData(){
     ]);
     const adsList=ads.data||[];let adsWithIns=adsList;
     if(adsList.length){
-      try{const ip=adsList.map(a=>api(a.id+'/insights',{fields:'spend,impressions,clicks,ctr,cpc,actions,cost_per_action_type,frequency,cost_per_result,results',time_range:tr}).catch(()=>({data:[]})));
-        const ir=await Promise.all(ip);adsWithIns=adsList.map((ad,i)=>({...ad,_ins:(ir[i].data||[])[0]||{}}));}
+      /* Antes: una consulta por anuncio (28 viajes al puente en una carga normal).
+         Ahora: una sola con level=ad, que devuelve la fila de cada anuncio.
+         Comprobado el 2026-10-10 contra el puente real: mismas cifras. */
+      try{
+        const todos=await api(acct+'/insights',{fields:'ad_id,spend,impressions,clicks,ctr,cpc,actions,cost_per_action_type,frequency,cost_per_result,results',time_range:tr,level:'ad',limit:500}).catch(()=>({data:[]}));
+        const porAnuncio={};
+        (todos.data||[]).forEach(function(f){ if(f.ad_id)porAnuncio[String(f.ad_id)]=f; });
+        adsWithIns=adsList.map(ad=>({...ad,_ins:porAnuncio[String(ad.id)]||{}}));
+      }
       catch(e){adsWithIns=adsList.map(ad=>({...ad,_ins:{}}));}
     }
     let funnelError=null;try{await fetchFunnelData();}catch(e){funnelError=e.message;}
@@ -1347,7 +1369,7 @@ function renderEmbudo(D){
 
   /* A2 · los leads importados de Evolta no son leads propios: no cuentan en el embudo */
   const filasCrudas=KOMMO_DATA.rows||[];
-  const esEvolta=function(r){return (r.tags||[]).some(function(t){return /^evolta-/i.test(String(t));});};
+  const esEvolta=function(r){return (r.tags||[]).some(function(t){return /evolta/i.test(String(t));});};
   const puenteMarcaEvolta=filasCrudas.some(esEvolta);
   const allRows=puenteMarcaEvolta?filasCrudas.filter(function(r){return !esEvolta(r);}):filasCrudas;
   const evoltaFuera=filasCrudas.length-allRows.length;
@@ -1357,7 +1379,7 @@ function renderEmbudo(D){
   const rangeLabel=D.since===D.until?D.since:`${D.since} → ${D.until}`;
   const avisoEvolta=puenteMarcaEvolta
     ? '<div class="help" style="margin:-6px 0 12px">Se dejaron fuera <b>'+leadsN(evoltaFuera)+'</b> leads importados de Evolta: no entraron por una campaña, así que no cuentan en el embudo.</div>'
-    : '<div class="erbox" style="margin:-6px 0 12px">Los leads importados de <b>Evolta</b> todavía se están contando en este embudo. Para dejarlos fuera hay que habilitar la etiqueta <code>evolta-&lt;año&gt;</code> en el puente de Kommo; en cuanto esté, esta página los excluye sola. Mientras tanto, los escalones de abajo salen más altos de lo real.</div>';
+    : '<div class="help" style="margin:-6px 0 12px">El puente todavía no manda la etiqueta de origen, así que este embudo no distingue los leads importados de Evolta. Medido en Kommo el 09/10/2026, eran <b>9 de 2,232</b>: no mueve los porcentajes. Cuando el puente mande la etiqueta, esta página los excluye sola y dice cuántos.</div>';
   const upd=KOMMO_DATA.updated?new Date(KOMMO_DATA.updated).toLocaleString('es-PE'):'';
 
   const fPeriod=buildKommoFunnel(periodRows);

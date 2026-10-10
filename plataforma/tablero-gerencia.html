@@ -14,6 +14,21 @@
   --mono:'Inter',system-ui,sans-serif;
 }
 
+/* Recuadro informativo para el responsable del servidor */
+.para-italo{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--card);border-radius:var(--r);padding:12px 15px;margin-bottom:12px}
+.para-italo > summary{cursor:pointer;font-size:13px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+.para-italo > summary::-webkit-details-marker{display:none}
+.para-italo > summary::before{content:'▸';color:var(--accent);font-size:12px;transition:transform .15s}
+.para-italo[open] > summary::before{transform:rotate(90deg)}
+.para-italo .quien{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);background:var(--accent-100);padding:2px 7px;border-radius:999px}
+.para-italo .cuerpo{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.6}
+.para-italo .cuerpo b{color:var(--ink)}
+.para-italo .cuerpo ul{margin:6px 0 10px;padding-left:19px}
+.para-italo .cuerpo li{margin-bottom:3px}
+.para-italo .cuerpo .si{color:var(--ok);font-weight:700}
+.para-italo .cuerpo .no{color:var(--bad);font-weight:700}
+.para-italo .cuerpo p:last-child{margin-bottom:0}
+
 /* ===== C3 · capa visual de Marketing sobre el tablero de Gerencia ===== */
 h1,h2,h3,.hero,.num{font-family:'Sora',Inter,system-ui,sans-serif;letter-spacing:-.015em}
 .card,.panel,.t,table,.ms>summary,.seg,.filt{border-radius:var(--r)}
@@ -325,6 +340,74 @@ table.t tr:hover td{background:var(--accent-100)}
           <span class="count mono" id="rCount"></span>
         </div>
         <div id="rFrescura" style="margin-bottom:12px"></div>
+        <details class="para-italo">
+          <summary><span class="quien">Para Italo</span> Por qué esta pestaña no se actualiza sola, y qué se puede arreglar</summary>
+          <div class="cuerpo">
+            <p>
+              Esta pestaña se alimenta de un archivo que alguien exporta de Kommo y sube a mano.
+              El 9 de octubre de 2026 se consultó la API de Kommo, en modo lectura, para ver si
+              podía leerse sola. Esto es lo que se encontró.
+            </p>
+
+            <p><b class="no">Lo que NO se puede leer de Kommo</b></p>
+            <ul>
+              <li><b>Entregado, leído, fallido y en proceso.</b> Son estados del proveedor de
+                WhatsApp. Kommo registra 36 tipos de evento y, de mensajería, solo dos:
+                mensaje que sale y mensaje que entra. Ningún estado de entrega.</li>
+              <li><b>Costo.</b> Es una cifra de facturación, no está en la API.</li>
+              <li><b>Plantilla y segmento.</b> Son configuración de la difusión; no se exponen.</li>
+            </ul>
+            <p>
+              Las rutas donde estarían las difusiones no existen: <code>/api/v4/broadcasts</code>,
+              <code>/api/v4/mail/broadcasts</code> y <code>/api/v4/salesbot</code> devuelven 404.
+              <b>Esa mitad va a seguir viniendo del archivo.</b>
+            </p>
+
+            <p><b class="si">Lo que SÍ se puede leer en vivo</b></p>
+            <ul>
+              <li>En qué <b>etapa</b> quedó cada lead de la difusión.</li>
+              <li><b>Quién</b> lo tiene asignado.</li>
+              <li><b>Cuántos respondieron</b>, y en cuánto los atendieron.</li>
+            </ul>
+            <p>
+              Se pueden identificar porque cada difusión dejó su etiqueta en los leads: en la
+              cuenta están <code>nr_tanda1</code>, <code>nr_tanda2</code>,
+              <code>nr_tanda3</code>, <code>nr_tanda4</code> y <code>ola2-tanda1</code>.
+            </p>
+
+            <p><b>Qué NO hace falta: el servidor ya está bien</b></p>
+            <p>
+              Se iba a pedir una ruta nueva y, al revisarlo, resultó innecesaria:
+              <code>/api/reactivacion/atencion</code> <b>ya hace la parte en vivo</b>. Para los
+              leads que respondieron devuelve su etapa de hoy, su asesor y en cuántos minutos se
+              los atendió. Es lo que alimenta los paneles «Cómo quedaron los que respondieron» y
+              «Atención de los que respondieron». <b>No hay nada que agregar de tu lado.</b>
+            </p>
+
+            <p><b>Por qué no se puede extender al resto</b></p>
+            <p>
+              Para traer en vivo a <i>todos</i> los destinatarios de una difusión, y no solo a los
+              que respondieron, habría que preguntarle a Kommo cuáles son. Se probó el 10 de
+              octubre y <b>Kommo no filtra leads por etiqueta</b>: con
+              <code>filter[tags_name]</code> una etiqueta inventada devuelve 250 leads igual, y
+              con <code>filter[tags]</code> por id devuelve 5,000 de los dos embudos. El filtro se
+              ignora.
+            </p>
+            <p>
+              Sin filtro, encontrar los leads de una difusión obliga a <b>recorrer el embudo
+              entero</b>: los <code>nr_tanda*</code> viven casi todos en Reactivación Evolta, que
+              pasa de 10,800 leads, o sea más de 40 páginas en cada carga. Y saldrían por la misma
+              IP que reparte los leads cada 30 segundos, que es justo lo que provocó el bloqueo de
+              cuatro horas y media del 24 de septiembre. <b>No vale la pena</b> por una pestaña que
+              hoy se alimenta de un archivo de septiembre.
+            </p>
+            <p>
+              Lo que sí ayudaría, y es barato: que quien exporta el archivo lo suba más seguido.
+              Arriba está la fecha para que se note cuándo se quedó viejo. Si quieres el detalle
+              de las pruebas, pídele a Nicolás la página con todo.
+            </p>
+          </div>
+        </details>
         <div class="grid kpis" id="rKpis" style="margin-bottom:12px"></div>
         <div class="panel" style="margin-bottom:12px"><div class="phead"><h2>Enviados por día</h2><span class="n">pasa el cursor por cada barra</span></div><div class="tw" id="rChart"></div></div>
         <div class="grid two" style="margin-bottom:12px">
