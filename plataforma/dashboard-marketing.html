@@ -1346,7 +1346,9 @@ function campaignAttributionKommo(rows){
   const map={};
   rows.forEach(r=>{
     const tags=r.tags||[];let camp='(sin campaña)',ad='—';
-    for(const t of tags){if(/^form/i.test(t)){camp=t;break;}}
+    /* La etiqueta del formulario puede venir con almohadilla delante: #FORM 28 SET...
+       Sin esto, esos leads caen en «sin campaña» aunque el puente ya los deje pasar. */
+    for(const t of tags){if(/^#?s*form/i.test(t)){camp=t;break;}}
     for(const t of tags){if(/^fb\d+/i.test(t)){ad=t;break;}}
     const cls=clasificarEtapaKommo(r.etapaKommo);
     if(!map[camp])map[camp]={camp,ad,total:0,agenda:0,meet:0,separacion:0,venta:0,perdido:0,ganadores:0};
@@ -1850,7 +1852,7 @@ function leadsPintar(){
     +(conAnu?'<div class="fgroup"><div class="fgroup-lbl">Anuncio</div><select class="fsel" onchange="leadsSet(\'anuncio\',this.value)">'+leadsOpciones(anuncios,LEADS_F.anuncio,'Todos')+'</select></div>':'')
     +'<div class="fgroup"><div class="fgroup-lbl">Etapa</div><select class="fsel" onchange="leadsSet(\'etapa\',this.value)">'+leadsOpciones(etapas,LEADS_F.etapa,'Todas')+'</select></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">Atención</div><select class="fsel" onchange="leadsSet(\'atencion\',this.value)"><option value="">Todas</option>'+atn.map(function(a){return '<option value="'+a[0]+'"'+(LEADS_F.atencion===a[0]?' selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div>'
-    +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre o teléfono" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
+    +'<div class="fgroup"><div class="fgroup-lbl">Buscar</div><input class="di" type="search" placeholder="Nombre, teléfono o N° de lead" value="'+esc(LEADS_F.q)+'" oninput="leadsSet(\'q\',this.value)"></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><label style="display:flex;align-items:center;gap:7px;height:34px;margin:0;font-size:13px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;margin:0;padding:0;accent-color:var(--pink)"'+(LEADS_F.reasig?' checked':'')+' onchange="leadsSet(\'reasig\',this.checked)"> Solo reasignados</label></div>'
     +'<div class="fgroup"><div class="fgroup-lbl">&nbsp;</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pb" onclick="leadsCargar(true)">↻ Actualizar leads</button><button class="pb" onclick="leadsExportar()">Exportar a Excel</button></div></div>'
     +'</div>'
@@ -2779,6 +2781,10 @@ async function telCargar(r){
 // ¿El lead coincide con lo buscado? Por nombre, o por teléfono si se escribieron al menos 3 dígitos
 // (se comparan solo los dígitos: "987 654 321", "987654321" y "+51987654321" encuentran lo mismo).
 function leadsCoincide(f,q){
+  /* Por número de lead. El bloque de chats y las alertas muestran «Lead 23174191» y ese número
+     es lo único que se tiene a mano cuando uno llega desde ahí. Se piden 4 dígitos o más para
+     que escribir «23» no devuelva media tabla. */
+  if(/^\d{4,}$/.test(q)&&String(f.id).indexOf(q)!==-1)return true;
   if(String(f.nombre||'').toLowerCase().indexOf(q)!==-1)return true;
   const d=telDigitos(q);if(d.length<3)return false;
   return telDe(f.id).some(function(t){return telDigitos(t).indexOf(d)!==-1;});
