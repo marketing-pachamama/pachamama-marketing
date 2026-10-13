@@ -1862,6 +1862,44 @@ function leadsPintar(){
   leadsPintarCuerpo();
 }
 
+/* Por qué no hay nada en la tabla. Casi siempre es el período, no el buscador. */
+function leadsVacioHtml(nPeriodo){
+  const desde=(LAST_DATA&&LAST_DATA.since)||'', hasta=(LAST_DATA&&LAST_DATA.until)||'';
+  const per=desde?(desde===hasta?leadsFechaCorta(desde):leadsFechaCorta(desde)+' al '+leadsFechaCorta(hasta)):'el período elegido';
+
+  if(!nPeriodo){
+    return '<b>No entró ningún lead en '+esc(per)+'.</b><br>'+
+           'Cambia el filtro de fechas de arriba (prueba «Este mes» o «30 días») y pulsa «Actualizar leads».';
+  }
+
+  const puestos=[];
+  if(LEADS_F.q)puestos.push('búsqueda «<b>'+esc(LEADS_F.q)+'</b>»');
+  const hr=(typeof horaRangoActivo==='function')&&horaRangoActivo();
+  if(hr)puestos.push('hora de entrada <b>'+esc(hr.d)+'–'+esc(hr.h)+'</b>');
+  if(LEADS_F.asesor)puestos.push('asesor «'+esc(LEADS_F.asesor)+'»');
+  if(LEADS_F.campania)puestos.push('campaña «'+esc(LEADS_F.campania)+'»');
+  if(LEADS_F.anuncio)puestos.push('anuncio «'+esc(LEADS_F.anuncio)+'»');
+  if(LEADS_F.etapa)puestos.push('etapa «'+esc(LEADS_F.etapa)+'»');
+  if(LEADS_F.atencion)puestos.push('atención «'+esc(LEADS_F.atencion)+'»');
+  if(LEADS_F.reasig)puestos.push('solo reasignados');
+
+  let h='<b>Ninguno de los '+leadsN(nPeriodo)+' leads de '+esc(per)+' cumple los filtros.</b>';
+  if(puestos.length)h+='<br>Filtros puestos: '+puestos.join(' · ')+'.';
+  if(LEADS_F.q){
+    h+='<br><span style="opacity:.85">Este listado solo busca entre los leads <b>del período de arriba</b>. '+
+       'Si el lead que buscas lo viste en el bloque de chats, ojo: ese bloque mira los <b>últimos 14 días</b> '+
+       'sin importar el período, así que puede estar fuera de este listado. Amplía las fechas y vuelve a buscar.</span>';
+  }
+  if(hr)h+='<br><span style="opacity:.85">¿Pusiste sin querer una hora de entrada? El botón <b>Quitar</b>, al lado del filtro de hora, la saca.</span>';
+  return h;
+}
+
+function leadsFechaCorta(iso){
+  if(!iso)return '';
+  const p=String(iso).slice(0,10).split('-');
+  return p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):String(iso);
+}
+
 function leadsPintarCuerpo(){
   const box=document.getElementById('leadsBody'), d=leadsDatos();
   if(!box||!d)return;
@@ -1899,7 +1937,7 @@ function leadsPintarCuerpo(){
       +'<td class="num">'+(f.reasignaciones?leadsN(f.reasignaciones):'—')+'</td>'
       +'<td>'+(cita?esc(cita):'—')+'</td>'
       +'</tr>';
-  }).join(''):'<tr><td colspan="'+(9+(conTel?1:0)+(conAnu?1:0))+'" class="empty">Ningún lead cumple los filtros elegidos.</td></tr>';
+  }).join(''):'<tr><td colspan="'+(9+(conTel?1:0)+(conAnu?1:0))+'" class="empty">'+leadsVacioHtml(todas.length)+'</td></tr>';
   h+='</tbody></table></div>';
   if(!LEADS_VER_TODO&&rows.length>LEADS_PAGINA)h+='<div style="padding:12px 16px;text-align:center"><button class="pb" onclick="leadsVerTodo()">Ver los '+leadsN(rows.length-LEADS_PAGINA)+' restantes</button></div>';
   h+='</div>';
@@ -3246,7 +3284,8 @@ function chtCajaHtml(){return CHT_URL?'<div id="chtBox">'+chtHtml()+'</div>':'';
 
 function chtHtml(){
   const btn='<button class="pb" style="height:28px;padding:0 11px;font-size:11.5px" onclick="chtCargar(true)">↻ Actualizar</button>';
-  const cab=function(der){return'<div class="tcard cht"><div class="tcard-h"><span>Clientes esperando respuesta en el chat</span><span class="cht-der">'+(der||'')+'</span></div>';};
+  const cab=function(der){return'<div class="tcard cht"><div class="tcard-h"><span>Clientes esperando respuesta en el chat</span><span class="cht-der">'+(der||'')+'</span></div>'+
+    '<div class="cht-nota" style="padding-bottom:0">Este bloque mira siempre los <b>últimos 14 días</b>, no el período elegido arriba. Si un lead de aquí no aparece en la tabla de abajo, es porque entró fuera de ese período: cambia el filtro de fechas. <b>El número del lead abre su ficha en Kommo.</b></div>';};
   const d=CHT.data;
   if(!d){
     if(CHT.cargando)return cab()+'<div class="cht-nota">Revisando los chats del CRM…</div></div>';
