@@ -199,6 +199,23 @@
   }
   .field-block.text input { font-family: var(--font-body); }
   .config-note { grid-column: 1 / -1; font-size: 12px; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 2px; }
+  .field-help { font-size: 11.5px; color: var(--text-muted); margin: 7px 0 0; }
+  .preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .preset-row .chip { padding: 6px 11px; font-size: 11.5px; }
+
+  /* Vista previa dentro del panel de metas: el resultado de lo que se acaba de escribir,
+     sin tener que cambiar de pestaña para descubrir si sirvió de algo. */
+  .goals-preview { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 14px; }
+  .goals-preview-figures { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end; }
+  .gp-item { display: flex; flex-direction: column; gap: 2px; }
+  .gp-value { font-family: var(--font-mono); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .gp-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; }
+  .gp-goal { margin-top: 14px; }
+  .gp-goal .bar-track { height: 10px; }
+  .gp-goal-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; font-size: 12px; }
+  .gp-goal-head b { font-family: var(--font-mono); font-size: 13.5px; }
+  .gp-cta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .gp-cta .hint-inline { font-size: 12px; color: var(--text-muted); }
 
   /* ---------- Views ---------- */
   .view { display: none; }
@@ -617,18 +634,25 @@
 
   <section class="config-panel" aria-label="Metas de campaña">
     <h3>Metas de campaña</h3>
-    <p class="hint">Estas dos casillas alimentan el panel <b>Reclutamiento</b> del Dashboard: la fecha de inicio decide desde cuándo se cuentan los postulantes y la meta dibuja la barra de avance. Se guardan solo en este navegador (el Pipeline y las métricas de Meta Ads sí son en vivo para todo el equipo).</p>
+    <p class="hint">Dile al tablero <b>desde cuándo contar</b> y <b>cuántas contrataciones buscas</b>. Con eso, el Dashboard calcula de dónde viene tu gente, qué fuente y qué formato terminan contratando mejor, y cuánto te falta para la meta. Se guardan solo en este navegador.</p>
     <div class="config-grid">
       <div class="field-block">
-        <label for="campaignStart">Inicio de campaña</label>
+        <label for="campaignStart">Contar postulantes desde</label>
         <input type="date" id="campaignStart">
+        <div class="preset-row" role="group" aria-label="Atajos de fecha">
+          <button type="button" class="chip" data-start-preset="7">Últimos 7 días</button>
+          <button type="button" class="chip" data-start-preset="30">Últimos 30 días</button>
+          <button type="button" class="chip" data-start-preset="month">Este mes</button>
+          <button type="button" class="chip" data-start-preset="all">Todo el historial</button>
+        </div>
       </div>
       <div class="field-block">
         <label for="hireGoal">Meta de contrataciones</label>
-        <input type="number" id="hireGoal" min="0" placeholder="0">
+        <input type="number" id="hireGoal" min="0" placeholder="Ej.: 10">
+        <p class="field-help">Cuántas personas quieres contratar en ese periodo.</p>
       </div>
-      <p class="config-note">Déjalas en blanco si prefieres ver el historial completo. La inversión de Meta Ads se trae en vivo desde el Dashboard — no necesitas registrarla a mano.</p>
     </div>
+    <div class="goals-preview" id="goalsPreview"></div>
   </section>
 
   <main>
@@ -833,6 +857,7 @@
     configToggle.addEventListener('click', function () {
       var open = appRoot.getAttribute('data-local-config') === 'open';
       appRoot.setAttribute('data-local-config', open ? 'closed' : 'open');
+      if (!open) { syncPresetChips(); renderGoalsPreview(); }
     });
   }
 
@@ -1069,9 +1094,71 @@
       if (g.hireGoal && hireGoalInput) hireGoalInput.value = g.hireGoal;
     } catch (e) { /* si el valor guardado está corrupto, se empieza en blanco */ }
   }
+  var goalsPreview = document.getElementById('goalsPreview');
+
+  function startPresetValue(preset) {
+    var now = new Date();
+    if (preset === 'all') return '';
+    if (preset === 'month') return metaToISO(new Date(now.getFullYear(), now.getMonth(), 1));
+    return metaToISO(new Date(now.getFullYear(), now.getMonth(), now.getDate() - (Number(preset) || 0)));
+  }
+  function syncPresetChips() {
+    var actual = readGoals().start;
+    $all('[data-start-preset]').forEach(function (chip) {
+      chip.classList.toggle('active', startPresetValue(chip.getAttribute('data-start-preset')) === actual);
+    });
+  }
+  /* El panel enseña, ahí mismo, el efecto de lo que se acaba de elegir: sin esto,
+     dos casillas vacías no dicen nada sobre para qué sirven. */
+  function renderGoalsPreview() {
+    if (!goalsPreview || appRoot.getAttribute('data-local-config') !== 'open') return;
+    var goals = readGoals();
+    var f = emptyFunnel();
+    collectRecruitmentLeads().forEach(function (l) { f.total++; if (f[l.stage] != null) f[l.stage]++; });
+    var figuras = [
+      { valor: fmtNum(f.total), etiqueta: 'Postulantes' },
+      { valor: fmtNum(funnelSum(f, STAGES_LLEGO_A_ENTREVISTA)), etiqueta: 'Llegaron a entrevista' },
+      { valor: fmtNum(f.contratado), etiqueta: 'Contratados' },
+      { valor: f.total ? fmtPctDecimal((f.contratado / f.total) * 100) : '—', etiqueta: 'Tasa de contratación' }
+    ];
+    var html = '<p class="gp-label" style="margin-bottom:11px">' +
+      (goals.start ? 'Contando desde el ' + fmtDateLong(goals.start) : 'Contando todo el historial') + '</p>' +
+      '<div class="goals-preview-figures">' + figuras.map(function (x) {
+        return '<div class="gp-item"><span class="gp-value">' + x.valor + '</span><span class="gp-label">' + x.etiqueta + '</span></div>';
+      }).join('') + '</div>';
+    if (goals.hireGoal > 0) {
+      var pct = Math.min(100, (f.contratado / goals.hireGoal) * 100);
+      var faltan = Math.max(0, goals.hireGoal - f.contratado);
+      html += '<div class="gp-goal"><div class="gp-goal-head"><span>Avance de la meta</span>' +
+        '<b>' + fmtNum(f.contratado) + ' / ' + fmtNum(goals.hireGoal) + '</b></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(2, pct) + '%;background:var(--accent)"></div></div>' +
+        '<p class="field-help">' + (faltan === 0 ? '¡Meta cumplida! 🎉' : 'Faltan ' + fmtNum(faltan) + (faltan === 1 ? ' contratación' : ' contrataciones') + ' · ' + fmtPct(pct) + ' del objetivo') + '</p></div>';
+    }
+    html += '<div class="gp-cta"><button type="button" class="btn-primary" id="goToDashboardBtn" artifact-local>Ver el panel completo ▸</button>' +
+      '<span class="hint-inline">Ahí verás qué plataforma y qué formato de anuncio te traen a los que sí terminan contratados.</span></div>';
+    goalsPreview.innerHTML = html;
+  }
+
   [campaignStartInput, hireGoalInput].forEach(function (el) {
-    if (el) el.addEventListener('input', function () { saveGoals(); renderDashboard(); });
+    if (el) el.addEventListener('input', function () { saveGoals(); syncPresetChips(); renderGoalsPreview(); renderDashboard(); });
   });
+
+  var configPanel = document.querySelector('.config-panel');
+  if (configPanel) {
+    configPanel.addEventListener('click', function (e) {
+      var preset = e.target.closest('[data-start-preset]');
+      if (preset) {
+        if (campaignStartInput) campaignStartInput.value = startPresetValue(preset.getAttribute('data-start-preset'));
+        saveGoals(); syncPresetChips(); renderGoalsPreview(); renderDashboard();
+        return;
+      }
+      if (e.target.closest('#goToDashboardBtn')) {
+        appRoot.setAttribute('data-local-config', 'closed');
+        var tabBtn = document.querySelector('[data-tab-btn="dashboard"]');
+        if (tabBtn) tabBtn.click();
+      }
+    });
+  }
 
   /* ---------------- Counts (local, recomputed) ---------------- */
   function updateCounts() {
@@ -2408,7 +2495,7 @@
     }
   });
 
-  function refreshAll() { updateCounts(); renderDashboard(); }
+  function refreshAll() { updateCounts(); renderGoalsPreview(); renderDashboard(); }
 
   /* ---------------- Meta live panel controls (delegated — panel is rebuilt on each render) ---------------- */
   dashboard.addEventListener('change', function (e) {
