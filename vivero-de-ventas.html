@@ -275,6 +275,12 @@
   .column[data-stage="contratado"] .column-head .count { color: var(--text-secondary); }
   .column-body { flex: 1; overflow-y: auto; padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
   .column-empty, .search-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 18px 6px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+  .column-more {
+    width: 100%; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+    padding: 10px 8px; cursor: pointer;
+  }
+  .column-more:hover { background: var(--surface); color: var(--text-primary); }
 
   /* ---------- Lead card ---------- */
   .lead-card {
@@ -393,6 +399,13 @@
   .meta-error-banner b { color: var(--critical); }
 
   /* ---------- Buscador de postulantes (Pipeline) ---------- */
+  .pipeline-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .pipeline-toolbar .pipeline-search { flex: 1 1 auto; margin-bottom: 0; }
+  .pipeline-toolbar .btn-ghost { flex: none; }
+  @media (max-width: 600px) {
+    .pipeline-toolbar { flex-wrap: wrap; }
+    .pipeline-toolbar .btn-ghost { width: 100%; justify-content: center; }
+  }
   .pipeline-search { position: relative; margin-bottom: 14px; }
   .pipeline-search input {
     width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); background: var(--bg);
@@ -516,6 +529,21 @@
   .kpi-tile .kpi-value { font-family: var(--font-mono); font-size: 23px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
   .kpi-tile .kpi-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 5px; }
 
+  /* ---------- Panel de reclutamiento (Pipeline dentro del Dashboard) ---------- */
+  /* El Dashboard apila paneles de varias secciones: una sola regla de separación evita
+     que cada bloque tenga que traer su propio margen (y que queden pegados entre sí). */
+  #dashboard { display: flex; flex-direction: column; gap: 16px; }
+  #dashboard > .meta-live-panel { margin-bottom: 0; }
+  .goal-block { margin-top: 16px; }
+  .goal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+  .goal-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .goal-figure { font-family: var(--font-mono); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .goal-note { font-size: 12px; color: var(--text-secondary); margin: 7px 0 0; }
+  .goal-note-empty { margin-top: 16px; padding: 11px 13px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+  .origin-bar-cell { min-width: 150px; }
+  .origin-bar-cell .bar-track { height: 10px; display: inline-block; width: calc(100% - 46px); vertical-align: middle; }
+  .origin-bar-value { font-family: var(--font-mono); font-weight: 700; font-variant-numeric: tabular-nums; margin-left: 8px; }
+
   /* Insights */
   .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }
   .insight-card { display: flex; gap: 10px; padding: 13px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); font-size: 12.5px; line-height: 1.5; }
@@ -589,7 +617,7 @@
 
   <section class="config-panel" aria-label="Metas de campaña">
     <h3>Metas de campaña</h3>
-    <p class="hint">Las métricas de Meta Ads y el Pipeline son en vivo para todo el equipo. Estas metas de campaña (fecha de inicio y meta de contrataciones) se guardan solo en este navegador.</p>
+    <p class="hint">Estas dos casillas alimentan el panel <b>Reclutamiento</b> del Dashboard: la fecha de inicio decide desde cuándo se cuentan los postulantes y la meta dibuja la barra de avance. Se guardan solo en este navegador (el Pipeline y las métricas de Meta Ads sí son en vivo para todo el equipo).</p>
     <div class="config-grid">
       <div class="field-block">
         <label for="campaignStart">Inicio de campaña</label>
@@ -599,7 +627,7 @@
         <label for="hireGoal">Meta de contrataciones</label>
         <input type="number" id="hireGoal" min="0" placeholder="0">
       </div>
-      <p class="config-note">La inversión de Meta Ads (Chamba Pachamama) se trae en vivo automáticamente desde el Dashboard — no necesitas registrarla a mano.</p>
+      <p class="config-note">Déjalas en blanco si prefieres ver el historial completo. La inversión de Meta Ads se trae en vivo desde el Dashboard — no necesitas registrarla a mano.</p>
     </div>
   </section>
 
@@ -607,14 +635,17 @@
     <section class="view view-pipeline">
       <details class="help">
         <summary>¿Cómo funciona este tablero?</summary>
-        <p>Agrega un postulante, avánzalo por las etapas conforme lo contactas y entrevistas, y usa Descartar / Reactivar según corresponda. El ícono 🗑 en la esquina de cada tarjeta la elimina por completo (para postulantes de prueba o duplicados) — pide confirmación porque no se puede deshacer. El dashboard se recalcula solo. El Pipeline se guarda en la nube: cualquier persona del equipo que abra este enlace ve y edita los mismos postulantes, en vivo. Las métricas de Meta Ads del Dashboard también son las mismas para todos, porque se traen en vivo desde la cuenta publicitaria.</p>
+        <p>Agrega un postulante, avánzalo por las etapas conforme lo contactas y entrevistas, y usa Descartar / Reactivar según corresponda. El ícono 🗑 en la esquina de cada tarjeta la elimina por completo (para postulantes de prueba o duplicados) — pide confirmación porque no se puede deshacer. El botón <b>⬇ Exportar CSV</b> descarga a tu computadora todos los postulantes con su etapa, origen y notas — sirve como respaldo y para analizarlos en Excel. En <b>Descartado</b> se muestran los 50 más recientes y el resto aparece al pulsar "Mostrar…" (o al buscar, que siempre revisa a todos). El dashboard se recalcula solo. El Pipeline se guarda en la nube: cualquier persona del equipo que abra este enlace ve y edita los mismos postulantes, en vivo. Las métricas de Meta Ads del Dashboard también son las mismas para todos, porque se traen en vivo desde la cuenta publicitaria.</p>
       </details>
 
       <div class="meta-status-line" id="pipelineStatusLine"><span class="pulse"></span><span>Cargando Pipeline compartido…</span></div>
       <div class="meta-error-banner" id="pipelineErrorBanner"></div>
 
-      <div class="pipeline-search">
-        <input type="search" id="pipelineSearchInput" placeholder="Buscar por nombre, WhatsApp, correo o ubicación…" aria-label="Buscar postulante">
+      <div class="pipeline-toolbar">
+        <div class="pipeline-search">
+          <input type="search" id="pipelineSearchInput" placeholder="Buscar por nombre, WhatsApp, correo o ubicación…" aria-label="Buscar postulante">
+        </div>
+        <button type="button" class="btn-ghost" id="exportCsvBtn" artifact-local title="Descargar todos los postulantes en un archivo que se abre en Excel">⬇ Exportar CSV</button>
       </div>
 
       <form id="addLeadForm" class="add-lead-form" artifact-local autocomplete="off">
@@ -631,7 +662,7 @@
             <div class="chip-group" data-field="platform" role="group" aria-label="Plataforma de origen">
               <button type="button" class="chip active" data-value="meta-leads">Meta Leads</button>
               <button type="button" class="chip" data-value="meta-wa">Meta WhatsApp</button>
-              <button type="button" class="chip" data-value="tiktok">LinkedIn</button>
+              <button type="button" class="chip" data-value="linkedin">LinkedIn</button>
               <button type="button" class="chip" data-value="google">Google</button>
               <button type="button" class="chip" data-value="bolsas">Bolsa empleo</button>
             </div>
@@ -737,7 +768,7 @@
   var PLATFORMS = [
     { key: 'meta-leads', label: 'Meta Leads', color: 'var(--cat-1)' },
     { key: 'meta-wa', label: 'Meta WhatsApp', color: 'var(--cat-2)' },
-    { key: 'tiktok', label: 'LinkedIn', color: 'var(--cat-3)' },
+    { key: 'linkedin', label: 'LinkedIn', color: 'var(--cat-3)' },
     { key: 'google', label: 'Google', color: 'var(--cat-4)' },
     { key: 'bolsas', label: 'Bolsa empleo', color: 'var(--cat-5)' }
   ];
@@ -772,7 +803,20 @@
     if (d.length === 9) d = '51' + d;
     return d;
   }
-  function platformInfo(key) { for (var i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].key === key) return PLATFORMS[i]; return PLATFORMS[0]; }
+  /* Durante un tiempo la plataforma rotulada "LinkedIn" se guardaba con la clave "tiktok".
+     Normalizamos al leer para que el dato almacenado y la etiqueta visible digan lo mismo,
+     y para que cualquier exportación o conteo por origen no mezcle las dos cosas. */
+  var LEGACY_PLATFORM_KEYS = { tiktok: 'linkedin' };
+  function normalizePlatformKey(key) {
+    if (LEGACY_PLATFORM_KEYS[key]) return LEGACY_PLATFORM_KEYS[key];
+    for (var i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].key === key) return key;
+    return PLATFORMS[0].key;
+  }
+  function normalizeCreativeKey(key) {
+    for (var i = 0; i < CREATIVES.length; i++) if (CREATIVES[i].key === key) return key;
+    return CREATIVES[0].key;
+  }
+  function platformInfo(key) { key = normalizePlatformKey(key); for (var i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].key === key) return PLATFORMS[i]; return PLATFORMS[0]; }
   function creativeInfo(key) { for (var i = 0; i < CREATIVES.length; i++) if (CREATIVES[i].key === key) return CREATIVES[i]; return CREATIVES[0]; }
 
   /* ---------------- Tabs & config toggle (local UI state) ---------------- */
@@ -827,8 +871,8 @@
     var frag = cardTemplate.content.cloneNode(true);
     var card = frag.querySelector('.lead-card');
     card.dataset.id = data.id || makeLeadId();
-    card.dataset.platform = data.platform;
-    card.dataset.creative = data.creative;
+    card.dataset.platform = normalizePlatformKey(data.platform);
+    card.dataset.creative = normalizeCreativeKey(data.creative);
     card.dataset.date = data.date || new Date().toISOString();
     $('.card-name', card).textContent = data.name;
     $('.card-phone', card).textContent = data.phone;
@@ -858,8 +902,8 @@
       id: card.dataset.id || makeLeadId(),
       name: $('.card-name', card).textContent.trim(),
       phone: $('.card-phone', card).textContent.trim(),
-      platform: card.dataset.platform || 'meta-leads',
-      creative: card.dataset.creative || 'video',
+      platform: normalizePlatformKey(card.dataset.platform),
+      creative: normalizeCreativeKey(card.dataset.creative),
       exp: Number($('.f-exp', card).value) || 0,
       location: $('.meta-loc', card).textContent.trim(),
       email: $('.meta-email', card).textContent.trim(),
@@ -928,6 +972,13 @@
   }
 
   board.addEventListener('click', function (e) {
+    var more = e.target.closest('.column-more');
+    if (more) {
+      var moreCol = more.closest('.column');
+      if (moreCol) columnExpanded[moreCol.getAttribute('data-stage')] = true;
+      applyPipelineSearch();
+      return;
+    }
     var adv = e.target.closest('.btn-advance');
     var dis = e.target.closest('.btn-discard');
     var react = e.target.closest('.btn-reactivate');
@@ -991,10 +1042,35 @@
     if (e.target.matches('.card-name, .meta-loc, .meta-email, .card-notes, .card-phone')) savePipelineNow();
   }, true);
 
-  /* Campaign goals affect the dashboard live */
-  ['hireGoal', 'campaignStart'].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('input', renderDashboard);
+  /* ---------------- Metas de campaña ----------------
+     Alimentan el panel de Reclutamiento del Dashboard: la fecha de inicio acota qué
+     postulantes se cuentan y la meta dibuja la barra de avance. Se guardan en este
+     navegador (no en el backend compartido), tal como dice el panel. */
+  var GOALS_STORAGE_KEY = 'vivero-metas-campana';
+  var campaignStartInput = document.getElementById('campaignStart');
+  var hireGoalInput = document.getElementById('hireGoal');
+
+  function readGoals() {
+    return {
+      start: (campaignStartInput && campaignStartInput.value) || '',
+      hireGoal: Math.max(0, Number(hireGoalInput && hireGoalInput.value) || 0)
+    };
+  }
+  function saveGoals() {
+    try { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(readGoals())); } catch (e) { /* modo privado o almacenamiento bloqueado */ }
+  }
+  function restoreGoals() {
+    try {
+      var raw = localStorage.getItem(GOALS_STORAGE_KEY);
+      if (!raw) return;
+      var g = JSON.parse(raw);
+      if (!g) return;
+      if (g.start && campaignStartInput) campaignStartInput.value = g.start;
+      if (g.hireGoal && hireGoalInput) hireGoalInput.value = g.hireGoal;
+    } catch (e) { /* si el valor guardado está corrupto, se empieza en blanco */ }
+  }
+  [campaignStartInput, hireGoalInput].forEach(function (el) {
+    if (el) el.addEventListener('input', function () { saveGoals(); renderDashboard(); });
   });
 
   /* ---------------- Counts (local, recomputed) ---------------- */
@@ -1023,25 +1099,54 @@
   function normalizeSearchText(s) {
     return (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   }
+  /* Columnas que con el tiempo acumulan cientos de tarjetas: se pintan solo las más
+     recientes para que el tablero no tenga que dibujar todo de golpe. Las tarjetas
+     restantes siguen existiendo (se guardan y se cuentan igual), solo están ocultas
+     hasta pulsar "Mostrar…" — y una búsqueda activa siempre las vuelve a incluir. */
+  var COLUMN_RENDER_LIMIT = { descartado: 50 };
+  var columnExpanded = {};
+
   function applyPipelineSearch() {
     var q = normalizeSearchText(pipelineSearchInput ? pipelineSearchInput.value.trim() : '');
     $all('.column').forEach(function (col) {
+      var stage = col.getAttribute('data-stage');
       var cards = $all('.lead-card', col);
-      var visibleCount = 0;
-      cards.forEach(function (card) {
+      var body = $('.column-body', col);
+      var matched = cards.filter(function (card) {
+        if (!q) return true;
         var haystack = normalizeSearchText(
           ($('.card-name', card) ? $('.card-name', card).textContent : '') + ' ' +
           ($('.card-phone', card) ? $('.card-phone', card).textContent : '') + ' ' +
           ($('.meta-email', card) ? $('.meta-email', card).textContent : '') + ' ' +
           ($('.meta-loc', card) ? $('.meta-loc', card).textContent : '')
         );
-        var match = !q || haystack.indexOf(q) !== -1;
-        card.style.display = match ? '' : 'none';
-        if (match) visibleCount++;
+        return haystack.indexOf(q) !== -1;
       });
-      var body = $('.column-body', col);
+      var limit = (!q && !columnExpanded[stage]) ? COLUMN_RENDER_LIMIT[stage] : null;
+      var shown = matched, hidden = 0;
+      if (limit && matched.length > limit) {
+        shown = matched.slice(matched.length - limit);
+        hidden = matched.length - limit;
+      }
+      cards.forEach(function (card) { card.style.display = 'none'; });
+      shown.forEach(function (card) { card.style.display = ''; });
+
+      var moreBtn = $('.column-more', body);
+      if (hidden > 0) {
+        if (!moreBtn) {
+          moreBtn = document.createElement('button');
+          moreBtn.type = 'button';
+          moreBtn.className = 'column-more';
+          moreBtn.setAttribute('artifact-local', '');
+        }
+        moreBtn.textContent = 'Mostrar ' + hidden + ' anterior' + (hidden === 1 ? '' : 'es');
+        body.appendChild(moreBtn);
+      } else if (moreBtn) {
+        moreBtn.remove();
+      }
+
       var noMatch = $('.search-empty', body);
-      if (q && cards.length > 0 && visibleCount === 0) {
+      if (q && cards.length > 0 && matched.length === 0) {
         if (!noMatch) {
           var div = document.createElement('div');
           div.className = 'search-empty';
@@ -1056,16 +1161,56 @@
   }
   if (pipelineSearchInput) pipelineSearchInput.addEventListener('input', applyPipelineSearch);
 
+  /* ---------------- Exportar a CSV (respaldo y análisis en Excel) ---------------- */
+  function csvCell(value) {
+    var s = value == null ? '' : String(value);
+    // Un nombre o una nota que empiece con "=", "+", "-" o "@" sería interpretado como
+    // fórmula al abrir el archivo; el apóstrofo lo fuerza a texto.
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
+  }
+  function buildLeadsCsv(leads) {
+    var headers = ['Nombre', 'WhatsApp', 'Correo', 'Ubicación', 'Meses de experiencia', 'Plataforma de origen',
+      'Formato del anuncio', 'Reside en zona', 'Disponible horario', 'Calificado', 'Etapa', 'Fecha de registro', 'Notas'];
+    var lines = [headers.map(csvCell).join(';')];
+    leads.forEach(function (l) {
+      var calificado = (Number(l.exp) || 0) >= 6 && l.zona && l.horario;
+      lines.push([
+        l.name, l.phone, l.email, l.location, Number(l.exp) || 0,
+        platformInfo(l.platform).label, creativeInfo(l.creative).label,
+        l.zona ? 'Sí' : 'No', l.horario ? 'Sí' : 'No', calificado ? 'Sí' : 'No',
+        STAGE_LABELS[l.stage] || 'Descartado', (l.date || '').slice(0, 10), l.notes
+      ].map(csvCell).join(';'));
+    });
+    return '﻿' + lines.join('\r\n'); // BOM: sin él Excel se come las tildes
+  }
+  function exportLeadsCsv() {
+    var leads = collectLeadsFromDOM();
+    if (!leads.length) { window.alert('Todavía no hay postulantes que exportar.'); return; }
+    var blob = new Blob([buildLeadsCsv(leads)], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'vivero-de-ventas_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  var exportCsvBtn = document.getElementById('exportCsvBtn');
+  if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportLeadsCsv);
+
   /* ---------------- Pipeline compartido (Cloudflare KV vía el mismo proxy) ---------------- */
   var PIPELINE_URL = 'https://reclutamientopachamama.ia-works126.workers.dev/pipeline';
   var PIPELINE_ACCESS_KEY = 'pachamama2026'; // debe coincidir con el secreto ACCESS_KEY del worker
   var PIPELINE_POLL_MS = 12000; // cada cuánto se revisa si otra persona guardó cambios
 
-  var pipeline = { version: 0, status: 'loading', error: null, loaded: false };
+  var pipeline = { version: 0, renderedVersion: null, status: 'loading', error: null, loaded: false };
   var pipelineSaving = false;
   var pipelinePendingSave = false;
   var pipelineSaveTimer = null;
   var pipelinePollTimer = null;
+  var pipelineLastSavedJSON = null; // última foto guardada con éxito: evita escrituras que no cambian nada
 
   function pipelineStatusLine() { return document.getElementById('pipelineStatusLine'); }
   function pipelineErrorBanner() { return document.getElementById('pipelineErrorBanner'); }
@@ -1100,12 +1245,20 @@
       var res = await fetch(PIPELINE_URL + '?key=' + encodeURIComponent(PIPELINE_ACCESS_KEY));
       var body = await res.json().catch(function () { return null; });
       if (!res.ok || !body || body.error) throw new Error((body && body.error) || ('HTTP ' + res.status));
-      pipeline.version = body.version || 0;
+      var incomingVersion = body.version || 0;
+      pipeline.version = incomingVersion;
       pipeline.status = 'ok';
       pipeline.error = null;
       pipeline.loaded = true;
-      renderBoardFromLeads(body.leads || []);
-      refreshAll();
+      // Si nadie guardó nada desde la última vez que pintamos, el tablero ya está al día:
+      // reconstruir cientos de tarjetas cada 12 segundos solo gastaba batería y robaba el foco.
+      if (pipeline.renderedVersion !== incomingVersion) {
+        if (renderBoardFromLeads(body.leads || [])) {
+          pipeline.renderedVersion = incomingVersion;
+          pipelineLastSavedJSON = JSON.stringify(collectLeadsFromDOM());
+        }
+        refreshAll();
+      }
     } catch (err) {
       pipeline.status = 'error';
       pipeline.error = (err && err.message) || 'Error desconocido';
@@ -1115,17 +1268,26 @@
 
   function schedulePipelineSave() {
     if (pipelineSaveTimer) clearTimeout(pipelineSaveTimer);
-    pipelineSaveTimer = setTimeout(function () { savePipelineNow(); }, 800);
+    // 1,5 s de espera al teclear: suficiente para que escribir una nota larga sea una
+    // sola escritura y no una por palabra. Las acciones (mover, descartar) siguen guardando al instante.
+    pipelineSaveTimer = setTimeout(function () { savePipelineNow(); }, 1500);
   }
 
   async function savePipelineNow() {
     if (pipelineSaveTimer) { clearTimeout(pipelineSaveTimer); pipelineSaveTimer = null; }
     if (!pipeline.loaded) return; // aún no cargamos el estado remoto — no pisar nada
     if (pipelineSaving) { pipelinePendingSave = true; return; }
+    var leads = collectLeadsFromDOM();
+    var payloadJSON = JSON.stringify(leads);
+    // Guardar algo idéntico a lo último guardado no aporta nada y consume una escritura
+    // del backend (y 160 KB de subida): si no cambió nada, no se envía.
+    if (payloadJSON === pipelineLastSavedJSON) {
+      if (pipeline.status === 'saving' || pipeline.status === 'conflict') { pipeline.status = 'ok'; renderPipelineStatus(); }
+      return;
+    }
     pipelineSaving = true;
     pipeline.status = 'saving';
     renderPipelineStatus();
-    var leads = collectLeadsFromDOM();
     try {
       var res = await fetch(PIPELINE_URL + '?key=' + encodeURIComponent(PIPELINE_ACCESS_KEY), {
         method: 'POST',
@@ -1136,7 +1298,10 @@
       if (res.status === 409 && body && body.current) {
         // Alguien más guardó primero: tomamos su versión como base y reintentamos con nuestros cambios encima.
         pipeline.version = body.current.version;
-        renderBoardFromLeads(body.current.leads || []);
+        if (renderBoardFromLeads(body.current.leads || [])) {
+          pipeline.renderedVersion = body.current.version;
+          pipelineLastSavedJSON = JSON.stringify(collectLeadsFromDOM());
+        }
         refreshAll();
         pipeline.status = 'conflict';
         renderPipelineStatus();
@@ -1146,6 +1311,10 @@
       }
       if (!res.ok || !body || body.error) throw new Error((body && body.error) || ('HTTP ' + res.status));
       pipeline.version = body.version;
+      // Lo que acabamos de guardar es exactamente lo que está en pantalla: el siguiente
+      // sondeo no necesita volver a dibujar el tablero.
+      pipeline.renderedVersion = body.version;
+      pipelineLastSavedJSON = payloadJSON;
       pipeline.status = 'ok';
       pipeline.error = null;
     } catch (err) {
@@ -1486,7 +1655,7 @@
         var h = withHires[0];
         out.push({
           icon: '✅', tone: 'info',
-          html: '<b>' + h.label + '</b> ya generó ' + h.hires + ' contratación' + (h.hires === 1 ? '' : 'es') + ' este período, a un CPL de ' + fmtMoney2(h.cpl) + ' — es el único dato 100% verificado de que el gasto en Meta se está traduciendo en contrataciones reales.'
+          html: '<b>' + h.label + '</b> ya generó ' + h.hires + (h.hires === 1 ? ' contratación' : ' contrataciones') + ' este período, a un CPL de ' + fmtMoney2(h.cpl) + ' — es el único dato 100% verificado de que el gasto en Meta se está traduciendo en contrataciones reales.'
         });
       }
     }
@@ -1686,8 +1855,207 @@
 
   function renderMetaStatusOnly() { renderDashboard(); }
 
+  /* ---------------- Reclutamiento: de dónde viene la gente y qué funciona mejor ----------------
+     Esta es la mitad del Dashboard que mira el Pipeline (no Meta): responde "¿qué fuente me trae
+     más postulantes?" y, sobre todo, "¿cuál me trae postulantes que de verdad llegan a contratarse?".
+     Las dos no suelen ser la misma, y esa diferencia es la decisión que importa. */
+  var STAGES_EN_PROCESO = ['nuevo', 'contactado', 'entrevista', 'entrevistado'];
+  var STAGES_LLEGO_A_ENTREVISTA = ['entrevista', 'entrevistado', 'contratado'];
+
+  function emptyFunnel() {
+    return { total: 0, nuevo: 0, contactado: 0, entrevista: 0, entrevistado: 0, contratado: 0, descartado: 0 };
+  }
+  function funnelSum(f, stages) {
+    return stages.reduce(function (n, s) { return n + (f[s] || 0); }, 0);
+  }
+  function collectRecruitmentLeads() {
+    var start = readGoals().start;
+    return $all('.lead-card', board).map(function (card) {
+      var col = card.closest('.column');
+      return {
+        platform: normalizePlatformKey(card.dataset.platform),
+        creative: normalizeCreativeKey(card.dataset.creative),
+        stage: col ? col.getAttribute('data-stage') : 'nuevo',
+        date: (card.dataset.date || '').slice(0, 10)
+      };
+    }).filter(function (l) { return !start || !l.date || l.date >= start; });
+  }
+  function groupFunnel(leads, field, defs) {
+    var map = {};
+    defs.forEach(function (d) { map[d.key] = emptyFunnel(); });
+    leads.forEach(function (l) {
+      var f = map[l[field]] || (map[l[field]] = emptyFunnel());
+      f.total++;
+      if (f[l.stage] != null) f[l.stage]++;
+    });
+    return map;
+  }
+  function funnelRows(defs, map) {
+    return defs.map(function (d) {
+      var f = map[d.key] || emptyFunnel();
+      return {
+        key: d.key, label: d.label, color: d.color, f: f,
+        entrevistas: funnelSum(f, STAGES_LLEGO_A_ENTREVISTA),
+        hireRate: f.total ? (f.contratado / f.total) * 100 : null,
+        discardRate: f.total ? (f.descartado / f.total) * 100 : null
+      };
+    }).filter(function (r) { return r.f.total > 0; }).sort(function (a, b) { return b.f.total - a.f.total; });
+  }
+  function renderFunnelTable(title, hint, rows, firstColLabel) {
+    if (!rows.length) {
+      return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p>' +
+        '<p class="board-empty-note">Todavía no hay postulantes registrados en este periodo.</p></div>';
+    }
+    var max = rows[0].f.total;
+    var body = rows.map(function (r) {
+      var w = Math.max(4, (r.f.total / max) * 100);
+      return '<tr>' +
+        '<td><span class="swatch" style="background:' + r.color + '"></span>' + escapeHtml(r.label) + '</td>' +
+        '<td class="origin-bar-cell"><div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + r.color + '"></div></div>' +
+        '<span class="origin-bar-value">' + fmtNum(r.f.total) + '</span></td>' +
+        '<td>' + fmtNum(funnelSum(r.f, STAGES_EN_PROCESO)) + '</td>' +
+        '<td>' + fmtNum(r.entrevistas) + '</td>' +
+        '<td>' + fmtNum(r.f.contratado) + '</td>' +
+        '<td>' + (r.hireRate != null ? fmtPctDecimal(r.hireRate) : '—') + '</td>' +
+        '<td>' + (r.discardRate != null ? fmtPct(r.discardRate) : '—') + '</td>' +
+        '</tr>';
+    }).join('');
+    return '<div class="panel"><h3>' + title + '</h3><p class="panel-hint">' + hint + '</p>' +
+      '<div style="overflow-x:auto"><table class="cost-table"><thead><tr>' +
+      '<th>' + firstColLabel + '</th><th>Postulantes</th><th>En proceso</th><th>Llegaron a entrevista</th>' +
+      '<th>Contratados</th><th>Tasa de contratación</th><th>Descartados</th>' +
+      '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
+  }
+  function generateRecruitmentInsights(sourceRows, formatRows) {
+    var out = [];
+    var conVolumen = sourceRows.filter(function (r) { return r.f.total >= 5; });
+    // Con una sola fuente activa no hay nada que comparar: una conclusión del tipo
+    // "X es tu mejor fuente" cuando X es la única sonaría a relleno.
+    if (sourceRows.length >= 2) {
+      var masVolumen = sourceRows[0];
+      var mejorTasa = conVolumen.slice().sort(function (a, b) { return b.hireRate - a.hireRate; })[0];
+      if (mejorTasa && mejorTasa.f.contratado > 0 && mejorTasa.key !== masVolumen.key) {
+        out.push({
+          icon: '⚖️', tone: 'warning',
+          html: 'De <b>' + escapeHtml(masVolumen.label) + '</b> llegan más postulantes (' + fmtNum(masVolumen.f.total) + '), pero la fuente que más contrata es <b>' + escapeHtml(mejorTasa.label) + '</b>: ' + fmtPctDecimal(mejorTasa.hireRate) + ' de los suyos terminó contratado, frente a ' + (masVolumen.hireRate != null ? fmtPctDecimal(masVolumen.hireRate) : '0%') + '. Cantidad y calidad no están viniendo del mismo lado.'
+        });
+      } else if (mejorTasa && mejorTasa.f.contratado > 0) {
+        out.push({
+          icon: '🏆', tone: 'good',
+          html: '<b>' + escapeHtml(mejorTasa.label) + '</b> es tu mejor fuente por partida doble: la que más postulantes trae (' + fmtNum(mejorTasa.f.total) + ') y la de mejor tasa de contratación (' + fmtPctDecimal(mejorTasa.hireRate) + ').'
+        });
+      }
+      var muchoDescarte = conVolumen.filter(function (r) { return r.discardRate != null && r.discardRate >= 70 && r.f.contratado === 0; })
+        .sort(function (a, b) { return b.f.total - a.f.total; })[0];
+      if (muchoDescarte) {
+        out.push({
+          icon: '🚩', tone: 'warning',
+          html: 'De <b>' + escapeHtml(muchoDescarte.label) + '</b> entraron ' + fmtNum(muchoDescarte.f.total) + ' postulantes, se descartó el ' + fmtPct(muchoDescarte.discardRate) + ' y no salió ninguna contratación — conviene revisar qué perfil está atrayendo esa fuente antes de seguir invirtiendo ahí.'
+        });
+      }
+    }
+    var mejorFormato = formatRows.filter(function (r) { return r.f.total >= 5 && r.hireRate != null; })
+      .sort(function (a, b) { return b.hireRate - a.hireRate; })[0];
+    if (mejorFormato && mejorFormato.f.contratado > 0 && out.length < 3) {
+      out.push({
+        icon: '🎬', tone: 'info',
+        html: 'El formato <b>' + escapeHtml(mejorFormato.label) + '</b> es el que mejor convierte: ' + fmtNum(mejorFormato.f.contratado) + (mejorFormato.f.contratado === 1 ? ' contratación' : ' contrataciones') + ' sobre ' + fmtNum(mejorFormato.f.total) + ' postulantes (' + fmtPctDecimal(mejorFormato.hireRate) + ').'
+      });
+    }
+    return out.slice(0, 3);
+  }
+  function metaActiveRange() {
+    if (metaLive.range === 'custom') return { since: metaLive.customSince, until: metaLive.customUntil };
+    return metaComputeRange(metaLive.range);
+  }
+  function metaTotalSpend() {
+    return (metaLive.daily || []).reduce(function (sum, r) { return sum + (Number(r.spend) || 0); }, 0);
+  }
+  function renderRecruitmentPanel() {
+    var goals = readGoals();
+    var leads = collectRecruitmentLeads();
+    var all = emptyFunnel();
+    leads.forEach(function (l) { all.total++; if (all[l.stage] != null) all[l.stage]++; });
+
+    var enProceso = funnelSum(all, STAGES_EN_PROCESO);
+    var llegaronEntrevista = funnelSum(all, STAGES_LLEGO_A_ENTREVISTA);
+    var hireRate = all.total ? (all.contratado / all.total) * 100 : null;
+    var periodo = goals.start
+      ? 'desde el ' + fmtDateLong(goals.start)
+      : 'historial completo · define el inicio de campaña en ⚙ para acotarlo';
+
+    var tiles = [
+      { label: 'Postulantes', value: fmtNum(all.total), sub: periodo },
+      { label: 'En proceso', value: fmtNum(enProceso), sub: 'aún sin decisión' },
+      { label: 'Llegaron a entrevista', value: fmtNum(llegaronEntrevista), sub: all.total ? fmtPct((llegaronEntrevista / all.total) * 100) + ' de los postulantes' : '—' },
+      { label: 'Contratados', value: fmtNum(all.contratado), sub: hireRate != null ? fmtPctDecimal(hireRate) + ' de tasa de contratación' : '—' },
+      { label: 'Descartados', value: fmtNum(all.descartado), sub: all.total ? fmtPct((all.descartado / all.total) * 100) + ' del total' : '—' }
+    ];
+
+    // Costo por contratación: solo tiene sentido comparando la inversión de Meta del periodo
+    // elegido contra las contrataciones salidas de postulantes registrados en ESE mismo periodo.
+    if (metaLive.status === 'ok') {
+      var r = metaActiveRange();
+      var spend = metaTotalSpend();
+      var hiresEnRango = $all('.lead-card', board).filter(function (card) {
+        var col = card.closest('.column');
+        if (!col || col.getAttribute('data-stage') !== 'contratado') return false;
+        var d = (card.dataset.date || '').slice(0, 10);
+        return d && r.since && r.until && d >= r.since && d <= r.until;
+      }).length;
+      if (spend > 0 && hiresEnRango > 0) {
+        tiles.push({
+          label: 'Costo por contratación',
+          value: fmtMoney2(spend / hiresEnRango),
+          sub: fmtMoney(spend) + ' ÷ ' + hiresEnRango + (hiresEnRango === 1 ? ' contratación' : ' contrataciones') + ' del periodo de Meta'
+        });
+      }
+    }
+
+    var kpiHtml = '<div class="kpi-row">' + tiles.map(function (t) {
+      return '<div class="kpi-tile"><div class="kpi-label">' + t.label + '</div><div class="kpi-value">' + t.value + '</div><div class="kpi-sub">' + t.sub + '</div></div>';
+    }).join('') + '</div>';
+
+    var goalHtml = '';
+    if (goals.hireGoal > 0) {
+      var pct = Math.min(100, (all.contratado / goals.hireGoal) * 100);
+      var faltan = Math.max(0, goals.hireGoal - all.contratado);
+      goalHtml = '<div class="goal-block">' +
+        '<div class="goal-head"><span class="goal-title">Meta de contrataciones</span>' +
+        '<span class="goal-figure">' + fmtNum(all.contratado) + ' / ' + fmtNum(goals.hireGoal) + '</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(2, pct) + '%;background:var(--accent)"></div></div>' +
+        '<p class="goal-note">' + (faltan === 0 ? '¡Meta cumplida! 🎉' : 'Faltan ' + fmtNum(faltan) + (faltan === 1 ? ' contratación' : ' contrataciones') + ' · ' + fmtPct(pct) + ' del objetivo') + '</p>' +
+        '</div>';
+    } else {
+      goalHtml = '<p class="goal-note goal-note-empty">Define una meta de contrataciones en <b>⚙ Metas de campaña</b> (arriba a la derecha) para ver aquí el avance.</p>';
+    }
+
+    var sourceRows = funnelRows(PLATFORMS, groupFunnel(leads, 'platform', PLATFORMS));
+    var formatRows = funnelRows(CREATIVES, groupFunnel(leads, 'creative', CREATIVES));
+    var insights = generateRecruitmentInsights(sourceRows, formatRows);
+    var insightsHtml = insights.length
+      ? '<div class="insight-grid" style="margin-top:16px">' + insights.map(function (it) {
+        return '<div class="insight-card tone-' + it.tone + '"><span class="ic-icon">' + it.icon + '</span><span>' + it.html + '</span></div>';
+      }).join('') + '</div>'
+      : '';
+
+    return '<div class="panel recruitment-panel">' +
+      '<div class="meta-live-head"><h3>🌱 Reclutamiento · de dónde viene la gente</h3>' +
+      '<span class="meta-status is-live"><span class="dot2"></span>Pipeline en vivo</span></div>' +
+      kpiHtml + goalHtml + insightsHtml + '</div>' +
+      renderFunnelTable('¿Qué fuente trae mejores postulantes?',
+        'Cada fila es una plataforma de origen, según la etapa en la que está hoy cada postulante',
+        sourceRows, 'Plataforma de origen') +
+      renderFunnelTable('¿Qué formato de anuncio trae mejores postulantes?',
+        'Lo mismo, pero por el formato del anuncio con el que llegó cada persona',
+        formatRows, 'Formato del anuncio');
+  }
+
   function renderDashboard() {
-    dashboard.innerHTML = renderMetaLivePanel() + renderAdFormatSection();
+    // Reconstruir el dashboard entero es caro; si su pestaña no está a la vista, no sirve de nada.
+    // Al cambiar de pestaña se vuelve a llamar a esta función, así que siempre se ve al día.
+    if (appRoot.getAttribute('data-local-tab') !== 'dashboard') return;
+    dashboard.innerHTML = renderRecruitmentPanel() + renderMetaLivePanel() + renderAdFormatSection();
   }
 
   /* ---------------- PandaPé: publicaciones activas (ingreso manual por ahora) ----------------
@@ -1757,7 +2125,8 @@
   }
 
   var pandapePostings = [];
-  var pandapeState = { version: 0, status: 'loading', error: null, loaded: false };
+  var pandapeState = { version: 0, renderedVersion: null, status: 'loading', error: null, loaded: false };
+  var pandapeLastSavedJSON = null;
   var pandapeSaving = false;
   var pandapePendingSave = false;
   var pandapeSaveTimer = null;
@@ -1796,12 +2165,22 @@
       var res = await fetch(PANDAPE_URL + '?key=' + encodeURIComponent(PANDAPE_ACCESS_KEY));
       var body = await res.json().catch(function () { return null; });
       if (!res.ok || !body || body.error) throw new Error((body && body.error) || ('HTTP ' + res.status));
-      pandapeState.version = body.version || 0;
+      var incomingVersion = body.version || 0;
+      var sameVersion = pandapeState.renderedVersion === incomingVersion;
+      pandapeState.version = incomingVersion;
       pandapeState.status = 'ok';
       pandapeState.error = null;
       pandapeState.loaded = true;
-      pandapePostings = (body.postings || []).map(sanitizePosting);
-      renderPandapeView();
+      // Sin cambios remotos no se repinta: antes, repintar cada 15 s borraba el foco
+      // justo cuando alguien estaba escribiendo en la tabla de publicaciones.
+      if (!sameVersion) {
+        pandapePostings = (body.postings || []).map(sanitizePosting);
+        pandapeState.renderedVersion = incomingVersion;
+        pandapeLastSavedJSON = JSON.stringify(pandapePostings);
+        renderPandapeView();
+      } else {
+        renderPandapeStatus();
+      }
     } catch (err) {
       pandapeState.status = 'error';
       pandapeState.error = (err && err.message) || 'Error desconocido';
@@ -1811,13 +2190,18 @@
 
   function schedulePandapeSave() {
     if (pandapeSaveTimer) clearTimeout(pandapeSaveTimer);
-    pandapeSaveTimer = setTimeout(function () { savePandapePostingsNow(); }, 800);
+    pandapeSaveTimer = setTimeout(function () { savePandapePostingsNow(); }, 1500);
   }
 
   async function savePandapePostingsNow() {
     if (pandapeSaveTimer) { clearTimeout(pandapeSaveTimer); pandapeSaveTimer = null; }
     if (!pandapeState.loaded) return; // aún no cargamos el estado remoto — no pisar nada
     if (pandapeSaving) { pandapePendingSave = true; return; }
+    var payloadJSON = JSON.stringify(pandapePostings);
+    if (payloadJSON === pandapeLastSavedJSON) {
+      if (pandapeState.status === 'saving' || pandapeState.status === 'conflict') { pandapeState.status = 'ok'; renderPandapeStatus(); }
+      return;
+    }
     pandapeSaving = true;
     pandapeState.status = 'saving';
     renderPandapeStatus();
@@ -1831,6 +2215,8 @@
       if (res.status === 409 && body && body.current) {
         pandapeState.version = body.current.version;
         pandapePostings = (body.current.postings || []).map(sanitizePosting);
+        pandapeState.renderedVersion = body.current.version;
+        pandapeLastSavedJSON = JSON.stringify(pandapePostings);
         renderPandapeView();
         pandapeState.status = 'conflict';
         renderPandapeStatus();
@@ -1840,6 +2226,8 @@
       }
       if (!res.ok || !body || body.error) throw new Error((body && body.error) || ('HTTP ' + res.status));
       pandapeState.version = body.version;
+      pandapeState.renderedVersion = body.version;
+      pandapeLastSavedJSON = payloadJSON;
       pandapeState.status = 'ok';
       pandapeState.error = null;
     } catch (err) {
@@ -2033,19 +2421,35 @@
     if (e.target.closest('#metaRefreshBtn')) loadMetaLive();
   });
 
-  /* ---------------- Init ---------------- */
+  /* ---------------- Init ----------------
+     Los sondeos se detienen mientras la pestaña está en segundo plano: una pestaña olvidada
+     toda la tarde consumía miles de lecturas del backend sin que nadie las mirara. Al volver
+     a ella se refresca de inmediato, así que nunca se ve información vieja. */
+  function pageHidden() { return typeof document.hidden === 'boolean' && document.hidden; }
+
+  restoreGoals();
   refreshAll();
   loadPipeline();
   pipelinePollTimer = setInterval(function () {
-    if (!pipelineSaving) loadPipeline();
+    if (!pipelineSaving && !pageHidden()) loadPipeline();
   }, PIPELINE_POLL_MS);
   loadMetaLive();
-  metaRefreshTimer = setInterval(loadMetaLive, META_AUTO_REFRESH_MIN * 60 * 1000);
+  metaRefreshTimer = setInterval(function () {
+    if (!pageHidden()) loadMetaLive();
+  }, META_AUTO_REFRESH_MIN * 60 * 1000);
   renderPandapeView();
   loadPandapePostingsRemote();
   pandapePollTimer = setInterval(function () {
-    if (!pandapeSaving) loadPandapePostingsRemote();
+    if (!pandapeSaving && !pageHidden()) loadPandapePostingsRemote();
   }, PANDAPE_POLL_MS);
+
+  document.addEventListener('visibilitychange', function () {
+    if (pageHidden()) return;
+    if (!pipelineSaving) loadPipeline();
+    if (!pandapeSaving) loadPandapePostingsRemote();
+    var metaStale = !metaLive.updatedAt || (Date.now() - metaLive.updatedAt.getTime()) > META_AUTO_REFRESH_MIN * 60 * 1000;
+    if (metaStale && metaLive.status !== 'loading') loadMetaLive();
+  });
 })();
 </script>
 </body>
